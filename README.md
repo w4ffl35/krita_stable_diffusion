@@ -1,6 +1,10 @@
 # Krita Stable Diffusion
 
 A Stable Diffusion for Krita.
+=======
+THIS PLUGIN IS UNDER ACTIVE DEVELOPMENT. NOTHING WORKS YET. BOOKMARK THIS PAGE AND KEEP AN EYE ON IT. MANY CHANGES WILL BE HAPPENING OVER THE NEXT WEEK.
+
+A Krita plugin for Stable Diffusion
 
 ## Installation
 
