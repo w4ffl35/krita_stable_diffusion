@@ -1,6 +1,6 @@
-# krita_stable_diffusion
+# Krita Stable Diffusion
 
-A Krita plugin for Stable Diffusion
+A Stable Diffusion for Krita.
 
 ## Installation
 
