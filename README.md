@@ -2,6 +2,8 @@
 
 A Krita plugin for Stable Diffusion
 
+https://www.youtube.com/watch?v=maWR7dDf4SE
+
 ## Installation
 
 1. Download the latest release from the releases page
