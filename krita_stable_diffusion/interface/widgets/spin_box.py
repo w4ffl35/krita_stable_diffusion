@@ -32,4 +32,5 @@ class SpinBox(Widget):
         else:
             element.setValue(self.config.value(self.config_name, type=int))
         element.valueChanged.connect(partial(self.config.setValue, self.config_name))
-        self.widget = element
+        element.text
+        self.widget = self.initialize_widget(element)

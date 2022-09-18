@@ -19,7 +19,7 @@ class Button(Widget):
         """
         element = QPushButton(self.label)
         element.released.connect(lambda: self.release_callback(element))
-        self.widget = element
+        self.widget = self.initialize_widget(element)
 
     def handle_button_release(self, element):
         pass

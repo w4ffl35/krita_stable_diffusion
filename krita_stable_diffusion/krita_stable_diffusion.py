@@ -10,6 +10,7 @@ class Controller(QObject):
     krita_instance = None
     config = None
     stop_socket_connection = None
+    log = []
 
     @property
     def krita(self):
@@ -217,6 +218,7 @@ class Controller(QObject):
         self.thread = None
         self.create_stable_diffusion_panel()
         Application.__setattr__("restart_stablediffusiond", self.reconnect_to_stablediffusion_responsed)
+        Application.__setattr__("stablediffusion", self)
 
         self.run()
 
