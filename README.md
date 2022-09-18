@@ -4,18 +4,41 @@ A Krita plugin for Stable Diffusion
 
 [See demo video on youtube](https://www.youtube.com/watch?v=maWR7dDf4SE)
 
+**This plugin is currently expected to run on linux.** 
+
+Windows support coming soon.
+
 ## Installation
 
-1. Download the latest release from the releases page
-2. Unzip it
-3. Acquire model and place into `/stablediffusiond`
-4. Copy or link `v1-inference.yaml` into `/stablediffusiond`
-5. Follow installation instructions in README.md in `/stablediffusion` and `/stablediffusiond`
-6. Place `krita-stable-diffusion` folder into Krita plugins folder (usually `~/.local/share/krita/pykrita`, if `~/.local/share/krita` exists but `pykrita` doesn't, then add it). You can find 
-7. Start Krita (or restart if it was running)
-8. Enable the plugin in the settings `Settings > Configure Krita > Python Plugin Manager`
+### Setup krita plugin
 
-Your directory structure should look like this
+1. [Download the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.1.0/krita_stable_diffusion-0.1.0.zip) and unzip it.
+2. Place `krita-stable-diffusion` folder into Krita plugins folder (usually `~/.local/share/krita/pykrita`, if `~/.local/share/krita` exists but `pykrita` doesn't, then add it). You can find
+
+### Setup the model and config file
+
+1. [Download stable-diffusion-v1-4](https://huggingface.co/CompVis/stable-diffusion-v1-4)
+2. Rename it to `model.ckpt` and place it into `krita_stable_diffusion/kritastablediffusiond`
+3. Copy `krita_stable_diffusion/stablediffusion/configs/stable-diffusion/v1-inference.yaml` to `krita_stable_diffusion/stablediffusiond/`
+ 
+
+### Create python environment
+
+1. Create python env `conda env create -f environment.yaml`
+2. Activate python env `conda activate kritastabeldiffusion`
+
+### Install stable diffusiond 
+
+`curl -s https://raw.githubusercontent.com/w4ffl35/stablediffusiond/feature/krita-plugin/install.sh | bash`
+
+### Enable the plugin
+
+1. Start Krita (or restart if it was running)
+2. Enable the plugin in the settings `Settings > Configure Krita > Python Plugin Manager`
+
+---
+
+Your directory structure should look like this (assuming krita has a typical installation)
 
 ```
 ~/.local/share/krita/pykrita/
@@ -40,7 +63,6 @@ Your directory structure should look like this
 └── ...
 └── settings.py
 ```
-
 
 Krita resources folder can be found under `Settings > Manage Resources` then click the `Open Resource Folder` button.
 

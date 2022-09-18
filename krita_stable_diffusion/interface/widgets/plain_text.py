@@ -15,4 +15,4 @@ class PlainText(Widget):
             lambda: self.config.setValue(self.config_name, element.toPlainText())
         )
         element.setPlainText(self.config.value(self.config_name))
-        self.widget = element
+        self.widget = self.initialize_widget(element)

@@ -1,7 +1,7 @@
 from krita import *
 from krita_stable_diffusion.interface.tabs.configtab import ConfigTab
-from krita_stable_diffusion.interface.tabs.img2imgtab import Img2ImgTab
-from krita_stable_diffusion.interface.tabs.txt2imgtab import Txt2ImgTab
+from krita_stable_diffusion.interface.tabs.generatetab import Txt2ImgTab
+from krita_stable_diffusion.interface.tabs.advanced import AdvancedTab
 from krita_stable_diffusion.interface.tabs.upscaletab import UpscaleTab
 
 
@@ -16,7 +16,7 @@ class KritaDockWidget(DockWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Stable Diffusion (v1.0.0)")
+        self.setWindowTitle("Stable Diffusion (v0.1.0)")
         self.create_interface()
 
         try:
@@ -29,7 +29,7 @@ class KritaDockWidget(DockWidget):
     def create_interface(self):
         tabs = QTabWidget()
         tabs.addTab(*(Txt2ImgTab().tab()))
-        tabs.addTab(*(Img2ImgTab().tab()))
+        tabs.addTab(*(AdvancedTab().tab()))
         tabs.addTab(*(UpscaleTab().tab()))
         tabs.addTab(*(ConfigTab().tab()))
 
