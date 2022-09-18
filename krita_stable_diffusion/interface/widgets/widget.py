@@ -6,6 +6,10 @@ class Widget(QWidget):
     Base widget class. This class should be inherited by all widgets.
     """
     attributes = []
+    min_width = None
+    max_width = None
+    max_height = None
+    disabled = False
 
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -20,13 +24,23 @@ class Widget(QWidget):
         # generate the widget
         self.create_widget()
 
+    def initialize_widget(self, widget):
+        if self.min_width:
+            widget.setMinimumWidth(self.min_width)
+        if self.max_width:
+            widget.setMaximumWidth(self.max_width)
+        if self.max_height:
+            widget.setMaximumHeight(self.max_height)
+        widget.setDisabled(self.disabled)
+        return widget
+
     def initialize_args(self, kwargs):
         """
         This method sets the attributes on the widget based on the kwargs passed to the widget
         :param kwargs:
         :return:
         """
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
     def create_widget(self):

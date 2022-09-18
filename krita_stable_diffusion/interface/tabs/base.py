@@ -23,6 +23,7 @@ class Base:
     widget = None
     layout = None
     default_setting_values = {}
+    log_widget = None
 
     @property
     def active_document(self):
@@ -61,7 +62,15 @@ class Base:
     def string_to_binary(self, st):
         return ''.join(format(ord(i), '08b') for i in str(st))
 
-    def handle_button_press(self, request_type):
+    def build_prompt(self, data, image_type=None, style=None):
+        if image_type and style:
+            data["prompt"] = " ".join([
+                f"{style} {image_type}",
+                data["prompt"]
+            ])
+        return data
+
+    def handle_button_press(self, request_type, **kwargs):
         """
         Callback for the txt2img button.
         :param _element: passed by the button but not used
@@ -79,6 +88,12 @@ class Base:
         # add config options to request data
         data = self.prep_config_options(data)
 
+        # build the prompt based on request data
+        data = self.build_prompt(
+            data,
+            kwargs.get("image_type", None),
+            kwargs.get("style", None))
+
         # send request
         self.send(data, request_type)
 
@@ -86,6 +101,7 @@ class Base:
         data["type"] = request_type
         st = json.dumps(data)
         os.system(f"stablediffusion_client {self.string_to_binary(st)}")
+        if self.log_widget: self.log_widget.widget.setPlaceholderText(f"Requesting {data['prompt']}...")
 
     def tab(self):
         return self.widget, self.display_name
@@ -96,6 +112,7 @@ class Base:
         do_watermark = self.config.value("do_watermark", True)
         data["do_nsfw_filter"] = 'false' if do_nsfw_filter == 0 else 'true'
         data["do_watermark"] = 'false' if do_watermark == 0 else 'true'
+        self.config.setValue("log", Application.stablediffusion.log)
         return data
 
     def initialize_settings(self):

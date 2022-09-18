@@ -11,17 +11,16 @@ from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.interface.widgets.spin_box import SpinBox
 from krita_stable_diffusion.settings import UPSCALERS, SAMPLERS
 
-class Txt2ImgTab(Base):
+class AdvancedTab(Base):
     """
     Txt2ImgTab interface for the Krita Stable Diffusion plugin.
     :param name: The name of the tab
     :param interfaces: The interfaces to be added to the tab
     """
     HOME = os.path.expanduser("~")
-    name = "Txt2ImgTab"
-    display_name = "Text to Image"
+    name = "Advanced"
+    display_name = "Advanced settings"
     default_setting_values = {
-        "prompt": "A cat",
         "outdir": "/home/joe/.stablediffusion/txt2img",
         "skip_grid": True,
         "skip_save": False,
@@ -30,14 +29,12 @@ class Txt2ImgTab(Base):
         "laion400m": False,
         "fixed_code": True,
         "ddim_eta": 0.0,
-        "n_iter": 1,
         "C": 4,
         "f": 8,
         "n_samples": 1,
         "n_rows": 0,
         "scale": 7.5,
         "from-file": False,
-        "seed": 42,
         "precision": "autocast",
         "init_img": f"{HOME}/.stablediffusion/img2img/output.png",
         "negative_prompt": "",
@@ -66,16 +63,6 @@ class Txt2ImgTab(Base):
 
     def __init__(self):
         super().__init__([
-            VerticalInterface(widgets=[
-                Label(label="Prompt"),
-                PlainText(placeholder="prompt", config_name="prompt"),
-                Label(label="Seed"),
-                LineEdit(placeholder="Random seed", config_name="seed"),
-                Label(label="Out directory"),
-                LineEdit(placeholder="Out directory", config_name="outdir"),
-                Button(label="Generate Image", release_callback=self.txt2img_button_release_callback),
-                Button(label="Apply img2img", release_callback=self.img2img_release_callback),
-            ]),
             HorizontalInterface(widgets=[Label(label="img2img settings")]),
             VerticalInterface(interfaces=[
                 HorizontalInterface(widgets=[
@@ -137,18 +124,6 @@ class Txt2ImgTab(Base):
             ]),
             VerticalInterface(interfaces=[
                 HorizontalInterface(widgets=[
-                    Label(label="Sample frequency"),
-                    Label(label="Total samples"),
-                    Label(label="Unconditional guidance scale"),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(min=1, max=250, config_name="n_iter", step=2),
-                    SpinBox(min=1, max=250, config_name="n_samples", step=1),
-                    SpinBox(min=1.0, max=50.0, config_name="scale", step=0.1, double=True),
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
                     Label(label="Latent Channels"),
                     Label(label="Downsampling factor"),
                 ]),
@@ -166,5 +141,19 @@ class Txt2ImgTab(Base):
                     DropDown(options=SAMPLERS, config_name="sampler"),
                     DropDown(options=["full", "autocast"], config_name="sampler"),
                 ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Total samples"),
+                    Label(label="Unconditional guidance scale"),
+                ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(min=1, max=250, config_name="n_samples", step=1),
+                    SpinBox(min=1.0, max=50.0, config_name="scale", step=0.1, double=True),
+                ]),
+            ]),
+            VerticalInterface(widgets=[
+                Label(label="Out directory"),
+                LineEdit(placeholder="Out directory", config_name="outdir"),
             ]),
         ])

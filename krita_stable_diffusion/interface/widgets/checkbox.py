@@ -14,4 +14,4 @@ class CheckBox(Widget):
         element = QCheckBox(self.label)
         element.setChecked(self.config.value(self.config_name, type=bool))
         element.stateChanged.connect(partial(self.config.setValue, self.config_name))
-        self.widget = element
+        self.widget = self.initialize_widget(element)

@@ -29,4 +29,4 @@ class DropDown(Widget):
             element.currentIndexChanged.connect(
                 partial(self.config.setValue, self.config_name)
             )
-        self.widget = element
+        self.widget = self.initialize_widget(element)

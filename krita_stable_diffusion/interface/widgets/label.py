@@ -10,4 +10,4 @@ class Label(Widget):
     """
     def create_widget(self):
         element = QLabel(self.label)
-        self.widget = element
+        self.widget = self.initialize_widget(element)
