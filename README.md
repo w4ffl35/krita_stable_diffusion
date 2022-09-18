@@ -15,6 +15,33 @@ A Krita plugin for Stable Diffusion
 7. Start Krita (or restart if it was running)
 8. Enable the plugin in the settings `Settings > Configure Krita > Python Plugin Manager`
 
+Your directory structure should look like this
+
+```
+~/.local/share/krita/pykrita/
+├── krita-stable-diffusion
+│   ├── interface
+│   ├── ...
+│   └── stablediffusion
+│   │   └── src
+│   │       └── clip
+│   │       └── taming-transformers
+│   │       └── ...
+│   │       └── src
+│   │           └── ...
+│   │           └── settings.py
+│   │       └── ...
+│   │       └── model.ckpt
+│   │       └── ...
+│   │       └── v1-inference.yaml
+│   └── stablediffusiond
+│   └── stablediffusiond
+└── krita_stable_diffusion.py
+└── ...
+└── settings.py
+```
+
+
 Krita resources folder can be found under `Settings > Manage Resources` then click the `Open Resource Folder` button.
 
 ![img.png](img.png)

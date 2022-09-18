@@ -86,57 +86,56 @@ class Img2ImgTab(Base):
                 # Button(label="Apply img2img upscale", release_callback=self.img2img_upscale_callback),
                 # Button(label="Apply img2img inpaint", release_callback=self.img2img_inpaint_callback()),
             ]),
-            # HorizontalInterface(widgets=[Label(label="Advanced settings")]),
-            # VerticalInterface(interfaces=[
-            #     HorizontalInterface(widgets=[
-            #         Label(label="Denoising Strength"),
-            #     ]),
-            #     HorizontalInterface(widgets=[
-            #         SpinBox(min=0, max=1, config_name="strength", step=0.1, double=True),
-            #         CheckBox(label="Enable tiling mode", config_name="tiling", default_value=self.default_setting_values["tiling"]),
-            #         CheckBox(label="Enable GFPGAN", config_name="gfpgan", default_value=self.default_setting_values["gfpgan"]),
-            #     ]),
-            # ]),
-            # VerticalInterface(interfaces=[
-            #     HorizontalInterface(widgets=[
-            #         Label(label="Prescaler for SD upscale"),
-            #     ]),
-            #     HorizontalInterface(widgets=[
-            #         DropDown(options=UPSCALERS, config_name="upscaler")
-            #     ]),
-            # ]),
-            # VerticalInterface(interfaces=[
-            #     HorizontalInterface(widgets=[
-            #         Label(label="Base size"),
-            #         Label(label="Max size"),
-            #     ]),
-            #     HorizontalInterface(widgets=[
-            #         SpinBox(min=64, max=2048, config_name="base_size", step=64),
-            #         SpinBox(min=64, max=2048, config_name="max_size", step=64),
-            #     ]),
-            # ]),
-            # VerticalInterface(interfaces=[
-            #     HorizontalInterface(widgets=[
-            #         Label(label="Steps"),
-            #         Label(label="Cfg Scale"),
-            #     ]),
-            #     HorizontalInterface(widgets=[
-            #         SpinBox(min=1, max=250, config_name="ddim_steps", step=1),
-            #         SpinBox(min=1.0, max=30.0, config_name="cfg_scale", step=0.5, double=True)
-            #     ]),
-            # ]),
-            # VerticalInterface(interfaces=[
-            #     HorizontalInterface(widgets=[
-            #         Label(label="Batch count"),
-            #         Label(label="Batch size"),
-            #     ]),
-            #     HorizontalInterface(widgets=[
-            #         SpinBox(min=1, max=250, config_name="batch_count", step=1),
-            #         SpinBox(min=1, max=8, config_name="batch_size", step=1)
-            #     ]),
-            # ]),
-            # VerticalInterface(widgets=[
-            #     Label(label="Sampler"),
-            #     DropDown(options=SAMPLERS, config_name="sampler")
-            # ]),
+            HorizontalInterface(widgets=[Label(label="Advanced settings")]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Denoising Strength"),
+                ]),
+                # HorizontalInterface(widgets=[
+                #     SpinBox(min=0, max=1, config_name="strength", step=0.1, double=True),
+                #     CheckBox(label="Enable GFPGAN", config_name="gfpgan", default_value=self.default_setting_values["gfpgan"]),
+                # ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Prescaler for SD upscale"),
+                ]),
+                HorizontalInterface(widgets=[
+                    DropDown(options=UPSCALERS, config_name="upscaler")
+                ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Base size"),
+                    Label(label="Max size"),
+                ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(min=64, max=2048, config_name="base_size", step=64),
+                    SpinBox(min=64, max=2048, config_name="max_size", step=64),
+                ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Steps"),
+                    Label(label="Cfg Scale"),
+                ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(min=1, max=250, config_name="ddim_steps", step=1),
+                    SpinBox(min=1.0, max=30.0, config_name="cfg_scale", step=0.5, double=True)
+                ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Batch count"),
+                    Label(label="Batch size"),
+                ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(min=1, max=250, config_name="batch_count", step=1),
+                    SpinBox(min=1, max=8, config_name="batch_size", step=1)
+                ]),
+            ]),
+            VerticalInterface(widgets=[
+                Label(label="Sampler"),
+                DropDown(options=SAMPLERS, config_name="sampler")
+            ]),
         ])
