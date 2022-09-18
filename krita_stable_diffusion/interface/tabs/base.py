@@ -62,6 +62,27 @@ class Base:
     def string_to_binary(self, st):
         return ''.join(format(ord(i), '08b') for i in str(st))
 
+    def handle_button_press(self, request_type):
+        """
+        Callback for the txt2img button.
+        :param _element: passed by the button but not used
+        :return: None, sends request to stable diffusion
+        """
+        # prepare request data
+        data = {}
+        for k,v in self.default_setting_values.items():
+            if k == "seed":
+                v = self.seed()
+            else:
+                v = self.config.value(k)
+            data[k] = v
+
+        # add config options to request data
+        data = self.prep_config_options(data)
+
+        # send request
+        self.send(data, request_type)
+
     def send(self, data, request_type):
         data["type"] = request_type
         st = json.dumps(data)
@@ -69,6 +90,14 @@ class Base:
 
     def tab(self):
         return self.widget, self.display_name
+
+    def prep_config_options(self, data):
+        # add config options
+        do_nsfw_filter = self.config.value("do_nsfw_filter", True)
+        do_watermark = self.config.value("do_watermark", True)
+        data["do_nsfw_filter"] = 'false' if do_nsfw_filter == 0 else 'true'
+        data["do_watermark"] = 'false' if do_watermark == 0 else 'true'
+        return data
 
     def initialize_settings(self):
         """

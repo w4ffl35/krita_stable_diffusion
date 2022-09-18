@@ -1,8 +1,3 @@
-import json
-import logging
-import os
-import sys
-
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.interface.tabs.base import Base
@@ -37,37 +32,22 @@ class Img2ImgTab(Base):
         "fixed_code": True,
         "ddim_eta": 0.0,
         "n_iter": 1,
-        "H": 512,
-        "W": 512,
         "C": 4,
         "f": 8,
         "n_samples": 1,
         "n_rows": 0,
         "scale": 5.0,
         "strength": 0.75,
-        # "from-file": "",
         "sampler": "DDIM",
         "cfg_scale": 7.5,
-        "seed": 42,
-        "nsfw_filter": True,
+        "seed": 42
     }
-
-    def send_request(self):
-        data = {}
-        for k, v in self.default_setting_values.items():
-            if k == "seed":
-                v = self.seed()
-            else:
-                v = self.config.value(k)
-            data[k] = v
-
-        self.send(data, "img2img")
 
     def img2img_release_callback(self, _element):
         path = self.default_setting_values["init_img"]
         self.config.setValue("init_img", path)
         self.save_active_node_to_png(path, False)
-        self.send_request()
+        self.handle_button_press("img2img")
 
     def img2img_upscale_callback(self):
         pass
@@ -91,10 +71,10 @@ class Img2ImgTab(Base):
                 HorizontalInterface(widgets=[
                     Label(label="Denoising Strength"),
                 ]),
-                # HorizontalInterface(widgets=[
-                #     SpinBox(min=0, max=1, config_name="strength", step=0.1, double=True),
-                #     CheckBox(label="Enable GFPGAN", config_name="gfpgan", default_value=self.default_setting_values["gfpgan"]),
-                # ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(min=0, max=1, config_name="strength", step=0.1, double=True),
+                    # CheckBox(label="Enable GFPGAN", config_name="gfpgan", default_value=self.default_setting_values["gfpgan"]),
+                ]),
             ]),
             VerticalInterface(interfaces=[
                 HorizontalInterface(widgets=[
@@ -102,16 +82,6 @@ class Img2ImgTab(Base):
                 ]),
                 HorizontalInterface(widgets=[
                     DropDown(options=UPSCALERS, config_name="upscaler")
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Base size"),
-                    Label(label="Max size"),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(min=64, max=2048, config_name="base_size", step=64),
-                    SpinBox(min=64, max=2048, config_name="max_size", step=64),
                 ]),
             ]),
             VerticalInterface(interfaces=[
