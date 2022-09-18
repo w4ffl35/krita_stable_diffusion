@@ -16,7 +16,8 @@ class ConfigTab(Base):
     name = "ConfigTab"
     display_name = "Config"
     default_setting_values = {
-        "nsfw_filter": False,
+        "do_nsfw_filter": False,
+        "do_watermark": False,
         "purge_temp_files": True,
         "aspect_ratio_correction": True,
         "restrict_tiling": True,
@@ -33,7 +34,8 @@ class ConfigTab(Base):
     def __init__(self):
         super().__init__([
             VerticalInterface(widgets=[
-                CheckBox(label="NSFW Filter", config_name="nsfw_filter", default_value=self.default_setting_values["nsfw_filter"]),
+                CheckBox(label="NSFW Filter", config_name="do_nsfw_filter", default_value=self.default_setting_values["do_nsfw_filter"]),
+                CheckBox(label="Add Watermark", config_name="do_watermark", default_value=self.default_setting_values["do_watermark"]),
                 CheckBox(label="Auto delete temp files", config_name="purge_temp_files", default_value=self.default_setting_values["purge_temp_files"]),
                 CheckBox(label="Try to fix aspect ratio for selections", config_name="aspect_ratio_correction", default_value=self.default_setting_values["aspect_ratio_correction"]),
                 CheckBox(label="Allow tiling only with no selection (on full image)", config_name="restrict_tiling", default_value=self.default_setting_values["restrict_tiling"]),

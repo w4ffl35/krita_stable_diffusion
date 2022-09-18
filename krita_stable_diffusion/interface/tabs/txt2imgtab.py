@@ -34,29 +34,23 @@ class Txt2ImgTab(Base):
         "fixed_code": True,
         "ddim_eta": 0.0,
         "n_iter": 1,
-        "H": 512,
-        "W": 512,
         "C": 4,
         "f": 8,
         "n_samples": 1,
         "n_rows": 0,
         "scale": 7.5,
         "from-file": False,
-        # "config": "",
-        # "ckpt": "",
         "seed": 42,
         "precision": "autocast",
     }
 
     def txt2img_button_release_callback(self, _element):
-        data = {}
-        for k,v in self.default_setting_values.items():
-            if k == "seed":
-                v = self.seed()
-            else:
-                v = self.config.value(k)
-            data[k] = v
-        self.send(data, "txt2img")
+        """
+        Callback for the txt2img button.
+        :param _element: passed by the button but not used
+        :return: None, sends request to stable diffusion
+        """
+        self.handle_button_press("txt2img")
 
 
     def __init__(self):
@@ -97,16 +91,6 @@ class Txt2ImgTab(Base):
                     SpinBox(min=1, max=250, config_name="n_iter", step=2),
                     SpinBox(min=1, max=250, config_name="n_samples", step=1),
                     SpinBox(min=1.0, max=50.0, config_name="scale", step=0.1, double=True),
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Width"),
-                    Label(label="Height"),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(min=256, max=512, config_name="W", step=8),
-                    SpinBox(min=256, max=512, config_name="H", step=8)
                 ]),
             ]),
             VerticalInterface(interfaces=[

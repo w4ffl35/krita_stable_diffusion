@@ -2,7 +2,7 @@
 
 A Krita plugin for Stable Diffusion
 
-https://www.youtube.com/watch?v=maWR7dDf4SE
+[See demo video on youtube](https://www.youtube.com/watch?v=maWR7dDf4SE)
 
 ## Installation
 
@@ -14,6 +14,33 @@ https://www.youtube.com/watch?v=maWR7dDf4SE
 6. Place `krita-stable-diffusion` folder into Krita plugins folder (usually `~/.local/share/krita/pykrita`, if `~/.local/share/krita` exists but `pykrita` doesn't, then add it). You can find 
 7. Start Krita (or restart if it was running)
 8. Enable the plugin in the settings `Settings > Configure Krita > Python Plugin Manager`
+
+Your directory structure should look like this
+
+```
+~/.local/share/krita/pykrita/
+├── krita-stable-diffusion
+│   ├── interface
+│   ├── ...
+│   └── stablediffusion
+│   │   └── src
+│   │       └── clip
+│   │       └── taming-transformers
+│   │       └── ...
+│   │       └── src
+│   │           └── ...
+│   │           └── settings.py
+│   │       └── ...
+│   │       └── model.ckpt
+│   │       └── ...
+│   │       └── v1-inference.yaml
+│   └── stablediffusiond
+│   └── stablediffusiond
+└── krita_stable_diffusion.py
+└── ...
+└── settings.py
+```
+
 
 Krita resources folder can be found under `Settings > Manage Resources` then click the `Open Resource Folder` button.
 
