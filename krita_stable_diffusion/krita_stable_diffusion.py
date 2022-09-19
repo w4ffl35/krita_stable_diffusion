@@ -1,10 +1,10 @@
 from krita import *
-import json
 import os
-import logging
-import threading
-import socket
-from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
+import logger as log
+
+#from krita_stable_diffusion.connect import StablediffusionresponsedConnection
+from connect import StableDiffusionConnectionManager
+from interface.interfaces.panel import KritaDockWidget
 
 class Controller(QObject):
     krita_instance = None
@@ -82,55 +82,15 @@ class Controller(QObject):
     def img2img_seed(self, value):
         self.config.setValue('img2img_seed', value)
 
-    def run(self):
+    def stablediffusion_responsed_callback(self, response):
         """
-        Starts a new thread with a client that has a connection to stablediffusion_responsed
-        :return: None
+        Handles response from Stable Diffusion service
+        :param response:
+        :return:
         """
-        # connect to stablediffusion_responsed socket in a separate thread
-        self.thread = threading.Thread(target=self.connect_to_stablediffusion_responsed, daemon=False)
-        self.thread.start()
-
-    def connect_to_stablediffusion_responsed(self):
-        """
-        Do not call this function directly, use run() instead
-        :return: None
-        """
-        self.SOCK = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.SOCK.connect(("localhost", 50007))
-        self.listen_for_responses()
-
-    def disconnect_from_stablediffusion_responsed(self):
-        """
-        Stops the stablediffusion_responsed socket connection
-        :return: None
-        """
-        self.SOCK.close()
-
-    def reconnect_to_stablediffusion_responsed(self):
-        """
-        Reconnects to stablediffusion_responsed
-        :return: None
-        """
-        self.disconnect_from_stablediffusion_responsed()
-        self.thread.join(timeout=0)
-        self.run()
-
-    def listen_for_responses(self):
-        print("Starting stablediffusion_responsed listener")
-        # open a connection to localhost:50007
-        check_stream = True
-        while check_stream:
-            image_paths = []
-            try:
-                image_paths = json.loads(self.SOCK.recv(1024))
-            except Exception as e:
-                print(e)
-                check_stream = False
-            if len(image_paths) > 0:
-                self.insert_images(image_paths)
-                self.active_document.refreshProjection()
-                self.delete_generated_images(image_paths)
+        self.insert_images(response)
+        self.active_document.refreshProjection()
+        self.delete_generated_images(response)
 
     def insert_images(self, image_paths):
         """
@@ -153,7 +113,7 @@ class Controller(QObject):
         :param type:
         :return: a reference to the new layer
         """
-        logging.info(f"creating layer")
+        log.info(f"creating layer")
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
         document.setVisible(visible)
@@ -165,7 +125,7 @@ class Controller(QObject):
         :param image:
         :return: QByteArray
         """
-        logging.info(f"converting image to byte array")
+        log.info(f"converting image to byte array")
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
@@ -178,7 +138,7 @@ class Controller(QObject):
         :param visible:
         :return:
         """
-        logging.info(f"adding image: {path}")
+        log.info(f"adding image: {path}")
         image = QImage()
         image.load(path, "PNG")
         layer = self.create_layer(layer_name, visible=visible)
@@ -215,10 +175,15 @@ class Controller(QObject):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
-        self.thread = None
         self.create_stable_diffusion_panel()
-        Application.__setattr__("restart_stablediffusiond", self.reconnect_to_stablediffusion_responsed)
         Application.__setattr__("stablediffusion", self)
+        self.sdresponse_connection = StableDiffusionConnectionManager(
+            callback=self.stablediffusion_responsed_callback
+        )
+        Application.__setattr__(
+            "sdresponse_connection",
+            self.sdresponse_connection
+        )
 
         self.run()
 

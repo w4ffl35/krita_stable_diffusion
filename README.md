@@ -102,6 +102,7 @@ Please post your results on the [stablediffusiond discussion board](https://gith
 2. Enable the plugin in the settings `Settings > Configure Krita > Python Plugin Manager`
 
 ![img_1.png](img_1.png)
+
 **Enable the plugin from within the Python Plugin Manager**
 
 `Settings > Configure Krita > Python Plugin Manager`
@@ -110,3 +111,12 @@ Please post your results on the [stablediffusiond discussion board](https://gith
 
 Tools contains a custom size property (512x512) and template (single layer, no background) 
 for Stable Diffusion projects.
+
+
+### Conda commands
+
+- Create `conda env create -f environment.yaml`
+- Recreate `conda env update --prefix ./env --file environment.yaml  --prune`
+- Activate `conda activate kritastabeldiffusion`
+- Deactivate `conda deactivate`
+- Destroy `conda env remove -n kritastabeldiffusion`
