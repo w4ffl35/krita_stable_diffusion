@@ -10,6 +10,10 @@ Windows support coming soon.
 
 ## Installation
 
+### Install cuda 11.3 drivers
+
+[Follow the instructions for your platform here](https://developer.nvidia.com/cuda-11.3.0-download-archive)
+
 ### Setup krita plugin
 
 1. [Download the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.1.0/krita_stable_diffusion-0.1.0.zip) and unzip it.
