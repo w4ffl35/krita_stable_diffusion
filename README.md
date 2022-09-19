@@ -4,11 +4,15 @@ A Krita plugin for Stable Diffusion
 
 [See demo video on youtube](https://www.youtube.com/watch?v=maWR7dDf4SE)
 
-**This plugin is currently expected to run on linux.** 
-
-Windows support coming soon.
+**This plugin is currently expected to run on linux. Windows support coming soon.**
 
 ## Installation
+
+### Recommend system 
+
+- Ubuntu 20
+- nvidia 2080s or better
+- Everything else is listed in the installation files
 
 ### Install cuda 11.3 drivers
 
