@@ -28,18 +28,14 @@ A Krita plugin for Stable Diffusion
 ### Setup the model and config file
 
 1. [Download stable-diffusion-v1-4](https://huggingface.co/CompVis/stable-diffusion-v1-4)
-2. Rename it to `model.ckpt` and place it into `krita_stable_diffusion/kritastablediffusiond`
-3. Copy `krita_stable_diffusion/stablediffusion/configs/stable-diffusion/v1-inference.yaml` to `krita_stable_diffusion/stablediffusiond/`
+2. Rename it to `model.ckpt` and place it into `krita_stable_diffusion`
+3. Copy `krita_stable_diffusion/stablediffusion/configs/stable-diffusion/v1-inference.yaml` to `krita_stable_diffusion`
  
 
 ### Create python environment
 
 1. Create python env `conda env create -f environment.yaml`
 2. Activate python env `conda activate kritastabeldiffusion`
-
-### Install stable diffusiond 
-
-`curl -s https://raw.githubusercontent.com/w4ffl35/stablediffusiond/feature/krita-plugin/install.sh | bash`
 
 ### Enable the plugin
 
@@ -56,19 +52,17 @@ Your directory structure should look like this (assuming krita has a typical ins
 │   ├── interface
 │   ├── ...
 │   └── stablediffusion
-│   │   └── src
-│   │       └── clip
-│   │       └── taming-transformers
-│   │       └── ...
-│   │       └── src
-│   │           └── ...
-│   │           └── settings.py
-│   │       └── ...
-│   │       └── model.ckpt
-│   │       └── ...
-│   │       └── v1-inference.yaml
-│   └── stablediffusiond
-│   └── stablediffusiond
+│       └── src
+│           └── clip
+│           └── taming-transformers
+│           └── ...
+│           └── src
+│               └── ...
+│               └── settings.py
+│           └── ...
+│           └── model.ckpt
+│           └── ...
+│           └── v1-inference.yaml
 └── krita_stable_diffusion.py
 └── ...
 └── settings.py
