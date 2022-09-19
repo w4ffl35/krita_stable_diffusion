@@ -12,9 +12,9 @@ A Krita plugin for Stable Diffusion
 
 - Ubuntu 20
 - nvidia 2080s or better
-- Everything else is listed in the installation files
 - 15gb hard drive space
 - 20gb RAM
+- Everything else is listed in the installation files
 
 ### Install cuda 11.3 drivers
 
