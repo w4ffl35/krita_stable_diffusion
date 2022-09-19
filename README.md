@@ -8,11 +8,13 @@ A Krita plugin for Stable Diffusion
 
 ## Installation
 
-### Recommend system 
+### Recommended minimum system requirements 
 
 - Ubuntu 20
 - nvidia 2080s or better
 - Everything else is listed in the installation files
+- 15gb hard drive space
+- 20gb RAM
 
 ### Install cuda 11.3 drivers
 
