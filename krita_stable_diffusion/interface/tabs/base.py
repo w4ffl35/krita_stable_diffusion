@@ -112,8 +112,8 @@ class Base:
         # add config options
         do_nsfw_filter = self.config.value("do_nsfw_filter", True)
         do_watermark = self.config.value("do_watermark", True)
-        data["do_nsfw_filter"] = 'false' if do_nsfw_filter == 0 else 'true'
-        data["do_watermark"] = 'false' if do_watermark == 0 else 'true'
+        data["do_nsfw_filter"] = False if do_nsfw_filter == 0 else True
+        data["do_watermark"] = False if do_watermark == 0 else True
         self.config.setValue("log", Application.stablediffusion.log)
         return data
 
@@ -134,8 +134,7 @@ class Base:
     def reset_default_values(self):
         # set default values
         for k, v in self.default_setting_values.items():
-            if not self.config.contains(k):
-                self.config.setValue(k, v)
+            self.config.setValue(k, v)
 
     def initialize_interfaces(self, interfaces):
         interfaces[0].addStretch()
