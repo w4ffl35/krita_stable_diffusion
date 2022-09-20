@@ -1,10 +1,14 @@
+import json
+import time
+
 from krita import *
+import threading
 import os
-import logger as log
+import krita_stable_diffusion.logger as log
 
 #from krita_stable_diffusion.connect import StablediffusionresponsedConnection
-from connect import StableDiffusionConnectionManager
-from interface.interfaces.panel import KritaDockWidget
+from krita_stable_diffusion.connect import StableDiffusionRequestQueueWorker, SimpleEnqueueSocketClient
+from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 
 class Controller(QObject):
     krita_instance = None
@@ -172,20 +176,75 @@ class Controller(QObject):
             )
         )
 
+    def kritastablediffusion_start(self):
+        self.kritastablediffusion_service()
+        # sleep for 1 second to allow the service to start
+        time.sleep(1)
+        self.kritastablediffusion_connect_client()
+        # self.kritastablediffusion_server_start()
+
+    def kritastablediffusion_connect_client(self):
+        """
+        Starts a server that allows clients to connect. We can then pass
+        requests to the client.
+        :return:
+        """
+        self.kritasd_client = SimpleEnqueueSocketClient(
+            port=50006
+        )
+
+    def kritastablediffusion_service(self):
+        """
+        Launches kritastablediffusion service
+        :return:
+        """
+        here = os.path.dirname(os.path.realpath(__file__))
+        #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion")
+        # os.system("/home/joe/miniconda3/envs/kritastablediffusion/bin/python ")
+
+    def kritastablediffusion_server_start(self):
+        """
+        Open a socket connection
+        :return:
+        """
+        self.kritasd_client = SimpleEnqueueSocketClient(
+            port=50007,
+            callback=self.handle_sd_response
+        )
+
+    def request_prompt(self, message):
+        """
+        Sends prompt request to stable diffusion
+        :param message:
+        :return:
+        """
+        self.kritasd_client.message = json.dumps(message).encode("ascii")
+
+    def handle_sd_response(self, response):
+        log.info("Handle stable diffusion response")
+        # TODO handle image insertion here
+
+    def run(self):
+        log.info("Running Stable Diffusion")
+        self.kritastablediffusion_start()
+
+    def close_threads(self):
+        print("CLOSING THREADS")
+
+
     def __init__(self, *args, **kwargs):
+        self.kritasd_server = None
+        self.kritasd_client = None
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
         self.create_stable_diffusion_panel()
         Application.__setattr__("stablediffusion", self)
-        self.sdresponse_connection = StableDiffusionConnectionManager(
-            callback=self.stablediffusion_responsed_callback
-        )
-        Application.__setattr__(
-            "sdresponse_connection",
-            self.sdresponse_connection
-        )
+        # on Application quit, close the server
+        Krita.instance().eventFilter = self.eventFilter
 
-        self.run()
+        # run self.run in a thread
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
 
 
 controller = Controller()

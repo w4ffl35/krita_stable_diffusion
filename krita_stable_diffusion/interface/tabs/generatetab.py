@@ -31,6 +31,8 @@ class Txt2ImgTab(Base):
         "fixed_code": True,
         "ddim_eta": 0.0,
         "n_iter": 1,
+        "H": 512,
+        "W": 512,
         "C": 4,
         "f": 8,
         "n_samples": 1,
@@ -40,8 +42,7 @@ class Txt2ImgTab(Base):
         "seed": 42,
         "precision": "autocast",
         "init_img": f"{HOME}/.stablediffusion/img2img/output.png",
-        "negative_prompt": "",
-        "cfg_scale": 7.5,
+        "negative_prompt": ""
     }
     photo_types = [
         "polaroid",

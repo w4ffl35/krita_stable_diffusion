@@ -1,16 +1,14 @@
+import json
 import sys
 import os
 import queue
-import json
 import socket
 import threading
-import logger as log
+import time
 
-# add krita_stable_diffusion.stablediffusion to import path
+import torch
+
 sys.path.append("/home/joe/Projects/ai/stablediffusion/stablediffusion")
-
-from stablediffusion.classes.txt2img import Txt2Img
-from stablediffusion.classes.img2img import Img2Img
 
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
@@ -103,6 +101,94 @@ SCRIPTS = {
     ],
 }
 
+
+
+class StableDiffusionRunner:
+    stablediffusion = None
+    model = None
+    device = None
+
+    def connect(self):
+        pass
+
+    def start(self):
+        pass
+
+    def process_data_value(self, key, value):
+        """
+        Process the data value. Ensure that we use the correct types.
+        :param key: key
+        :param value: value
+        :return: processed value
+        """
+        if value == "true":
+            return True
+        if value == "false":
+            return False
+        if key in [
+            "ddim_steps", "n_iter", "H", "W", "C", "f",
+            "n_samples", "n_rows", "seed"
+        ]:
+            return int(value)
+        if key in ["ddim_eta", "scale", "strength"]:
+            return float(value)
+        return value
+
+    def process_options(self, options, data):
+        # # get all keys from data
+        # keys = data.keys()
+        #
+        # for index, opt in enumerate(options):
+        #     if opt[0] in keys:
+        #         options[index] = (
+        #             opt[0],
+        #             data[opt[0]]
+        #         )
+        # return options
+        keys = data.keys()
+        for index, opt in enumerate(options):
+            if opt[0] in keys:
+                options[index] = (opt[0], self.process_data_value(opt[0], data.get(opt[0], opt[1])))
+
+    def txt2img_sample(self, data):
+        print(self.process_options(self.txt2img_options, data))
+        return self._txt2img_loader.sample(
+            self.process_options(self.txt2img_options, data)
+        )
+
+    def img2img_sample(self, data):
+        return self._img2img_loader.sample(
+            self.process_options(self.img2img_options, data)
+        )
+
+    def __init__(self, *args, **kwargs):
+        self.txt2img_options = kwargs.get("txt2img_options", None)
+        self.img2img_options = kwargs.get("img2img_options", None)
+        if self.txt2img_options is None:
+            raise Exception("txt2img_options is required")
+        if self.img2img_options is None:
+            raise Exception("img2img_options is required")
+
+        from classes.txt2img import Txt2Img
+        from classes.img2img import Img2Img
+
+        # start a txt2img loader instance
+        self._txt2img_loader = Txt2Img(
+            options=self.txt2img_options,
+            model=self.model,
+            device=self.device
+        )
+
+
+        # initialize img2img loader and pass it the same model and device
+        # self._img2img_loader = Img2Img(
+        #     options=self.img2img_options,
+        #     model=self._txt2img_loader.model,
+        #     device=self._txt2img_loader.device
+        # )
+        #super(StableDiffusionRunner, self).__init__(*args, **kwargs)
+
+
 class Connection:
     """
     Connects to Stable Diffusion service
@@ -165,308 +251,265 @@ class Connection:
         self.start()
 
 
-class StablediffusionresponsedConnection(Connection):
+class SocketConnection(Connection):
     """
-    Connects to stablediffusion_responsed service over a socket.
+    Opens a socket on a server and port.
 
     parameters:
     :host: Hostname or IP address of the service
     :port: Port of the service
     """
-    conn = None
+    port = 50006
+    host = "localhost"
+    soc = None
+    soc_connection = None
+    soc_addr = None
+
+    def open_socket(self):
+        """
+        Open a socket conenction
+        :return:
+        """
+
+    def handle_open_socket(self):
+        """
+        Override this method to handle open socket
+        :return:
+        """
+        pass
 
     def connect(self):
-        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn.connect((
-            self.kwargs.get("host", "localhost"),
-            self.kwargs.get("port", 50007),
-        ))
-        print("Starting stablediffusion_responsed listener")
-        # open a connection to localhost:50007
-        check_stream = True
-        while check_stream:
-            response = None
-            try:
-                response = json.loads(self.conn.recv(1024))
-            except Exception as e:
-                print(e)
-                check_stream = False
-            if response:
-                self.callback(response)
+        self.open_socket()
+        self.handle_open_socket()
 
     def disconnect(self):
-        self.conn.close()
+        self.soc_connection.close()
 
     def __init__(self, *args, **kwargs):
-        self.callback = kwargs.get("callback", None)
+        self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         super().__init__(*args, **kwargs)
 
 
-class SimpleEnqueue(Connection):
+class SocketServer(SocketConnection):
+    max_client_connections = 1
+
+    @property
+    def has_connection(self):
+        return self.soc_connection is not None
+
+    def callback(self, msg):
+        """
+        Override this method or pass it in as a parameter to handle messages
+        :param msg:
+        :return:
+        """
+        pass
+
+    def worker(self):
+        """
+        Worker is started in a thread and waits for messages that are appended
+        to the queue. When a message is received, it is passed to the callback
+        method. The callback method should be overridden to handle the message.
+        :return:
+        """
+        pass
+
+    def open_socket(self):
+        try:
+            self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.soc.bind((self.host, self.port))
+        except socket.error as err:
+            print(f"Failed to open a socket at {self.host}:{self.port}")
+            print(str(err))
+        print(f"Socket opened {self.soc}")
+
+    def handle_open_socket(self):
+        """
+        Listen for incoming connections.
+        Returns:
+        """
+        self.soc.listen(self.max_client_connections)
+        while True:
+            self.soc_connection, self.soc_addr = self.soc.accept()
+            print(f"Connection established with {self.soc_addr}")
+            while True and self.soc_connection is not None:
+                msg = self.soc_connection.recv(1024)
+                if msg is not None and msg != b'':
+                    print("Message received: ", msg)
+                    self.message = msg
+                time.sleep(1)
+            time.sleep(1)
+
+    def __init__(self, *args, **kwargs):
+        self.max_client_connections = kwargs.get(
+            "max_client_connections",
+            self.max_client_connections
+        )
+        super().__init__(*args, **kwargs)
+        self.worker_thread = threading.Thread(target=self.worker, daemon=False)
+        self.worker_thread.start()
+
+
+class SocketClient(SocketConnection):
+    def callback(self, msg):
+        """
+        Override this method or pass it in as a parameter to handle messages
+        :param msg:
+        :return:
+        """
+        pass
+
+    def worker(self):
+        """
+        Worker is started in a thread and waits for messages that are appended
+        to the queue. When a message is received, it is passed to the callback
+        method. The callback method should be overridden to handle the message.
+        :return:
+        """
+        pass
+
+    def connect(self):
+        while True:
+            print("Connecting...")
+            self.soc.connect((self.host, self.port))
+            print("connected...")
+            while True:
+                response = None
+                try:
+                    response = self.soc.recv(1024)
+                except Exception as e:
+                    print("Repsponse error")
+                    print(e)
+                if response:
+                    print("PUTTING RESPONSE INTO QUEUE")
+                    self.queue.put(response)
+                time.sleep(1)
+
+    def __init__(self, *args, **kwargs):
+        self.queue = kwargs.get("queue", queue.SimpleQueue())
+        super().__init__(*args, **kwargs)
+        self.worker_thread = threading.Thread(target=self.worker, daemon=False)
+        self.worker_thread.start()
+
+
+class SimpleEnqueueSocketServer(SocketServer):
     """
     Creates a SimpleQueue and waits for messages to append to it.
     """
-    message = None
-    do_receive = False
+    @property
+    def message(self):
+        return ""
 
-    def connect(self):
-        """
-        Recieves messages and adds them to the Queue
-        :return:
-        """
-        self.do_receive = True
-        while self.do_receive:
-            self.enqueue()
+    @message.setter
+    def message(self, msg):
+        self.queue.put(msg)
 
-    def enqueue(self):
-        if self.message:
-            self.queue.put(self.message)
-            self.message = None
-
-    def disconnect(self):
-        self.do_receive = False
+    def worker(self):
+        while True:
+            print("simple enqueue worker")
+            if self.has_connection:     # if a client is connected...
+                msg = self.queue.get()  # get a message from the queue
+                try:                    # send to callback
+                    self.callback(msg)
+                except Exception as err:
+                    print(f"Error in callback: {err}")
+            time.sleep(1)
 
     def __init__(self, *args, **kwargs):
-        # create a new SimpleQueue or use the one passed via kwargs
         self.queue = kwargs.get("queue", queue.SimpleQueue())
         super().__init__(*args, **kwargs)
 
 
-class SimpleDequeue(SimpleEnqueue):
-    def connect(self):
-        """
-        Gets messages from the Queue
-        :return:
-        """
-        self.do_receive = True
-        while self.do_receive:
-            self.message = self.queue.get()
-            self.message_handler(self.message)
+class SimpleEnqueueSocketClient(SocketClient):
+    """
+    Creates a SimpleQueue and waits for messages to append to it.
+    """
 
-    def message_handler(self, message):
-        """
-        Override this method to handle messages
-        :param message: The message to handle
-        :return: None
-        """
-        pass
+    @property
+    def message(self):
+        return ""
 
+    @message.setter
+    def message(self, msg):
+        self.queue.put(msg)
 
-class StableDiffusionRunner(Connection):
-    stablediffusion = None
-    model = None
-    device = None
+    def callback(self, message):
+        print("SimpleEnqueueSocketClient")
+        self.soc.sendall(json.dumps(message).encode("utf-8"))
 
-    def connect(self):
-        """
-        Start Stable Diffusion
-        :return: None
-        """
-        # start a txt2img loader instance
-        self._txt2img_loader = Txt2Img(
-            options=self.txt2img_options,
-            model=self.model,
-            device=self.device
-        )
-
-        # store model and device for re-use
-        self.model = self._txt2img_loader.model
-        self.device = self._txt2img_loader.device
-
-        # initialize img2img loader and pass it the same model and device
-        self._img2img_loader = Img2Img(
-            options=self.img2img_options,
-            model=self._txt2img_loader.model,
-            device=self._txt2img_loader.device
-        )
-
-    def process_options(self, options, data):
-        # get all keys from data
-        keys = data.keys()
-
-        for index, opt in enumerate(options):
-            if opt[0] in keys:
-                options[index] = (
-                    opt[0],
-                    data[opt[0]]
-                )
-        return options
-
-    def txt2img_sample(self, data):
-        return self._txt2img_loader.sample(
-            self.process_options(self.txt2img_options, data)
-        )
-
-    def img2img_sample(self, data):
-        return self._img2img_loader.sample(
-            self.process_options(self.img2img_options, data)
-        )
+    def worker(self):
+        while True:
+            msg = self.queue.get()
+            try:
+                self.callback(msg)
+            except Exception as err:
+                print(f"Error in callback: {err}")
 
     def __init__(self, *args, **kwargs):
-        self.txt2img_options = kwargs.get("txt2img_options", None)
-        self.img2img_options = kwargs.get("img2img_options", None)
-        if self.txt2img_options is None:
-            raise Exception("txt2img_options is required")
-        if self.img2img_options is None:
-            raise Exception("img2img_options is required")
-        super(StableDiffusionRunner, self).__init__(*args, **kwargs)
+        self.queue = kwargs.get("queue", queue.SimpleQueue())
+        super().__init__(*args, **kwargs)
 
 
-class StableDiffusionRequestQueueWorker(SimpleDequeue):
-    def message_handler(self, data):
+class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
+
+    def callback(self, data):
         """
         Handle a stable diffusion request message
         :return: None
         """
+        print("SERVER CALLBACK")
+        data = json.loads(data.decode("utf-8"))
+        print(data)
         response = None
-        try:
-            response = self.stablediffusion.__getattribute__(
-                f'{data["method"]}_sample')(data["options"]
-            )
-        except AttributeError as e:
-            log.error(f"Method {data['method']} not found")
-            log.error(e)
-        if response is not None:
+        if data["type"] == "txt2img":
+            print("txt2img")
+            response = self.sdrunner.txt2img_sample(data["options"])
+        elif data["type"] == "img2txt":
+            print("img2txt")
+            response = self.sdrunner.img2img_sample(data["options"])
+        print(response)
+        if response is not None and response is not b'':
+            print("RESPONSE FROM STABLE DIFFUSION")
+            print(response)
             self.response_queue.put(response)
 
+
+    def response_queue_worker(self):
+        while True:
+            print("rquest queue worker")
+            response = self.response_queue.get()
+            message = json.dumps(response)
+            if message is not None and message is not b'':
+                print("SENDING RESPONSE")
+                self.soc_connection.sendall(message.encode("utf-8"))
+
+    def init_sd_runner(self):
+        print("Starting Stable Diffusion Runner...")
+        self.sdrunner = StableDiffusionRunner(
+            txt2img_options=SCRIPTS["txt2img"],
+            img2img_options=SCRIPTS["img2img"]
+        )
+        torch.cuda.empty_cache()
+
     def __init__(self, *args, **kwargs):
-        self.stablediffusion = kwargs.get("stablediffusion", None)
-        self.response_queue = kwargs.get("response_queue", None)
-        if not self.stablediffusion:
-            raise ValueError("stablediffusion is required")
+        # create a stable diffusion runner service
+        t = threading.Thread(target=self.init_sd_runner, daemon=False)
+        t.start()
+        t.join()
+        self.response_queue = kwargs.get("response_queue", queue.SimpleQueue())
         if not self.response_queue:
             raise ValueError("response_queue is required")
         super().__init__(*args, **kwargs)
 
 
-class StableDiffusionResponseQueueWorker(SimpleDequeue):
-    def message_handler(self, message):
+class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
+    def callback(self, message):
         """
         Handle a stable diffusion response message
         :return: None
         """
-        self.callback(message)
-
-    def __init__(self, *args, **kwargs):
-        self.callback = kwargs.get("callback", None)
-        super().__init__(*args, **kwargs)
-
-
-class StableDiffusionConnectionManager:
-    def stop_stable_diffusion(self):
-        # stop the stablediffusion runner
         pass
 
-    def start_request_connection(self):
-        self.request_connection.start()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def stop_request_connection(self):
-        self.request_connection.stop()
-
-    def restart_request_connection(self):
-        self.request_connection.restart()
-
-    def start_response_connection(self):
-        self.request_connection.start()
-
-    def stop_response_connection(self):
-        self.request_connection.stop()
-
-    def restart_response_connection(self):
-        self.request_connection.restart()
-
-    def start_request_worker(self):
-        self.request_worker.start()
-
-    def stop_request_worker(self):
-        self.request_worker.stop()
-
-    def restart_request_worker(self):
-        self.request_worker.restart()
-
-    def start_response_worker(self):
-        self.response_worker.start()
-
-    def stop_response_worker(self):
-        self.response_worker.stop()
-
-    def restart_response_worker(self):
-        self.response_worker.restart()
-
-    def start(self):
-        """
-        Start all connections and workers
-        :return: None
-        """
-        self.start_request_connection()
-        self.start_response_connection()
-        self.start_request_worker()
-        self.start_response_worker()
-
-    def stop(self):
-        """
-        Stop all connections and workers
-        :return: None
-        """
-        self.stop_request_connection()
-        self.stop_response_connection()
-        self.stop_request_worker()
-        self.stop_response_worker()
-
-    def restart(self):
-        """
-        Restart all connections and workers
-        :return: None
-        """
-        self.restart_request_connection()
-        self.restart_response_connection()
-        self.restart_request_worker()
-        self.restart_response_worker()
-
-    def __init__(self, callback=None):
-        """
-        Initialize all connections and workers
-        """
-
-        # Callback used for respone queue worker
-        if not callback:
-            raise ValueError("callback is required")
-
-        # create queues
-        self.request_queue = queue.SimpleQueue()
-        self.response_queue = queue.SimpleQueue()
-
-        # create a stable diffusion runner service
-        log.info("Starting Stable Diffusion Runner...")
-        self.stablediffusion = StableDiffusionRunner(
-            txt2img_options=SCRIPTS["txt2img"],
-            img2img_options=SCRIPTS["img2img"]
-        )
-
-        # create request connection thread
-        log.info("creating request connection...")
-        self.request_connection = SimpleEnqueue(queue=self.request_queue)
-
-        # create response connection thread
-        log.info("creating response connection...")
-        self.response_connection = SimpleEnqueue(queue=self.response_queue)
-
-        # create worker thread which
-        # 1. waits for messages on the request_queue
-        # 2. sends the request to stable diffusion
-        # 3. adds the response to the response_queue
-        log.info("creating request worker...")
-        self.request_worker = StableDiffusionRequestQueueWorker(
-            queue=self.request_queue,
-            response_queue=self.response_queue,
-            stablediffusion=self.stablediffusion,
-        )
-
-        # create worker thread which
-        # 1. waits for messages on the response_queue
-        # 2. sends the response to the client
-        log.info("creating response worker...")
-        self.response_worker = StableDiffusionResponseQueueWorker(
-            queue=self.response_queue,
-            callback=callback
-        )

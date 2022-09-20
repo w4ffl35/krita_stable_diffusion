@@ -1,3 +1,4 @@
+
 import json
 import os
 import logging
@@ -92,16 +93,20 @@ class Base:
         data = self.build_prompt(
             data,
             kwargs.get("image_type", None),
-            kwargs.get("style", None))
+            kwargs.get("style", None)
+        )
 
         # send request
         self.send(data, request_type)
 
-    def send(self, data, request_type):
-        data["type"] = request_type
-        st = json.dumps(data)
-        os.system(f"stablediffusion_client {self.string_to_binary(st)}")
-        if self.log_widget: self.log_widget.widget.setPlaceholderText(f"Requesting {data['prompt']}...")
+    def send(self, options, request_type):
+        st = {
+            "type": request_type,
+            "options": options,
+        }
+        # os.system(f"stablediffusion_client {self.string_to_binary(st)}")
+        Application.stablediffusion.kritasd_client.message = st
+        if self.log_widget: self.log_widget.widget.setPlaceholderText(f"Requesting {options['prompt']}...")
 
     def tab(self):
         return self.widget, self.display_name
