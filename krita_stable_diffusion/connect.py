@@ -360,21 +360,30 @@ class SocketClient(SocketConnection):
         """
         pass
 
+    def listen_for_response(self):
+        while True:
+            response = None
+            try:
+                response = self.soc.recv(1024)
+            except ConnectionRefusedError:
+                break
+            except Exception as e:
+                print("Repsponse error")
+                print(e)
+            if response:
+                print("PUTTING RESPONSE INTO QUEUE")
+                self.queue.put(response)
+
     def connect(self):
         while True:
-            print("Connecting...")
-            self.soc.connect((self.host, self.port))
-            print("connected...")
-            while True:
-                response = None
-                try:
-                    response = self.soc.recv(1024)
-                except Exception as e:
-                    print("Repsponse error")
-                    print(e)
-                if response:
-                    print("PUTTING RESPONSE INTO QUEUE")
-                    self.queue.put(response)
+            print("Attempting server connection...")
+            # check self.soc for connection
+            try:
+                self.soc.connect((self.host, self.port))
+                self.soc.sendall(b"")
+                self.listen_for_response()
+            except ConnectionRefusedError:
+                print("Connection refused")
                 time.sleep(1)
 
     def __init__(self, *args, **kwargs):

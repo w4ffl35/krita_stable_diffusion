@@ -176,11 +176,8 @@ class Controller(QObject):
         )
 
     def kritastablediffusion_start(self):
-        self.kritastablediffusion_service()
-        # sleep for 1 second to allow the service to start
-        time.sleep(1)
         self.kritastablediffusion_connect_client()
-        # self.kritastablediffusion_server_start()
+        self.kritastablediffusion_service()
 
     def stablediffusion_response_callback(self, msg):
         self.insert_images(msg)
@@ -202,18 +199,7 @@ class Controller(QObject):
         :return:
         """
         here = os.path.dirname(os.path.realpath(__file__))
-        #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion")
-        # os.system("/home/joe/miniconda3/envs/kritastablediffusion/bin/python ")
-
-    def kritastablediffusion_server_start(self):
-        """
-        Open a socket connection
-        :return:
-        """
-        self.kritasd_client = SimpleEnqueueSocketClient(
-            port=50007,
-            callback=self.handle_sd_response
-        )
+        os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion")
 
     def request_prompt(self, message):
         """
