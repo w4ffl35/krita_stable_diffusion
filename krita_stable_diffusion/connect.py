@@ -11,7 +11,6 @@ import torch
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
 sys.path.append(f"{HOME}/Projects/ai/stablediffusion/stablediffusion")
-
 SCRIPTS = {
     'txt2img': [
         ('prompt', ''),
@@ -148,7 +147,7 @@ class StableDiffusionRunner:
         return options
 
     def txt2img_sample(self, data):
-        print(self.process_options(self.txt2img_options, data))
+        print("Sampling txt2img")
         return self._txt2img_loader.sample(
             options=self.process_options(self.txt2img_options, data)
         )
@@ -332,7 +331,6 @@ class SocketServer(SocketConnection):
             while True and self.soc_connection is not None:
                 msg = self.soc_connection.recv(1024)
                 if msg is not None and msg != b'':
-                    print("Message received: ", msg)
                     self.message = msg
                 time.sleep(1)
             time.sleep(1)
@@ -403,13 +401,14 @@ class SimpleEnqueueSocketServer(SocketServer):
 
     def worker(self):
         while True:
-            print("simple enqueue worker")
             if self.has_connection:     # if a client is connected...
                 msg = self.queue.get()  # get a message from the queue
                 try:                    # send to callback
                     self.callback(msg)
                 except Exception as err:
                     print(f"Error in callback: {err}")
+            else:
+                print("Simple enqueue server waiting for connection...")
             time.sleep(1)
 
     def __init__(self, *args, **kwargs):
@@ -434,15 +433,29 @@ class SimpleEnqueueSocketClient(SocketClient):
         print("SimpleEnqueueSocketClient")
         self.soc.sendall(json.dumps(message).encode("utf-8"))
 
+    def handle_response_default(self, msg):
+        print("Pass handle_response to kwargs to override this method")
+
     def worker(self):
         while True:
+            print("Client waiting for message...")
             msg = self.queue.get()
+            print("Message received")
             try:
-                self.callback(msg)
+                msg = msg.decode("utf-8")
             except Exception as err:
-                print(f"Error in callback: {err}")
+                pass
+            try:
+                keys = msg.keys()
+                self.callback(msg)
+                continue
+            except:
+                pass
+            if msg != "" and msg is not None:
+                self.handle_response(msg)
 
     def __init__(self, *args, **kwargs):
+        self.handle_response = kwargs.get("handle_response", self.handle_response_default)
         self.queue = kwargs.get("queue", queue.SimpleQueue())
         super().__init__(*args, **kwargs)
 
@@ -463,21 +476,18 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         elif data["type"] == "img2txt":
             print("img2txt")
             response = self.sdrunner.img2img_sample(data["options"])
-        print(response)
         if response is not None and response is not b'':
-            print("RESPONSE FROM STABLE DIFFUSION")
-            print(response)
             self.response_queue.put(response)
 
 
     def response_queue_worker(self):
         while True:
-            print("rquest queue worker")
+            print("response queue worker")
             response = self.response_queue.get()
-            message = json.dumps(response)
-            if message is not None and message is not b'':
+            res = json.dumps(response)
+            if res is not None and res is not b'':
                 print("SENDING RESPONSE")
-                self.soc_connection.sendall(message.encode("utf-8"))
+                self.soc_connection.sendall(res.encode("utf-8"))
 
     def init_sd_runner(self):
         print("Starting Stable Diffusion Runner...")
@@ -496,6 +506,8 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         if not self.response_queue:
             raise ValueError("response_queue is required")
         super().__init__(*args, **kwargs)
+        self.worker_thread = threading.Thread(target=self.response_queue_worker, daemon=False)
+        self.worker_thread.start()
 
 
 class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):

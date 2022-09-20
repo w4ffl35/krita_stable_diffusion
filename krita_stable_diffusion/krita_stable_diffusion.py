@@ -103,11 +103,10 @@ class Controller(QObject):
         :return:
         """
         layer_name_prefix = "SD_txt2img:"
+        image_paths = json.loads(image_paths)
         for image_data in image_paths:
-            # seed = image_data.__contains__("seed") or ""
-            # image_path = image_data["image"]
-            image_path = image_data
-            seed = ""
+            seed = image_data.__contains__("seed") or ""
+            image_path = image_data["file_name"]
             self.add_image(f"{layer_name_prefix}:{seed}:{image_path}", image_path)
 
     def create_layer(self, name, visible=True, type="paintLayer"):
@@ -183,6 +182,9 @@ class Controller(QObject):
         self.kritastablediffusion_connect_client()
         # self.kritastablediffusion_server_start()
 
+    def stablediffusion_response_callback(self, msg):
+        self.insert_images(msg)
+
     def kritastablediffusion_connect_client(self):
         """
         Starts a server that allows clients to connect. We can then pass
@@ -190,7 +192,8 @@ class Controller(QObject):
         :return:
         """
         self.kritasd_client = SimpleEnqueueSocketClient(
-            port=50006
+            port=50006,
+            handle_response=self.stablediffusion_response_callback
         )
 
     def kritastablediffusion_service(self):
