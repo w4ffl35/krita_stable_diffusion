@@ -174,15 +174,12 @@ class StableDiffusionRunner:
             model=self.model,
             device=self.device
         )
-
-
         # initialize img2img loader and pass it the same model and device
-        # self._img2img_loader = Img2Img(
-        #     options=self.img2img_options,
-        #     model=self._txt2img_loader.model,
-        #     device=self._txt2img_loader.device
-        # )
-        #super(StableDiffusionRunner, self).__init__(*args, **kwargs)
+        self._img2img_loader = Img2Img(
+            options=self.img2img_options,
+            model=self._txt2img_loader.model,
+            device=self._txt2img_loader.device
+        )
 
 
 class Connection:
@@ -471,10 +468,8 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         data = json.loads(data.decode("utf-8"))
         response = None
         if data["type"] == "txt2img":
-            print("txt2img")
             response = self.sdrunner.txt2img_sample(data["options"])
-        elif data["type"] == "img2txt":
-            print("img2txt")
+        elif data["type"] == "img2img":
             response = self.sdrunner.img2img_sample(data["options"])
         if response is not None and response is not b'':
             self.response_queue.put(response)
