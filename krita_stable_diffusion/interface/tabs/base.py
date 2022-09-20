@@ -1,3 +1,4 @@
+import json
 import logging
 import random
 from krita import *
@@ -102,7 +103,7 @@ class Base:
             "options": options,
         }
         # os.system(f"stablediffusion_client {self.string_to_binary(st)}")
-        Application.stablediffusion.kritasd_client.message = st
+        Application.stablediffusion.client.message = st
         if self.log_widget: self.log_widget.widget.setPlaceholderText(f"Requesting {options['prompt']}...")
 
     def tab(self):

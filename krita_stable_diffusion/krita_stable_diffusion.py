@@ -1,4 +1,5 @@
 import json
+import sys
 import time
 
 from krita import *
@@ -15,6 +16,31 @@ class Controller(QObject):
     config = None
     stop_socket_connection = None
     log = []
+    threads = []
+    first_run = True
+    name = "Controller"
+
+
+    def start_thread(self, target, daemon=False, name=None):
+        t = threading.Thread(target=target, daemon=daemon)
+        if name:
+            t.setName(name)
+        t.start()
+        self.threads.append(t)
+        return t
+
+    def stop(self):
+        print("Stopping client")
+        self.client.quit()
+        for n in range(len(self.threads)):
+            thread = self.threads[n]
+            print(f"{n+1} of {len(self.threads)} Stopping thread {thread.getName()} from {self.name}...")
+            try:
+                thread.join()
+            except:
+                print("Failed to join thread")
+            print(f"Stopped thread {thread.getName()}...")
+        print(f"All threads in {self.name} stopped")
 
     @property
     def krita(self):
@@ -175,31 +201,20 @@ class Controller(QObject):
             )
         )
 
-    def kritastablediffusion_start(self):
-        self.kritastablediffusion_connect_client()
-        self.kritastablediffusion_service()
-
     def stablediffusion_response_callback(self, msg):
+        print("STABLE DIFFUSION RESPONSE CALLBACK", msg)
         self.insert_images(msg)
 
-    def kritastablediffusion_connect_client(self):
-        """
-        Starts a server that allows clients to connect. We can then pass
-        requests to the client.
-        :return:
-        """
-        self.kritasd_client = SimpleEnqueueSocketClient(
-            port=50006,
-            handle_response=self.stablediffusion_response_callback
-        )
-
-    def kritastablediffusion_service(self):
+    def kritastablediffusion_service_start(self):
         """
         Launches kritastablediffusion service
         :return:
         """
         here = os.path.dirname(os.path.realpath(__file__))
-        os.system(f"{here}/dist/kritastablediffusion")
+        # get process id for the current process
+        pid = os.getpid()
+        #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}")
+        os.system(f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid} &")
 
     def request_prompt(self, message):
         """
@@ -207,33 +222,54 @@ class Controller(QObject):
         :param message:
         :return:
         """
-        self.kritasd_client.message = json.dumps(message).encode("ascii")
+        self.client.message = json.dumps(message).encode("ascii")
 
     def handle_sd_response(self, response):
         log.info("Handle stable diffusion response")
         # TODO handle image insertion here
 
-    def run(self):
-        log.info("Running Stable Diffusion")
-        self.kritastablediffusion_start()
+    def try_quit(self):
+        try:
+            if hasattr(Application, "activated") and Application.activeWindow() is None:
+                self.stop()
+                return True
+            elif Application.activeWindow():
+                Application.__setattr__("activated", True)
+        except Exception as e:
+            print("application dead", e)
+            pass
+        return False
 
-    def close_threads(self):
-        print("CLOSING THREADS")
-
+    def watch_connection(self):
+        while True:
+            print("watch connection")
+            if self.try_quit():
+                self.quit_event.set()
+                break
+            time.sleep(1)
 
     def __init__(self, *args, **kwargs):
-        self.kritasd_server = None
-        self.kritasd_client = None
+        self.client = None
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
         self.create_stable_diffusion_panel()
         Application.__setattr__("stablediffusion", self)
         # on Application quit, close the server
         Krita.instance().eventFilter = self.eventFilter
-
-        # run self.run in a thread
-        self.thread = threading.Thread(target=self.run)
-        self.thread.start()
+        self.quit_event = threading.Event()
+        self.quit_event.clear()
+        self.client = SimpleEnqueueSocketClient(
+            port=50006,
+            handle_response=self.stablediffusion_response_callback
+        )
+        self.start_thread(
+            target=self.kritastablediffusion_service_start,
+            name="kritastablediffusion"
+        )
+        self.start_thread(
+            target=self.watch_connection,
+            name="watch_connection"
+        )
 
 
 controller = Controller()
