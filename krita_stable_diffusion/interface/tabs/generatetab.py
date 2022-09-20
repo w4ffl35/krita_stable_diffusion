@@ -22,7 +22,7 @@ class Txt2ImgTab(Base):
     display_name = "Text to Image"
     default_setting_values = {
         "prompt": "A cat",
-        "outdir": "/home/joe/.stablediffusion/txt2img",
+        "outdir": f"{HOME}/.stablediffusion/txt2img",
         "skip_grid": True,
         "skip_save": False,
         "ddim_steps": 50,
