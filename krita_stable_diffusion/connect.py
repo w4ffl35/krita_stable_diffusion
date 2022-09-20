@@ -5,18 +5,17 @@ import queue
 import socket
 import threading
 import time
-
 import torch
 
-sys.path.append("/home/joe/Projects/ai/stablediffusion/stablediffusion")
 
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
+sys.path.append(f"{HOME}/Projects/ai/stablediffusion/stablediffusion")
 
 SCRIPTS = {
     'txt2img': [
         ('prompt', ''),
-        ('outdir', f'{HOME}/.stablediffusion/txt2img'),
+        ('outdir', os.path.join(SDPATH, "txt2img")),
         ('skip_grid', ''),
         # ('skip_save', ''),
         ('ddim_steps', 50),
@@ -43,7 +42,7 @@ SCRIPTS = {
     'img2img': [
         ('prompt', ''),
         ('init_img', ''),
-        ('outdir', f'{HOME}/.stablediffusion/img2img'),
+        ('outdir', os.path.join(SDPATH, "img2img")),
         ('skip_grid', True),
         ('skip_save', False),
         ('ddim_steps', 50),
@@ -68,13 +67,13 @@ SCRIPTS = {
         ('do_watermark', ''),
     ],
     'inpaint': [
-        ('indir', f'{HOME}/.stablediffusion/inpaint/input'),
-        ('outdir', f'{HOME}/.stablediffusion/inpaint'),
+        ('indir', f'{HOME}/inpaint/input'),
+        ('outdir', f'{HOME}/inpaint'),
         ('steps', 50),
     ],
     'knn2img': [
         ('prompt', ''),
-        ('outdir', f'{HOME}/.stablediffusion/knn2img'),
+        ('outdir', f'{HOME}/knn2img'),
         ('skip_grid', True),
         ('ddim_steps', 50),
         ('n_repeat', 1),
@@ -87,8 +86,8 @@ SCRIPTS = {
         ('n_rows', 0),
         ('scale', 5.0),
         ('from-file', ''),
-        ('config', 'stablediffusion/configs/retrieval-augmented-diffusion/768x768.yaml'),
-        ('ckpt', '../models/rdm/rdm768x768/model.ckpt'),
+        ('config', os.path.join(SDPATH, 'configs/retrieval-augmented-diffusion/768x768.yaml')),
+        ('ckpt', os.path.join(SDPATH, 'models/rdm/rdm768x768/model.ckpt')),
         ('clip_type', 'ViT-L/14'),
         ('database', 'artbench-surrealism'),
         ('use_neighbors', False),
@@ -459,7 +458,6 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         """
         print("SERVER CALLBACK")
         data = json.loads(data.decode("utf-8"))
-        print(data)
         response = None
         if data["type"] == "txt2img":
             print("txt2img")

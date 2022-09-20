@@ -18,11 +18,12 @@ class Txt2ImgTab(Base):
     :param interfaces: The interfaces to be added to the tab
     """
     HOME = os.path.expanduser("~")
+    SDDIR = os.path.join(HOME, "stablediffusion")
     name = "Txt2ImgTab"
     display_name = "Text to Image"
     default_setting_values = {
         "prompt": "A cat",
-        "outdir": f"{HOME}/.stablediffusion/txt2img",
+        "outdir": os.path.join(SDDIR, "txt2img"),
         "skip_grid": True,
         "skip_save": False,
         "ddim_steps": 50,
@@ -41,7 +42,7 @@ class Txt2ImgTab(Base):
         "from-file": False,
         "seed": 42,
         "precision": "autocast",
-        "init_img": f"{HOME}/.stablediffusion/img2img/output.png",
+        "init_img": os.path.join(SDDIR, "img2img/output.png"),
         "negative_prompt": ""
     }
     photo_types = [
