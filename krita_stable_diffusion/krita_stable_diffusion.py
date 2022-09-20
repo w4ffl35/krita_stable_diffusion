@@ -199,7 +199,7 @@ class Controller(QObject):
         :return:
         """
         here = os.path.dirname(os.path.realpath(__file__))
-        os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion")
+        os.system(f"{here}/dist/kritastablediffusion")
 
     def request_prompt(self, message):
         """
