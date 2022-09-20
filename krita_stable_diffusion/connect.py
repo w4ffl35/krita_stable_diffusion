@@ -134,30 +134,28 @@ class StableDiffusionRunner:
         return value
 
     def process_options(self, options, data):
-        # # get all keys from data
-        # keys = data.keys()
-        #
-        # for index, opt in enumerate(options):
-        #     if opt[0] in keys:
-        #         options[index] = (
-        #             opt[0],
-        #             data[opt[0]]
-        #         )
-        # return options
+        # get all keys from data
         keys = data.keys()
         for index, opt in enumerate(options):
             if opt[0] in keys:
-                options[index] = (opt[0], self.process_data_value(opt[0], data.get(opt[0], opt[1])))
+                options[index] = (
+                    opt[0],
+                    self.process_data_value(
+                        opt[0],
+                        data.get(opt[0], opt[1])
+                    )
+                )
+        return options
 
     def txt2img_sample(self, data):
         print(self.process_options(self.txt2img_options, data))
         return self._txt2img_loader.sample(
-            self.process_options(self.txt2img_options, data)
+            options=self.process_options(self.txt2img_options, data)
         )
 
     def img2img_sample(self, data):
         return self._img2img_loader.sample(
-            self.process_options(self.img2img_options, data)
+            options=self.process_options(self.img2img_options, data)
         )
 
     def __init__(self, *args, **kwargs):
