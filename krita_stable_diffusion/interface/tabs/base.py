@@ -83,7 +83,7 @@ class Base:
             if k == "seed":
                 v = self.seed()
             else:
-                v = self.config.value(k)
+                v = self.config.value(k, v)
             data[k] = v
 
         # add config options to request data
