@@ -6,7 +6,7 @@ import socket
 import threading
 import time
 import torch
-
+import psutil
 
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
@@ -218,7 +218,7 @@ class Connection:
         Starts a new thread with a connection to service.
         :return: None
         """
-        self.thread = threading.Thread(target=self.connect, daemon=False)
+        self.thread = threading.Thread(target=self.connect, daemon=True)
         self.thread.start()
 
     def stop(self):
@@ -227,7 +227,8 @@ class Connection:
         :return: None
         """
         self.disconnect()
-        self.thread.join(timeout=0)
+        print("Stopping connection thread")
+        self.thread.join()
 
     def restart(self):
         """
@@ -276,7 +277,8 @@ class SocketConnection(Connection):
         self.handle_open_socket()
 
     def disconnect(self):
-        self.soc_connection.close()
+        if self.soc_connection:
+            self.soc_connection.close()
 
     def __init__(self, *args, **kwargs):
         self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -285,6 +287,7 @@ class SocketConnection(Connection):
 
 class SocketServer(SocketConnection):
     max_client_connections = 1
+    quit_event = None
 
     @property
     def has_connection(self):
@@ -316,30 +319,71 @@ class SocketServer(SocketConnection):
             print(str(err))
         print(f"Socket opened {self.soc}")
 
+    def try_quit(self):
+        has_krita_process = False
+        for proc in psutil.process_iter():
+            if proc.name() == "krita":
+                has_krita_process = True
+        if not has_krita_process:
+            print("krita process not found, quitting")
+            self.quit_event.set()
+        return self.quit_event.is_set()
+
     def handle_open_socket(self):
         """
         Listen for incoming connections.
         Returns:
         """
         self.soc.listen(self.max_client_connections)
-        while True:
-            self.soc_connection, self.soc_addr = self.soc.accept()
-            print(f"Connection established with {self.soc_addr}")
-            while True and self.soc_connection is not None:
-                msg = self.soc_connection.recv(1024)
-                if msg is not None and msg != b'':
-                    self.message = msg
-                time.sleep(1)
+        while not self.quit_event.is_set():
+            print("Waiting for a connection")
+            self.soc_connection, self.soc_addr = self.soc.accept() if not self.quit_event.is_set() else (None, None)
+            if self.soc_connection:
+                print(f"Connection established with {self.soc_addr}")
+            while self.soc_connection:
+                try:
+                    msg = self.soc_connection.recv(1024)
+                    print(msg)
+                    if msg == b"pingping" or msg == b"ping":
+                        self.soc_connection.sendall(b"pong")
+                        msg = None
+                    if msg is not None and msg != b'':
+                        self.message = msg
+                    if self.quit_event.is_set():
+                        break
+                    time.sleep(1)
+                except ConnectionResetError:
+                    break
+            # if self.quit_event.is_set():
+            #     break
             time.sleep(1)
+        print("Socket server stopped")
+
+    def watch_connection(self):
+        while not self.quit_event.is_set():
+            if self.try_quit():
+                print("quitting connection")
+                break
+            time.sleep(1)
+        # destroy all threads
+        self.stop()
+
+    def stop(self):
+        super().stop()
+        print("stopping worker thread")
+        self.worker_thread.join()
 
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.quit_event = threading.Event()
+        self.quit_event.clear()
         self.max_client_connections = kwargs.get(
             "max_client_connections",
             self.max_client_connections
         )
-        super().__init__(*args, **kwargs)
-        self.worker_thread = threading.Thread(target=self.worker, daemon=False)
+        self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.worker_thread.start()
+        self.watch_connection()
 
 
 class SocketClient(SocketConnection):
@@ -360,37 +404,74 @@ class SocketClient(SocketConnection):
         """
         pass
 
-    def listen_for_response(self):
-        while True:
-            response = None
-            try:
-                response = self.soc.recv(1024)
-            except ConnectionRefusedError:
-                break
-            except Exception as e:
-                print("Repsponse error")
-                print(e)
-            if response:
-                print("PUTTING RESPONSE INTO QUEUE")
-                self.queue.put(response)
-
     def connect(self):
+        has_connection = False
+        listen_for_messages = False
         while True:
-            print("Attempting server connection...")
+            print("Connecting to server...")
             # check self.soc for connection
+            if not has_connection:
+                try:
+                    self.soc.connect((self.host, self.port))
+                except Exception as e:
+                    print("failed to connect", e)
+                    if self.soc_connection:
+                        self.soc_connection.close()
+
             try:
-                self.soc.connect((self.host, self.port))
-                self.soc.sendall(b"")
-                self.listen_for_response()
-            except ConnectionRefusedError:
-                print("Connection refused")
-                time.sleep(1)
+                self.soc.sendall(b"ping")
+                s = self.soc.recv(1024)
+                print(s)
+                if s != b'pong':
+                    print("No pong returned on ping")
+                    raise ConnectionResetError
+                has_connection = True
+                listen_for_messages = True
+            except BrokenPipeError:
+                if self.soc_connection:
+                    self.soc_connection.close()
+                self.soc_connection = None
+                has_connection = False
+                listen_for_messages = False
+                self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            except Exception as e:
+                print("Connection lost", e)
+                if self.soc_connection:
+                    self.soc_connection.close()
+                self.soc_connection = None
+                has_connection = False
+                listen_for_messages = False
+                self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            if listen_for_messages:
+                print("Listening for messages")
+                # listen to server for response
+                response = None
+                try:
+                    response = self.soc.recv(1024)
+                except ConnectionRefusedError:
+                    print("CONNECTION REFUSED")
+                    break
+                except ConnectionResetError:
+                    print("CONNECTION RESET")
+                    break
+
+                except Exception as e:
+                    print("Repsponse error")
+                    print(e)
+                if response:
+                    print("PUTTING RESPONSE INTO QUEUE")
+                    self.queue.put(response)
+            time.sleep(1)
 
     def __init__(self, *args, **kwargs):
         self.queue = kwargs.get("queue", queue.SimpleQueue())
         super().__init__(*args, **kwargs)
-        self.worker_thread = threading.Thread(target=self.worker, daemon=False)
+        # on self.quit_event is set, stop the thread
+        self.worker_thread = threading.Thread(target=self.worker, daemon=True)
         self.worker_thread.start()
+        self.thread = threading.Thread(target=self.connect, daemon=True)
+        self.thread.start()
 
 
 class SimpleEnqueueSocketServer(SocketServer):
@@ -406,18 +487,21 @@ class SimpleEnqueueSocketServer(SocketServer):
         self.queue.put(msg)
 
     def worker(self):
-        while True:
+        while not self.quit_event.is_set():
             if self.has_connection:     # if a client is connected...
+                print("has connection")
                 msg = self.queue.get()  # get a message from the queue
                 try:                    # send to callback
                     self.callback(msg)
                 except Exception as err:
                     print(f"Error in callback: {err}")
-            else:
-                print("Simple enqueue server waiting for connection...")
+                    self.soc_connection = None
+            print("Simple enqueue server waiting for connection...")
             time.sleep(1)
+        print("worker stopped")
 
     def __init__(self, *args, **kwargs):
+        self.do_run = True
         self.queue = kwargs.get("queue", queue.SimpleQueue())
         super().__init__(*args, **kwargs)
 
@@ -485,13 +569,16 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
 
 
     def response_queue_worker(self):
-        while True:
-            print("response queue worker")
-            response = self.response_queue.get()
-            res = json.dumps(response)
-            if res is not None and res is not b'':
-                print("SENDING RESPONSE")
-                self.soc_connection.sendall(res.encode("utf-8"))
+        while not self.quit_event or not self.quit_event.is_set():
+            if self.quit_event:
+                print("response queue worker")
+                response = self.response_queue.get()
+                res = json.dumps(response)
+                if res is not None and res is not b'':
+                    print("SENDING RESPONSE")
+                    self.soc_connection.sendall(res.encode("utf-8"))
+            time.sleep(1)
+        print("quit response queue worker")
 
     def init_sd_runner(self):
         print("Starting Stable Diffusion Runner...")
@@ -501,17 +588,23 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         )
         torch.cuda.empty_cache()
 
+    def stop(self):
+        super().stop()
+        print("Stopping Stable Diffusion Runner...")
+        self.sdrunner_thread.join()
+        print("stopping response worker thread")
+        self.response_worker_thread.join()
+
     def __init__(self, *args, **kwargs):
         # create a stable diffusion runner service
-        t = threading.Thread(target=self.init_sd_runner, daemon=False)
-        t.start()
-        t.join()
+        self.sdrunner_thread = threading.Thread(target=self.init_sd_runner, daemon=True)
         self.response_queue = kwargs.get("response_queue", queue.SimpleQueue())
         if not self.response_queue:
             raise ValueError("response_queue is required")
+        self.response_worker_thread = threading.Thread(target=self.response_queue_worker, daemon=True)
+        self.sdrunner_thread.start()
+        self.response_worker_thread.start()
         super().__init__(*args, **kwargs)
-        self.worker_thread = threading.Thread(target=self.response_queue_worker, daemon=False)
-        self.worker_thread.start()
 
 
 class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
