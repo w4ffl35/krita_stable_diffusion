@@ -1,6 +1,9 @@
+import os
 import sys
 import queue
-sys.path.append("/home/joe/Projects/ai/krita_stable_diffusion")
+
+HOME = os.path.expanduser("~")
+sys.path.append(f"{HOME}Projects/ai/krita_stable_diffusion")
 
 import logger as log
 from connect import StableDiffusionRequestQueueWorker
@@ -91,44 +94,11 @@ class StableDiffusionConnectionManager:
         self.request_queue = kwargs.get("request_queue", queue.SimpleQueue())
         self.response_queue = kwargs.get("response_queue", queue.SimpleQueue())
 
-        # create request worker thread which
-        # 1. waits for messages on the request_queue
-        # 2. sends the request to stable diffusion
-        # 3. adds the response to the response_queue
+        # create request client
         log.info("creating request worker...")
         self.request_worker = StableDiffusionRequestQueueWorker(
             port=50006
         )
 
-        # create response worker thread which
-        # 1. waits for messages on the response_queue
-        # 2. sends the response to the client
-        # log.info("creating response worker...")
-        # self.response_worker = StableDiffusionResponseQueueWorker(
-        #     port=50007,
-        #     queue=self.response_queue,
-        #     callback=callback
-        # )
-
-        # # # create request connection thread
-        # log.info("creating request connection...")
-        # self.request_connection = SimpleEnqueueSocketClient(
-        #     port=50006,
-        #     queue=self.request_queue,
-        #     worker=self.request_worker
-        # )
-        #
-        # # create response connection thread
-        # log.info("creating response connection...")
-        # self.response_connection = SimpleEnqueue(
-        #     queue=self.response_queue,
-        #     worker=self.response_worker
-        # )
-
 if __name__ == "__main__":
-    # _txt2img_loader = Txt2Img(
-    #     options=SCRIPTS["txt2img"],
-    #     model=None,
-    #     device=None
-    # )
     StableDiffusionConnectionManager()
