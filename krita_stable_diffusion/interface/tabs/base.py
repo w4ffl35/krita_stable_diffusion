@@ -104,7 +104,10 @@ class Base:
         }
         # os.system(f"stablediffusion_client {self.string_to_binary(st)}")
         Application.stablediffusion.client.message = st
-        if self.log_widget: self.log_widget.widget.setPlaceholderText(f"Requesting {options['prompt']}...")
+        if self.log_widget:
+            self.log_widget.widget.setPlaceholderText(
+                f"Requesting {options['prompt']}..."
+            )
 
     def tab(self):
         return self.widget, self.display_name

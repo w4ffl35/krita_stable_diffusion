@@ -306,10 +306,15 @@ class SocketConnection(Connection):
     def disconnect(self):
         if self.soc_connection:
             self.soc_connection.close()
+        self.soc.close()
+        self.soc_connection = None
+
+    def initialize_socket(self):
+        self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.soc.settimeout(3)
 
     def __init__(self, *args, **kwargs):
-        self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.soc.settimeout(1)
+        self.initialize_socket()
         super().__init__(*args, **kwargs)
 
 
@@ -345,6 +350,7 @@ class SocketServer(SocketConnection):
         try:
             self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.soc.bind((self.host, self.port))
+            self.soc.settimeout(3)
         except socket.error as err:
             print(f"Failed to open a socket at {self.host}:{self.port}")
             print(str(err))
@@ -371,43 +377,39 @@ class SocketServer(SocketConnection):
         self.soc.listen(self.max_client_connections)
         print("Socket opened")
         while True:
-            print("Waiting for a connection")
-            self.soc.settimeout(1)
+            if not self.soc_connection:
+                print("SERVER: awaiting connection")
+                self.soc.settimeout(3)
+                try:
+                    self.soc_connection, self.soc_addr = self.soc.accept() if not self.quit_event.is_set() else (None, None)
+                except socket.timeout:
+                    print("SERVER: socket timeout")
+                print(f"SERVER: connection established with {self.soc_addr}")
             try:
-                self.soc_connection, self.soc_addr = self.soc.accept() if not self.quit_event.is_set() else (None, None)
-            except socket.timeout:
-                pass
-            if self.soc_connection:
-                print(f"Connection established with {self.soc_addr}")
-                print("Awaiting message...")
-            while True:
-                if self.soc_connection:
-                    try:
-                        msg = self.soc_connection.recv(1024) if not self.quit_event.is_set() else None
-                        if msg == b"pingping" or msg == b"ping":
-                            # respond to ping
-                            self.soc_connection.sendall(b"pong")
-                            msg = None
-                        if msg is not None and msg != b'':
-                            print("Message received")
-                            # push directly to queue
-                            self.message = msg
-                        if self.quit_event.is_set():
-                            print("Quitting...")
-                            # break from loop if we are quitting
-                            break
-                        time.sleep(1)
-                    except ConnectionResetError:
-                        break
-                if self.quit_event.is_set(): break
+                msg = self.soc_connection.recv(1024) if not self.quit_event.is_set() else None
+                if msg == b"pingping" or msg == b"ping":
+                    # respond to ping
+                    self.soc_connection.sendall(b"pong")
+                    msg = None
+                if msg is not None and msg != b'':
+                    print(f"SERVER: message received")
+                    # push directly to queue
+                    self.message = msg
+                if self.quit_event.is_set():
+                    print(f"SERVER: quitting")
+                    # break from loop if we are quitting
+                    break
+                time.sleep(1)
+            except ConnectionResetError:
+                print("SERVER: connection reset")
             if self.quit_event.is_set(): break
             time.sleep(1)
-        print("Socket server stopped")
+        print(f"SERVER: server stopped")
 
     def watch_connection(self):
         while True:
             if self.try_quit():
-                print("quitting connection")
+                print(f"SERVER: shutting down")
                 break
             time.sleep(1)
 
@@ -455,34 +457,52 @@ class SocketClient(SocketConnection):
         """
         pass
 
+    def reset_connection(self):
+        self.disconnect()
+        self.initialize_socket()
+        self.has_connection = False
+
+    def handle_response(self, response):
+        self.queue.put(response)
+
     def connect(self):
-        print("Connecting to server...")
+        ping = None
         while True:
             # check self.soc for connection
             if not self.has_connection:
+                self.reset_connection()
                 try:
+                    print("CLIENT: connecting")
                     self.soc.connect((self.host, self.port))
                     self.has_connection = True
+                    self.soc.settimeout(None)
+                    print("CLIENT: connected")
                 except Exception as e:
-                    print("failed to connect", e)
+                    print("CLIENT: failed to connect", e)
+                    self.has_connection = False
 
             if self.quit_event.is_set():
+                print("CLIENT: quitting")
                 break
 
             if self.has_connection:
                 try:
-                    self.soc.sendall(b"ping")
                     response = self.soc.recv(1024)
-                    if response != b'pong':
-                        print("PUTTING RESPONSE INTO QUEUE")
-                        self.queue.put(response)
+                    if response != b'pong' and response != b'ping':
+                        print("CLIENT: enqueuing reseponse")
+                        self.handle_response(response)
+                    if response == b'pong':
+                        print("received pong")
+                        ping = 'pong'
+                except socket.timeout:
+                    self.has_connection = False
+                    print("CLIENT: connection timed out")
                 except Exception as e:
-                    self.soc.close()
-                    self.soc_connection = None
-                    self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self.soc.settimeout(1)
-            if self.quit_event.is_set(): break
+                    self.has_connection = False
+                    print("CLIENT: Connection lost", e)
+                if self.quit_event.is_set(): break
             time.sleep(1)
+            if self.quit_event.is_set(): break
 
     def __init__(self, *args, **kwargs):
         self.quit_event = threading.Event()
@@ -500,6 +520,9 @@ class SocketClient(SocketConnection):
 
 
 class SimpleEnqueueSocketServer(SocketServer):
+    # list to hold failed messages
+    _failed_messages = []
+
     """
     Creates a SimpleQueue and waits for messages to append to it.
     """
@@ -515,20 +538,20 @@ class SimpleEnqueueSocketServer(SocketServer):
         self.queue.put(msg)
 
     def worker(self):
-        print("Simple enqueue server waiting for connection...")
-        while self.quit_event.is_set():
-            print("awaiting connection")
+        print("SERVER WORKER: enqueue worker started")
+        while True:
+            print("SERVER WORKER: await connection")
             if self.has_connection:     # if a client is connected...
-                print("has connection")
+                print("SERVER WORKER: waiting for queue")
                 msg = self.queue.get()  # get a message from the queue
                 try:                    # send to callback
                     self.callback(msg)
                 except Exception as err:
-                    print(f"Error in callback: {err}")
+                    print(f"SERVER: callback error: {err}")
                     pass
             if self.quit_event.is_set(): break
             time.sleep(1)
-        print("worker dead")
+        print("SERVER WORKER: worker stopped")
 
     def __init__(self, *args, **kwargs):
         self.do_run = True
@@ -551,20 +574,76 @@ class SimpleEnqueueSocketClient(SocketClient):
     def message(self, msg):
         self.queue.put(msg)
 
+    @property
+    def response(self):
+        return ""
+
+    @response.setter
+    def response(self, msg):
+        self.res_queue.put(msg)
+
+    def handle_response(self, response):
+        print("CLIENT: handle response")
+        res = json.loads(response.decode("utf-8"))
+        print(res)
+        if "response" in res:
+            self.response = response
+        else:
+            self.message = response
+
+    def retry_messages(self):
+        """
+        TODO: implement this function
+        :return:
+        """
+        failed_messages = self._failed_messages
+        for message in failed_messages:
+            try:
+                # remove message from failed messages
+                self._failed_messages.remove(message)
+                self.callback(message)
+            except Exception as err:
+                print(f"CLIENT: error in retry_message: {err}")
+                pass
+
     def callback(self, message):
-        self.soc.sendall(json.dumps(message).encode("utf-8"))
+        try:
+            self.soc.sendall(json.dumps(message).encode("utf-8"))
+        except BrokenPipeError:
+            # keep track of failed messages and resend them
+            # when we regain a connection
+            self._failed_messages.append(message)
+            self.has_connection = False
+            self.disconnect()
+            self.initialize_socket()
+            print("CLIENT: lost connection to server")
+        except Exception as err:
+            print(f"CLIENT: error in callback: {err}")
+            pass
 
     def handle_response_default(self, msg):
-        print("Pass handle_response to kwargs to override this method")
+        print("CLIENT: Pass handle_response to kwargs to override this method")
 
     def quit(self):
         self.quit_event.set()
         self.queue.put("quit")
 
     def worker(self):
+        while True:
+            if self.quit_event.is_set():
+                break
+            if not self.queue.empty():
+                msg = self.queue.get()
+                if msg == "quit":
+                    self.quit_event.set()
+                    break
+                self.callback(msg)
+            time.sleep(1)
+
+    def response_worker(self):
         while not self.quit_event.is_set():
             print("Client waiting for message...")
-            msg = self.queue.get()
+            msg = self.res_queue.get()
             if msg == "quit":
                 break
             print("Message received")
@@ -582,9 +661,14 @@ class SimpleEnqueueSocketClient(SocketClient):
                 self.handle_response(msg)
 
     def __init__(self, *args, **kwargs):
+        self._failed_messages = []
         self.handle_response = kwargs.get("handle_response", self.handle_response_default)
-        self.queue = kwargs.get("queue", queue.SimpleQueue())
+        self.res_queue = queue.SimpleQueue()
         super().__init__(*args, **kwargs)
+        self.start_thread(
+            self.response_worker,
+            name="response worker"
+        )
 
 
 class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
@@ -596,36 +680,42 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         Handle a stable diffusion request message
         :return: None
         """
-        print("SERVER CALLBACK")
-        data = json.loads(data.decode("utf-8"))
+        print("x" * 80)
+        print("x"*80)
+        print(data)
+        print(type(data))
+        print("x" * 80)
+        print("x" * 80)
         response = None
+        print("callback", data)
+        data = json.loads(data.decode("utf-8"))
         if data["type"] == "txt2img":
-            response = self.sdrunner.txt2img_sample(data["options"])
+           response = self.sdrunner.txt2img_sample(data["options"])
         elif data["type"] == "img2img":
-            response = self.sdrunner.img2img_sample(data["options"])
-        if response is not None and response is not b'':
-            self.response_queue.put(response)
+           response = self.sdrunner.img2img_sample(data["options"])
+        if response is not None and response != b'':
+           self.response_queue.put(response)
 
 
     def response_queue_worker(self):
         while True:
-            print("response queue worker")
+            print("SERVER: response queue worker")
             response = self.response_queue.get()
             print(response)
             if response == "quit":
                 break
-            res = json.dumps(response)
-            if res is not None and res is not b'':
-                print("SENDING RESPONSE")
+            res = json.dumps({ "response": response })
+            if res is not None and res != b'':
+                print("SERVER: sending response")
                 try:
                     self.soc_connection.sendall(res.encode("utf-8"))
                 except Exception as e:
-                    print("Failed to send response", e)
+                    print("SERVER: failed to send response", e)
             if self.quit_event.is_set(): break
             time.sleep(1)
 
     def init_sd_runner(self):
-        print("Starting Stable Diffusion Runner...")
+        print("SERVER: starting Stable Diffusion runner")
         self.sdrunner = StableDiffusionRunner(
             txt2img_options=SCRIPTS["txt2img"],
             img2img_options=SCRIPTS["img2img"]

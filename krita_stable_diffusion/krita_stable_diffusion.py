@@ -129,7 +129,6 @@ class Controller(QObject):
         :return:
         """
         layer_name_prefix = "SD_txt2img:"
-        image_paths = json.loads(image_paths)
         for image_data in image_paths:
             seed = image_data.__contains__("seed") or ""
             image_path = image_data["file_name"]
@@ -203,7 +202,11 @@ class Controller(QObject):
 
     def stablediffusion_response_callback(self, msg):
         print("STABLE DIFFUSION RESPONSE CALLBACK", msg)
-        self.insert_images(msg)
+        msg = json.loads(msg.decode("utf-8"))
+        print(msg)
+        print(type(msg))
+        print(msg["response"])
+        self.insert_images(msg["response"])
 
     def kritastablediffusion_service_start(self):
         """
