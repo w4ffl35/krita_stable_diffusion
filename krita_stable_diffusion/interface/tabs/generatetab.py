@@ -89,20 +89,58 @@ class Txt2ImgTab(Base):
         )
 
     def __init__(self):
-        self.log_widget = PlainText(placeholder="log", config_name="log", max_height=50, disabled=True)
+        self.log_widget = PlainText(
+            placeholder="log",
+            config_name="log",
+            max_height=50,
+            disabled=True
+        )
+        txt2img_button = Button(
+            label="text ➔ image",
+            release_callback=self.txt2img_button_release_callback,
+            config_name="server_connected",
+        )
+        img2img_button = Button(
+            label="text + image ➔ image",
+            release_callback=self.img2img_release_callback,
+            config_name="server_connected",
+        )
+        photo_button = Button(
+            label="PHOTO",
+            release_callback=self.txt2img_photo_release_callback,
+            config_name="server_connected",
+        )
         super().__init__([
             VerticalInterface(widgets=[
-                Label(label="Prompt"),
-                PlainText(placeholder="prompt", config_name="prompt"),
+                Label(
+                    label="Prompt"
+                ),
+                PlainText(
+                    placeholder="prompt", config_name="prompt"
+                ),
             ]),
             VerticalInterface(interfaces=[
                 HorizontalInterface(widgets=[
-                    Label(label="Number of images", max_width=150),
-                    Label(label="Seed"),
+                    Label(
+                        label="Number of images",
+                        max_width=150
+                    ),
+                    Label(
+                        label="Seed"
+                    ),
                 ]),
                 HorizontalInterface(widgets=[
-                    SpinBox(min=1, max=250, config_name="n_iter", step=2, min_width=150),
-                    LineEdit(placeholder="Random seed", config_name="seed"),
+                    SpinBox(
+                        min=1,
+                        max=250,
+                        config_name="n_iter",
+                        step=2,
+                        min_width=150
+                    ),
+                    LineEdit(
+                        placeholder="Random seed",
+                        config_name="seed"
+                    ),
                 ]),
             ]),
             VerticalInterface(interfaces=[
@@ -110,13 +148,16 @@ class Txt2ImgTab(Base):
                     Label(label="Photo type"),
                 ]),
                 HorizontalInterface(widgets=[
-                    DropDown(options=self.photo_types, config_name="photo_type"),
-                    Button(label="PHOTO", release_callback=self.txt2img_photo_release_callback),
+                    DropDown(
+                        options=self.photo_types,
+                        config_name="photo_type"
+                    ),
+                    photo_button,
                 ]),
             ]),
             HorizontalInterface(widgets=[
-                Button(label="text ➔ image", release_callback=self.txt2img_button_release_callback),
-                Button(label="text + image ➔ image", release_callback=self.img2img_release_callback),
+                txt2img_button,
+                img2img_button,
             ]),
             HorizontalInterface(widgets=[
                 self.log_widget,

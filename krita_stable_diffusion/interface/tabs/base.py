@@ -167,6 +167,7 @@ class Base:
         return seed
 
     def __init__(self, interfaces):
+        Application.__setattr__("connected_to_sd", False)
         self.initialize_settings()
         self.reset_default_values()
         self.initialize_interfaces(interfaces)

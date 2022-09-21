@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 import time
 
@@ -185,6 +186,7 @@ class Controller(QObject):
             "krita_stable_diffusion"
         ))
         self.config = Application.krita_stable_diffusion_config
+        self.config.setValue("server_connected", False)
 
         # initialize default settings
         for k, v in kwargs.get("defaults", {}).items():
@@ -217,7 +219,15 @@ class Controller(QObject):
         # get process id for the current process
         pid = os.getpid()
         #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}")
-        os.system(f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid} &")
+        # run os.system command as a separate process
+        #p = subprocess.Popen(
+        # f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}",
+        #     shell=True
+        # )
+        p = subprocess.Popen(
+            f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+            shell=True
+        )
 
     def request_prompt(self, message):
         """
@@ -233,11 +243,8 @@ class Controller(QObject):
 
     def try_quit(self):
         try:
-            if hasattr(Application, "activated") and Application.activeWindow() is None:
-                self.stop()
+            if Application.connected_to_sd and Application.activeWindow() is None:
                 return True
-            elif Application.activeWindow():
-                Application.__setattr__("activated", True)
         except Exception as e:
             print("application dead", e)
             pass
@@ -246,9 +253,17 @@ class Controller(QObject):
     def watch_connection(self):
         while True:
             if self.try_quit():
-                self.quit_event.set()
+                print("CLIENT: QUITTING")
+                self.client.close()
                 break
             time.sleep(1)
+
+
+    def handle_status_change(self, status):
+        if status == "CONNECTED":
+            self.config.setValue("sever_connected", True)
+        else:
+            self.config.setValue("sever_connected", False)
 
     def __init__(self, *args, **kwargs):
         self.client = None
@@ -258,11 +273,11 @@ class Controller(QObject):
         Application.__setattr__("stablediffusion", self)
         # on Application quit, close the server
         Krita.instance().eventFilter = self.eventFilter
-        self.quit_event = threading.Event()
-        self.quit_event.clear()
         self.client = SimpleEnqueueSocketClient(
             port=50006,
-            handle_response=self.stablediffusion_response_callback
+            handle_response=self.stablediffusion_response_callback,
+            status_change_callback=self.handle_status_change,
+            Application=Application
         )
         self.start_thread(
             target=self.kritastablediffusion_service_start,
