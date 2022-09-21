@@ -242,7 +242,6 @@ class Controller(QObject):
 
     def watch_connection(self):
         while True:
-            print("watch connection")
             if self.try_quit():
                 self.quit_event.set()
                 break
