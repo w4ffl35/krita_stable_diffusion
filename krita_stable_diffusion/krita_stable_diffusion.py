@@ -220,14 +220,14 @@ class Controller(QObject):
         pid = os.getpid()
         #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}")
         # run os.system command as a separate process
-        #p = subprocess.Popen(
-        # f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}",
-        #     shell=True
-        # )
         p = subprocess.Popen(
-            f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+            f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
             shell=True
         )
+        # p = subprocess.Popen(
+        #     f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+        #     shell=True
+        # )
 
     def request_prompt(self, message):
         """
