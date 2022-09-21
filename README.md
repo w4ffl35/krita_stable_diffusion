@@ -28,7 +28,7 @@ Some of the things we are working towards:
 
 ## Installation
 
-1. [Download and unzip the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.1.0/krita_stable_diffusion-0.1.0.zip)
+1. [Download and unzip the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.0/krita_stable_diffusion-0.2.0.zip)
 2. Move the contents of the PLUGIN folder into your pykrita folder `/home/USER/.local/share/krita/pykrita/`
 ```
 ~/.local/share/krita/pykrita/
