@@ -1,9 +1,15 @@
-from krita import *
 import json
-import os
-import logging
+import subprocess
+import sys
+import time
+
+from krita import *
 import threading
-import socket
+import os
+import krita_stable_diffusion.logger as log
+
+#from krita_stable_diffusion.connect import StablediffusionresponsedConnection
+from krita_stable_diffusion.connect import StableDiffusionRequestQueueWorker, SimpleEnqueueSocketClient
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 
 class Controller(QObject):
@@ -11,6 +17,31 @@ class Controller(QObject):
     config = None
     stop_socket_connection = None
     log = []
+    threads = []
+    first_run = True
+    name = "Controller"
+
+
+    def start_thread(self, target, daemon=False, name=None):
+        t = threading.Thread(target=target, daemon=daemon)
+        if name:
+            t.setName(name)
+        t.start()
+        self.threads.append(t)
+        return t
+
+    def stop(self):
+        print("Stopping client")
+        self.client.quit()
+        for n in range(len(self.threads)):
+            thread = self.threads[n]
+            print(f"{n+1} of {len(self.threads)} Stopping thread {thread.getName()} from {self.name}...")
+            try:
+                thread.join()
+            except:
+                print("Failed to join thread")
+            print(f"Stopped thread {thread.getName()}...")
+        print(f"All threads in {self.name} stopped")
 
     @property
     def krita(self):
@@ -82,55 +113,15 @@ class Controller(QObject):
     def img2img_seed(self, value):
         self.config.setValue('img2img_seed', value)
 
-    def run(self):
+    def stablediffusion_responsed_callback(self, response):
         """
-        Starts a new thread with a client that has a connection to stablediffusion_responsed
-        :return: None
+        Handles response from Stable Diffusion service
+        :param response:
+        :return:
         """
-        # connect to stablediffusion_responsed socket in a separate thread
-        self.thread = threading.Thread(target=self.connect_to_stablediffusion_responsed, daemon=False)
-        self.thread.start()
-
-    def connect_to_stablediffusion_responsed(self):
-        """
-        Do not call this function directly, use run() instead
-        :return: None
-        """
-        self.SOCK = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.SOCK.connect(("localhost", 50007))
-        self.listen_for_responses()
-
-    def disconnect_from_stablediffusion_responsed(self):
-        """
-        Stops the stablediffusion_responsed socket connection
-        :return: None
-        """
-        self.SOCK.close()
-
-    def reconnect_to_stablediffusion_responsed(self):
-        """
-        Reconnects to stablediffusion_responsed
-        :return: None
-        """
-        self.disconnect_from_stablediffusion_responsed()
-        self.thread.join(timeout=0)
-        self.run()
-
-    def listen_for_responses(self):
-        print("Starting stablediffusion_responsed listener")
-        # open a connection to localhost:50007
-        check_stream = True
-        while check_stream:
-            image_paths = []
-            try:
-                image_paths = json.loads(self.SOCK.recv(1024))
-            except Exception as e:
-                print(e)
-                check_stream = False
-            if len(image_paths) > 0:
-                self.insert_images(image_paths)
-                self.active_document.refreshProjection()
-                self.delete_generated_images(image_paths)
+        self.insert_images(response)
+        self.active_document.refreshProjection()
+        self.delete_generated_images(response)
 
     def insert_images(self, image_paths):
         """
@@ -140,10 +131,8 @@ class Controller(QObject):
         """
         layer_name_prefix = "SD_txt2img:"
         for image_data in image_paths:
-            # seed = image_data.__contains__("seed") or ""
-            # image_path = image_data["image"]
-            image_path = image_data
-            seed = ""
+            seed = image_data.__contains__("seed") or ""
+            image_path = image_data["file_name"]
             self.add_image(f"{layer_name_prefix}:{seed}:{image_path}", image_path)
 
     def create_layer(self, name, visible=True, type="paintLayer"):
@@ -153,7 +142,7 @@ class Controller(QObject):
         :param type:
         :return: a reference to the new layer
         """
-        logging.info(f"creating layer")
+        log.info(f"creating layer")
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
         document.setVisible(visible)
@@ -165,7 +154,7 @@ class Controller(QObject):
         :param image:
         :return: QByteArray
         """
-        logging.info(f"converting image to byte array")
+        log.info(f"converting image to byte array")
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
@@ -178,7 +167,7 @@ class Controller(QObject):
         :param visible:
         :return:
         """
-        logging.info(f"adding image: {path}")
+        log.info(f"adding image: {path}")
         image = QImage()
         image.load(path, "PNG")
         layer = self.create_layer(layer_name, visible=visible)
@@ -197,6 +186,7 @@ class Controller(QObject):
             "krita_stable_diffusion"
         ))
         self.config = Application.krita_stable_diffusion_config
+        self.config.setValue("server_connected", False)
 
         # initialize default settings
         for k, v in kwargs.get("defaults", {}).items():
@@ -212,15 +202,91 @@ class Controller(QObject):
             )
         )
 
+    def stablediffusion_response_callback(self, msg):
+        print("STABLE DIFFUSION RESPONSE CALLBACK", msg)
+        msg = json.loads(msg.decode("utf-8"))
+        print(msg)
+        print(type(msg))
+        print(msg["response"])
+        self.insert_images(msg["response"])
+
+    def kritastablediffusion_service_start(self):
+        """
+        Launches kritastablediffusion service
+        :return:
+        """
+        here = os.path.dirname(os.path.realpath(__file__))
+        # get process id for the current process
+        pid = os.getpid()
+        #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}")
+        # run os.system command as a separate process
+        p = subprocess.Popen(
+            f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
+            shell=True
+        )
+        # p = subprocess.Popen(
+        #     f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+        #     shell=True
+        # )
+
+    def request_prompt(self, message):
+        """
+        Sends prompt request to stable diffusion
+        :param message:
+        :return:
+        """
+        self.client.message = json.dumps(message).encode("ascii")
+
+    def handle_sd_response(self, response):
+        log.info("Handle stable diffusion response")
+        # TODO handle image insertion here
+
+    def try_quit(self):
+        try:
+            if Application.connected_to_sd and Application.activeWindow() is None:
+                return True
+        except Exception as e:
+            print("application dead", e)
+            pass
+        return False
+
+    def watch_connection(self):
+        while True:
+            if self.try_quit():
+                print("CLIENT: QUITTING")
+                self.client.close()
+                break
+            time.sleep(1)
+
+
+    def handle_status_change(self, status):
+        if status == "CONNECTED":
+            self.config.setValue("sever_connected", True)
+        else:
+            self.config.setValue("sever_connected", False)
+
     def __init__(self, *args, **kwargs):
+        self.client = None
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
-        self.thread = None
         self.create_stable_diffusion_panel()
-        Application.__setattr__("restart_stablediffusiond", self.reconnect_to_stablediffusion_responsed)
         Application.__setattr__("stablediffusion", self)
-
-        self.run()
+        # on Application quit, close the server
+        Krita.instance().eventFilter = self.eventFilter
+        self.client = SimpleEnqueueSocketClient(
+            port=50006,
+            handle_response=self.stablediffusion_response_callback,
+            status_change_callback=self.handle_status_change,
+            Application=Application
+        )
+        self.start_thread(
+            target=self.kritastablediffusion_service_start,
+            name="kritastablediffusion"
+        )
+        self.start_thread(
+            target=self.watch_connection,
+            name="watch_connection"
+        )
 
 
 controller = Controller()

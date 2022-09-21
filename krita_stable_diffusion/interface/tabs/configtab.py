@@ -25,9 +25,9 @@ class ConfigTab(Base):
 
     def restart_stable_diffusion(self, _element):
         """
-        Restarts the Stable Diffusion plugin.
+        Restarts the Stable Diffusion Response connection
         """
-        Application.restart_stablediffusiond()
+        Application.sdresponse_connection.restart()
         # os.system("sudo systemctl restart stablediffusiond.service")
         # os.system("sudo systemctl restart stablediffusion_responsed.service")
 

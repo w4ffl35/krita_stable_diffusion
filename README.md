@@ -1,94 +1,87 @@
 # Krita Stable Diffusion
 
-A Krita plugin for Stable Diffusion
+A Krita plugin for Stable Diffusion.
 
-[See demo video on youtube](https://www.youtube.com/watch?v=maWR7dDf4SE)
+- Run Stable Diffusion locally in Krita without the need for a Python environment.
+- **Easy installation: no need to install Python, no need to install dependencies**
+- Non-blocking image generation: continue working in Krita while your images generate
+- No need for webui or a webserver at all
+- Ability to enqueue multiple requests, allowing you to generate multiple prompts and come back to see them after
+- NSFW toggle
 
-**This plugin is currently expected to run on linux. Windows support coming soon.**
+This is a brand new plugin. There are undocumented issues. Some of the problems you may encounter:
+
+- Crashes
+- Threads that did not close correctly
+- Not all Stable Diffusion features have been implemented yet
+- Other unexpected behavior
+
+Some of the things we are working towards:
+
+- Implementation of all Stable Diffusion features
+- Improved UX
+- Improved Installation process
+- The ability to use the plugin with online services
+- More!
+
+---
 
 ## Installation
 
-### Recommended minimum system requirements 
-
-- Ubuntu 20
-- nvidia 2080s or better
-- 15gb hard drive space
-- 20gb RAM
-- Everything else is listed in the installation files
-
-### Install cuda 11.3 drivers
-
-[Follow the instructions for your platform here](https://developer.nvidia.com/cuda-11.3.0-download-archive)
-
-### Setup krita plugin
-
-1. [Download the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.1.0/krita_stable_diffusion-0.1.0.zip) and unzip it.
-2. Place `krita-stable-diffusion` folder into Krita plugins folder (usually `~/.local/share/krita/pykrita`, if `~/.local/share/krita` exists but `pykrita` doesn't, then add it). You can find
-
-### Setup the model and config file
-
-1. [Download stable-diffusion-v1-4](https://huggingface.co/CompVis/stable-diffusion-v1-4)
-2. Rename it to `model.ckpt` and place it into `krita_stable_diffusion/kritastablediffusiond`
-3. Copy `krita_stable_diffusion/stablediffusion/configs/stable-diffusion/v1-inference.yaml` to `krita_stable_diffusion/stablediffusiond/`
- 
-
-### Create python environment
-
-1. Create python env `conda env create -f environment.yaml`
-2. Activate python env `conda activate kritastabeldiffusion`
-
-### Install stable diffusiond 
-
-`curl -s https://raw.githubusercontent.com/w4ffl35/stablediffusiond/feature/krita-plugin/install.sh | bash`
-
-### Enable the plugin
-
-1. Start Krita (or restart if it was running)
-2. Enable the plugin in the settings `Settings > Configure Krita > Python Plugin Manager`
-
----
-
-Your directory structure should look like this (assuming krita has a typical installation)
-
+1. [Download and unzip the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.1.0/krita_stable_diffusion-0.1.0.zip)
+2. Move the contents of the PLUGIN folder into your pykrita folder `/home/USER/.local/share/krita/pykrita/`
 ```
 ~/.local/share/krita/pykrita/
-├── krita-stable-diffusion
-│   ├── interface
-│   ├── ...
-│   └── stablediffusion
-│   │   └── src
-│   │       └── clip
-│   │       └── taming-transformers
-│   │       └── ...
-│   │       └── src
-│   │           └── ...
-│   │           └── settings.py
-│   │       └── ...
-│   │       └── model.ckpt
-│   │       └── ...
-│   │       └── v1-inference.yaml
-│   └── stablediffusiond
-│   └── stablediffusiond
-└── krita_stable_diffusion.py
-└── ...
-└── settings.py
+└── krita-stable-diffusion
+    ├── krita-stable-diffusion
+    └── Krita Stable Diffusion Plugin
+```
+3. Move the stablediffusion folder to your home directory `/home/$USER/stablediffusion/`
+4. [Download the Stable Diffusion model](https://huggingface.co/CompVis/stable-diffusion-v1-4)
+5. Rename it to `model.ckpt` and place it into `/home/$HOME/stablediffusion/models/ldm/stable-diffusion-v1/model.ckpt`
+```
+~/stablediffusion/
+├── configs
+├── img2img
+├── models
+│   └── ldm
+│       └── stable-diffusion-v1
+│           └── model.ckpt
+└── txt2txt
 ```
 
-Krita resources folder can be found under `Settings > Manage Resources` then click the `Open Resource Folder` button.
+### Krita resources folder
+
+If your Krita resources folder is not where you expect to find it, you open Krita
+and go to **`Settings > Manage Resources` then click the `Open Resource Folder` button.**
 
 ![img.png](img.png)
 
-Enable the plugin from within the Python Plugin Manager
+---
 
-`Settings > Configure Krita > Python Plugin Manager`
+## Enable the plugin
 
 ![img_1.png](img_1.png)
 
-## Tools
-
-Tools contains a custom size property (512x512) and template (single layer, no background) 
-for Stable Diffusion projects.
+You may need to restart Krita.
 
 ---
 
-THIS PLUGIN IS UNDER ACTIVE DEVELOPMENT. BOOKMARK THIS PAGE AND KEEP AN EYE ON IT. MANY CHANGES WILL BE HAPPENING OVER THE NEXT WEEK.
+### System requirements
+
+This plugin will run on a variety of systems. As it is tested the results will
+be listed below.
+
+If you have a different system than the one listed below, [please post your 
+results in this discussion thread](https://github.com/w4ffl35/krita_stable_diffusion/discussions/16).
+
+
+| OS |    GPU    |      CPU      | HD Space | RAM | Krita | Cuda Drivers |
+|:---:|:---------:|:-------------:|:---------:|:---:|:-----:|:------------:|
+| Ubuntu 20.04 | RTX 2080s | Ryzen 7 2700x | 20gb | 32GB | 4.2.9 |     11.3     |
+
+---
+
+
+
+Please post your results on the [stablediffusiond discussion board](https://github.com/w4ffl35/stablediffusiond/discussions).

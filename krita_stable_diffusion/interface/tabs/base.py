@@ -1,5 +1,4 @@
 import json
-import os
 import logging
 import random
 from krita import *
@@ -82,7 +81,7 @@ class Base:
             if k == "seed":
                 v = self.seed()
             else:
-                v = self.config.value(k)
+                v = self.config.value(k, v)
             data[k] = v
 
         # add config options to request data
@@ -92,16 +91,23 @@ class Base:
         data = self.build_prompt(
             data,
             kwargs.get("image_type", None),
-            kwargs.get("style", None))
+            kwargs.get("style", None)
+        )
 
         # send request
         self.send(data, request_type)
 
-    def send(self, data, request_type):
-        data["type"] = request_type
-        st = json.dumps(data)
-        os.system(f"stablediffusion_client {self.string_to_binary(st)}")
-        if self.log_widget: self.log_widget.widget.setPlaceholderText(f"Requesting {data['prompt']}...")
+    def send(self, options, request_type):
+        st = {
+            "type": request_type,
+            "options": options,
+        }
+        # os.system(f"stablediffusion_client {self.string_to_binary(st)}")
+        Application.stablediffusion.client.message = st
+        if self.log_widget:
+            self.log_widget.widget.setPlaceholderText(
+                f"Requesting {options['prompt']}..."
+            )
 
     def tab(self):
         return self.widget, self.display_name
@@ -110,8 +116,8 @@ class Base:
         # add config options
         do_nsfw_filter = self.config.value("do_nsfw_filter", True)
         do_watermark = self.config.value("do_watermark", True)
-        data["do_nsfw_filter"] = 'false' if do_nsfw_filter == 0 else 'true'
-        data["do_watermark"] = 'false' if do_watermark == 0 else 'true'
+        data["do_nsfw_filter"] = False if do_nsfw_filter == 0 else True
+        data["do_watermark"] = False if do_watermark == 0 else True
         self.config.setValue("log", Application.stablediffusion.log)
         return data
 
@@ -132,8 +138,7 @@ class Base:
     def reset_default_values(self):
         # set default values
         for k, v in self.default_setting_values.items():
-            if not self.config.contains(k):
-                self.config.setValue(k, v)
+            self.config.setValue(k, v)
 
     def initialize_interfaces(self, interfaces):
         interfaces[0].addStretch()
@@ -162,6 +167,7 @@ class Base:
         return seed
 
     def __init__(self, interfaces):
+        Application.__setattr__("connected_to_sd", False)
         self.initialize_settings()
         self.reset_default_values()
         self.initialize_interfaces(interfaces)
