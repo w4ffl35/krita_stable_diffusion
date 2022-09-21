@@ -18,11 +18,12 @@ class Txt2ImgTab(Base):
     :param interfaces: The interfaces to be added to the tab
     """
     HOME = os.path.expanduser("~")
+    SDDIR = os.path.join(HOME, "stablediffusion")
     name = "Txt2ImgTab"
     display_name = "Text to Image"
     default_setting_values = {
         "prompt": "A cat",
-        "outdir": "/home/joe/.stablediffusion/txt2img",
+        "outdir": os.path.join(SDDIR, "txt2img"),
         "skip_grid": True,
         "skip_save": False,
         "ddim_steps": 50,
@@ -31,6 +32,8 @@ class Txt2ImgTab(Base):
         "fixed_code": True,
         "ddim_eta": 0.0,
         "n_iter": 1,
+        "H": 512,
+        "W": 512,
         "C": 4,
         "f": 8,
         "n_samples": 1,
@@ -39,9 +42,8 @@ class Txt2ImgTab(Base):
         "from-file": False,
         "seed": 42,
         "precision": "autocast",
-        "init_img": f"{HOME}/.stablediffusion/img2img/output.png",
-        "negative_prompt": "",
-        "cfg_scale": 7.5,
+        "init_img": os.path.join(SDDIR, "img2img/output.png"),
+        "negative_prompt": ""
     }
     photo_types = [
         "polaroid",
@@ -87,20 +89,58 @@ class Txt2ImgTab(Base):
         )
 
     def __init__(self):
-        self.log_widget = PlainText(placeholder="log", config_name="log", max_height=50, disabled=True)
+        self.log_widget = PlainText(
+            placeholder="log",
+            config_name="log",
+            max_height=50,
+            disabled=True
+        )
+        txt2img_button = Button(
+            label="text ➔ image",
+            release_callback=self.txt2img_button_release_callback,
+            config_name="server_connected",
+        )
+        img2img_button = Button(
+            label="text + image ➔ image",
+            release_callback=self.img2img_release_callback,
+            config_name="server_connected",
+        )
+        photo_button = Button(
+            label="PHOTO",
+            release_callback=self.txt2img_photo_release_callback,
+            config_name="server_connected",
+        )
         super().__init__([
             VerticalInterface(widgets=[
-                Label(label="Prompt"),
-                PlainText(placeholder="prompt", config_name="prompt"),
+                Label(
+                    label="Prompt"
+                ),
+                PlainText(
+                    placeholder="prompt", config_name="prompt"
+                ),
             ]),
             VerticalInterface(interfaces=[
                 HorizontalInterface(widgets=[
-                    Label(label="Number of images", max_width=150),
-                    Label(label="Seed"),
+                    Label(
+                        label="Number of images",
+                        max_width=150
+                    ),
+                    Label(
+                        label="Seed"
+                    ),
                 ]),
                 HorizontalInterface(widgets=[
-                    SpinBox(min=1, max=250, config_name="n_iter", step=2, min_width=150),
-                    LineEdit(placeholder="Random seed", config_name="seed"),
+                    SpinBox(
+                        min=1,
+                        max=250,
+                        config_name="n_iter",
+                        step=2,
+                        min_width=150
+                    ),
+                    LineEdit(
+                        placeholder="Random seed",
+                        config_name="seed"
+                    ),
                 ]),
             ]),
             VerticalInterface(interfaces=[
@@ -108,13 +148,16 @@ class Txt2ImgTab(Base):
                     Label(label="Photo type"),
                 ]),
                 HorizontalInterface(widgets=[
-                    DropDown(options=self.photo_types, config_name="photo_type"),
-                    Button(label="PHOTO", release_callback=self.txt2img_photo_release_callback),
+                    DropDown(
+                        options=self.photo_types,
+                        config_name="photo_type"
+                    ),
+                    photo_button,
                 ]),
             ]),
             HorizontalInterface(widgets=[
-                Button(label="text ➔ image", release_callback=self.txt2img_button_release_callback),
-                Button(label="text + image ➔ image", release_callback=self.img2img_release_callback),
+                txt2img_button,
+                img2img_button,
             ]),
             HorizontalInterface(widgets=[
                 self.log_widget,
