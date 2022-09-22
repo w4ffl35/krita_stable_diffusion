@@ -1,7 +1,7 @@
 # Krita Stable Diffusion
 
 [![Download Plugin](https://img.shields.io/static/v1?label=Plugin&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://drive.google.com/file/d/183KKC-t-4eyKrU2g2F4kUW_Hya-nATaU/view)
-[![Download Krita](https://img.shields.io/static/v1?label=Krita&message=Download&color=00aa00&style=for-the-badge&logoColor=white&link=)]([https://drive.google.com/file/d/183KKC-t-4eyKrU2g2F4kUW_Hya-nATaU/view](https://krita.org/en/download/krita-desktop/))
+[![Download Krita](https://img.shields.io/static/v1?label=Krita&message=Download&color=00aa00&style=for-the-badge&logoColor=white&link=)](https://krita.org/en/download/krita-desktop/)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
