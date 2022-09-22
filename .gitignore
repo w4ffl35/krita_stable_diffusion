@@ -129,8 +129,4 @@ dmypy.json
 .pyre/
 
 # linked folder
-service
 stablediffusion
-stablediffusiond
-
-src
