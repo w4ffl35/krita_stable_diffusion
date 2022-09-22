@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[See Relesase for download link](https://github.com/w4ffl35/krita_stable_diffusion/releases)
+[See Releases for download link](https://github.com/w4ffl35/krita_stable_diffusion/releases)
 
 A Krita plugin for Stable Diffusion.
 
