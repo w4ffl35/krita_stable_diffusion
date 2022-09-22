@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[See Releases for download link](https://github.com/w4ffl35/krita_stable_diffusion/releases)
+[![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 A Krita plugin for Stable Diffusion.
 
