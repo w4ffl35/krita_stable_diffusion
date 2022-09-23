@@ -4,10 +4,10 @@ import queue
 import threading
 import time
 
-HOME = os.path.expanduser("~")
-sys.path.append(f"{HOME}Projects/ai/krita_stable_diffusion")
+# path to here
+HERE=os.path.dirname(os.path.abspath(__file__))
+sys.path.append(HERE)
 
-import logger as log
 from connect import StableDiffusionRequestQueueWorker
 
 
@@ -21,7 +21,7 @@ class StableDiffusionConnectionManager:
         self.response_queue = kwargs.get("response_queue", queue.SimpleQueue())
 
         # create request client
-        log.info("creating request worker...")
+        print("creating request worker...")
         self.request_worker = StableDiffusionRequestQueueWorker(
             port=50006,
             pid=kwargs.get("pid"),
