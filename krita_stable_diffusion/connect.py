@@ -8,9 +8,13 @@ import time
 import torch
 import psutil
 
+HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
-sys.path.append(f"{HOME}/Projects/ai/stablediffusion/stablediffusion")
+sys.path.append(os.path.join("/home/dev/krita-stable-diffusion/krita_stable_diffusion"))
+sys.path.append(os.path.join("/home/dev"))
+sys.path.append(os.path.join("/home/dev/stablediffusion"))
+sys.path.append(os.path.join("/home/dev/stablediffusion/classes"))
 SCRIPTS = {
     'txt2img': [
         ('prompt', ''),
@@ -100,7 +104,6 @@ SCRIPTS = {
 }
 
 
-
 class StableDiffusionRunner:
     stablediffusion = None
     model = None
@@ -165,8 +168,26 @@ class StableDiffusionRunner:
         if self.img2img_options is None:
             raise Exception("img2img_options is required")
 
-        from classes.txt2img import Txt2Img
-        from classes.img2img import Img2Img
+        while True:
+            try:
+                from stablediffusion.classes.txt2img import Txt2Img
+                from stablediffusion.classes.img2img import Img2Img
+                break
+            except ModuleNotFoundError:
+                pass
+            try:
+                from classes.txt2img import Txt2Img
+                from classes.img2img import Img2Img
+                break
+            except ModuleNotFoundError:
+                pass
+            try:
+                from txt2img import Txt2Img
+                from img2img import Img2Img
+                break
+            except ModuleNotFoundError:
+                HERE = os.path.dirname(os.path.abspath(__file__))
+                raise Exception("UNABLE TO IMPORT CLASSES " + HERE)
 
         # start a txt2img loader instance
         self._txt2img_loader = Txt2Img(
@@ -193,9 +214,6 @@ class Connection:
     @property
     def name(self):
         return self.__str__()
-
-    def __str__(self):
-        return "Connection"
 
     def start_thread(self, target, daemon=False, name=None):
         t = threading.Thread(target=target, daemon=daemon)
@@ -286,9 +304,6 @@ class SocketConnection(Connection):
     soc_connection = None
     soc_addr = None
 
-    def __str__(self):
-        return "SocketConnection"
-
     def open_socket(self):
         """
         Open a socket conenction
@@ -333,9 +348,6 @@ class SocketServer(SocketConnection):
         self.initialize_socket()
         self.has_connection = False
         self.open_socket()
-
-    def __str__(self):
-        return "SocketServer"
 
     def callback(self, msg):
         """
@@ -457,9 +469,6 @@ class SocketServer(SocketConnection):
 class SocketClient(SocketConnection):
     has_connection = False
 
-    def __str__(self):
-        return "SocketClient"
-
     def callback(self, msg):
         """
         Override this method or pass it in as a parameter to handle messages
@@ -510,6 +519,7 @@ class SocketClient(SocketConnection):
                 try:
                     print("Waiting for response from server")
                     response = self.soc.recv(1024)
+                    print("CLIENT: response received", response)
                     if self.quit_event.is_set(): break
                     if response != b'pong' and response != b'ping':
                         print("CLIENT: enqueuing reseponse")
@@ -558,9 +568,6 @@ class SimpleEnqueueSocketServer(SocketServer):
     """
     Creates a SimpleQueue and waits for messages to append to it.
     """
-    def __str__(self):
-        return "SimpleEnqueueSocketServer"
-
     @property
     def message(self):
         return ""
@@ -595,9 +602,6 @@ class SimpleEnqueueSocketClient(SocketClient):
     """
     Creates a SimpleQueue and waits for messages to append to it.
     """
-    def __str__(self):
-        return "SimpleEnqueueSocketClient"
-
     @property
     def message(self):
         return ""
@@ -706,22 +710,12 @@ class SimpleEnqueueSocketClient(SocketClient):
 
 
 class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
-    def __str__(self):
-        return "SimpleEnqueueSocketServer"
-
     def callback(self, data):
         """
         Handle a stable diffusion request message
         :return: None
         """
-        print("x" * 80)
-        print("x"*80)
-        print(data)
-        print(type(data))
-        print("x" * 80)
-        print("x" * 80)
         response = None
-        print("callback", data)
         data = json.loads(data.decode("utf-8"))
         if data["type"] == "txt2img":
             response = self.sdrunner.txt2img_sample(data["options"])
@@ -735,7 +729,6 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         while True:
             print("SERVER: response queue worker")
             response = self.response_queue.get()
-            print(response)
             if response == "quit":
                 break
             res = json.dumps({ "response": response })
@@ -755,15 +748,6 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
             img2img_options=SCRIPTS["img2img"]
         )
         torch.cuda.empty_cache()
-        print("*"* 80)
-        print("*" * 80)
-        print("*" * 80)
-        print("*" * 80)
-        print("SD Runner started")
-        print("*" * 80)
-        print("*" * 80)
-        print("*" * 80)
-        print("*" * 80)
 
     def __init__(self, *args, **kwargs):
         self.response_queue = queue.SimpleQueue()
@@ -781,11 +765,7 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         super().__init__(*args, **kwargs)
 
 
-
 class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
-    def __str__(self):
-        return "StableDiffusionResponseQueueWorker"
-
     def callback(self, message):
         """
         Handle a stable diffusion response message

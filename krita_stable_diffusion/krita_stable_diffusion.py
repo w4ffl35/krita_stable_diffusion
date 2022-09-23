@@ -1,6 +1,5 @@
 import json
 import subprocess
-import sys
 import time
 
 from krita import *
@@ -8,9 +7,10 @@ import threading
 import os
 import krita_stable_diffusion.logger as log
 
-#from krita_stable_diffusion.connect import StablediffusionresponsedConnection
-from krita_stable_diffusion.connect import StableDiffusionRequestQueueWorker, SimpleEnqueueSocketClient
+from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
+
+HOME = os.path.expanduser("~")
 
 class Controller(QObject):
     krita_instance = None
@@ -130,7 +130,9 @@ class Controller(QObject):
         :return:
         """
         layer_name_prefix = "SD_txt2img:"
+        print("Inserting images")
         for image_data in image_paths:
+            print("IMAGE DATA", image_data)
             seed = image_data.__contains__("seed") or ""
             image_path = image_data["file_name"]
             self.add_image(f"{layer_name_prefix}:{seed}:{image_path}", image_path)
@@ -170,6 +172,7 @@ class Controller(QObject):
         log.info(f"adding image: {path}")
         image = QImage()
         image.load(path, "PNG")
+        print("Getting layer ", layer_name)
         layer = self.create_layer(layer_name, visible=visible)
         layer.setPixelData(self.byte_array(image), self.x(), self.y(), self.width(), self.height())
 
@@ -216,18 +219,29 @@ class Controller(QObject):
         :return:
         """
         here = os.path.dirname(os.path.realpath(__file__))
-        # get process id for the current process
         pid = os.getpid()
-        #os.system(f"{here}/dist/kritastablediffusion/kritastablediffusion --pid {pid}")
-        # run os.system command as a separate process
-        p = subprocess.Popen(
-            f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
-            shell=True
-        )
-        # p = subprocess.Popen(
-        #     f"/home/joe/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
-        #     shell=True
-        # )
+        while True:
+            if os.path.exists(f"{here}/kritastablediffusion/kritastablediffusion"):
+                p = subprocess.Popen(
+                    f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
+                    shell=True
+                )
+                break
+
+            if os.path.isfile(f"{here}/kritastablediffusion"):
+                p = subprocess.Popen(
+                    f"{here}/kritastablediffusion --pid {pid}",
+                    shell=True
+                )
+                break
+
+            if os.path.exists(f"{here}/kritastablediffusion.py"):
+                p = subprocess.Popen(
+                    f"{HOME}/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+                    shell=True
+                )
+                break
+            raise Exception("Missing kritastablediffusion")
 
     def request_prompt(self, message):
         """
@@ -266,6 +280,7 @@ class Controller(QObject):
             self.config.setValue("sever_connected", False)
 
     def __init__(self, *args, **kwargs):
+        Application.__setattr__("connected_to_sd", False)
         self.client = None
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
