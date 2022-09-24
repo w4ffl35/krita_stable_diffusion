@@ -105,6 +105,9 @@ SCRIPTS = {
 
 
 class StableDiffusionRunner:
+    """
+    Run Stable Diffusion.
+    """
     stablediffusion = None
     model = None
     device = None
@@ -136,6 +139,12 @@ class StableDiffusionRunner:
         return value
 
     def process_options(self, options, data):
+        """
+        Process the data, compare aginast options.
+        :param options: options
+        :param data: data
+        return: processed options
+        """
         # get all keys from data
         keys = data.keys()
         for index, opt in enumerate(options):
@@ -150,17 +159,31 @@ class StableDiffusionRunner:
         return options
 
     def txt2img_sample(self, data):
+        """
+        Run txt2img sample.
+        :param data: data
+        return: result
+        """
         print("Sampling txt2img")
         return self._txt2img_loader.sample(
             options=self.process_options(self.txt2img_options, data)
         )
 
     def img2img_sample(self, data):
+        """
+        Run img2img sample.
+        :param data: data
+        return: result
+        """
         return self._img2img_loader.sample(
             options=self.process_options(self.img2img_options, data)
         )
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the runner.
+        """
+        super().__init__(*args, **kwargs)
         self.txt2img_options = kwargs.get("txt2img_options", None)
         self.img2img_options = kwargs.get("img2img_options", None)
         if self.txt2img_options is None:
@@ -320,32 +343,58 @@ class SocketConnection(Connection):
         pass
 
     def connect(self):
+        """
+        Open a socket and handle connection
+        :return: None
+        """
         self.open_socket()
         self.handle_open_socket()
 
     def disconnect(self):
+        """
+        Disconnect from socket
+        :return: None
+        """
         if self.soc_connection:
             self.soc_connection.close()
         self.soc.close()
         self.soc_connection = None
 
     def initialize_socket(self):
+        """
+        Initialize a socket. Use timeout to prevent constant blocking.
+        :return: None
+        """
         self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.soc.settimeout(3)
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the socket connection, call initialize socket prior
+        to calling super because super will start a thread calling connect,
+        and connect opens a socket.
+
+        Failing to call initialize socket prior to super will result in an error
+        """
         self.initialize_socket()
         super().__init__(*args, **kwargs)
         self.queue = queue.SimpleQueue()
 
 
 class SocketServer(SocketConnection):
+    """
+    Opens a socket on a server and port.
+    """
     max_client_connections = 1
     quit_event = None
     has_connection = False
     response_queue = None
 
     def reset_connection(self):
+        """
+        Reset connection to service
+        :return: None
+        """
         self.disconnect()
         self.initialize_socket()
         self.has_connection = False
@@ -369,6 +418,10 @@ class SocketServer(SocketConnection):
         pass
 
     def open_socket(self):
+        """
+        Open a socket conenction
+        :return: None
+        """
         try:
             self.soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.soc.settimeout(1)
@@ -442,6 +495,10 @@ class SocketServer(SocketConnection):
         self.stop()
 
     def watch_connection(self):
+        """
+        Watch the connection and shutdown if the server if the connection
+        is lost.
+        """
         while True:
             if self.try_quit():
                 print(f"SERVER: shutting down")
@@ -704,6 +761,9 @@ class SimpleEnqueueSocketClient(SocketClient):
             if self.quit_event.is_set(): break
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the client
+        """
         self._failed_messages = []
         self.handle_response = kwargs.get(
             "handle_response",
@@ -732,6 +792,10 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
             self.response_queue.put(response)
 
     def response_queue_worker(self):
+        """
+        Wait for responses from the stable diffusion runner and send
+        them to the client
+        """
         while True:
             print("SERVER: response queue worker")
             response = self.response_queue.get()
@@ -748,6 +812,10 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
             time.sleep(1)
 
     def init_sd_runner(self):
+        """
+        Initialize the stable diffusion runner
+        return: None
+        """
         print("SERVER: starting Stable Diffusion runner")
         self.sdrunner = StableDiffusionRunner(
             txt2img_options=SCRIPTS["txt2img"],
@@ -756,6 +824,9 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         torch.cuda.empty_cache()
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the worker
+        """
         self.response_queue = queue.SimpleQueue()
         self.pid = kwargs.get("pid")
         # create a stable diffusion runner service
