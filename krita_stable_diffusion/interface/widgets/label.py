@@ -8,6 +8,7 @@ class Label(Widget):
     :param label: The text of the label
     :return: None
     """
+
     def create_widget(self):
         element = QLabel(self.label)
         self.widget = self.initialize_widget(element)

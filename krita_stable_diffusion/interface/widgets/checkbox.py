@@ -10,6 +10,7 @@ class CheckBox(Widget):
     :param default_value: The default value of the checkbox
     :param config_name: The name of the config value to be set on checkbox state change
     """
+
     def create_widget(self):
         element = QCheckBox(self.label)
         element.setChecked(self.config.value(self.config_name, type=bool))

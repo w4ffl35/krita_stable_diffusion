@@ -11,6 +11,7 @@ from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.interface.widgets.spin_box import SpinBox
 from krita_stable_diffusion.settings import UPSCALERS, SAMPLERS
 
+
 class AdvancedTab(Base):
     """
     Txt2ImgTab interface for the Krita Stable Diffusion plugin.
@@ -37,7 +38,7 @@ class AdvancedTab(Base):
         "scale": 7.5,
         "from-file": False,
         "precision": "autocast",
-        "init_img":  os.path.join(SDDIR, "img2img/output.png"),
+        "init_img": os.path.join(SDDIR, "img2img/output.png"),
         "negative_prompt": "",
         "cfg_scale": 7.5,
     }
@@ -61,7 +62,6 @@ class AdvancedTab(Base):
         """
         self.handle_button_press("txt2img")
 
-
     def __init__(self):
         super().__init__([
             HorizontalInterface(widgets=[Label(label="img2img settings")]),
@@ -78,8 +78,13 @@ class AdvancedTab(Base):
                     Label(label="Denoising Strength"),
                 ]),
                 HorizontalInterface(widgets=[
-                    SpinBox(min=0, max=1, config_name="strength", step=0.1, double=True),
-                    # CheckBox(label="Enable GFPGAN", config_name="gfpgan", default_value=self.default_setting_values["gfpgan"]),
+                    SpinBox(
+                        min=0,
+                        max=1,
+                        config_name="strength",
+                        step=0.1,
+                        double=True
+                    ),
                 ]),
             ]),
             VerticalInterface(interfaces=[
@@ -88,8 +93,18 @@ class AdvancedTab(Base):
                     Label(label="Cfg Scale"),
                 ]),
                 HorizontalInterface(widgets=[
-                    SpinBox(min=1, max=250, config_name="ddim_steps", step=1),
-                    SpinBox(min=1.0, max=30.0, config_name="cfg_scale", step=0.5, double=True)
+                    SpinBox(
+                        min=1,
+                        max=250,
+                        config_name="ddim_steps",
+                        step=1
+                    ),
+                    SpinBox(
+                        min=1.0,
+                        max=30.0,
+                        config_name="cfg_scale",
+                        step=0.5, double=True
+                    )
                 ]),
             ]),
             VerticalInterface(interfaces=[
@@ -140,7 +155,9 @@ class AdvancedTab(Base):
                 ]),
                 HorizontalInterface(widgets=[
                     DropDown(options=SAMPLERS, config_name="sampler"),
-                    DropDown(options=["full", "autocast"], config_name="sampler"),
+                    DropDown(
+                        options=["full", "autocast"], config_name="sampler"
+                    ),
                 ]),
             ]),
             VerticalInterface(interfaces=[
@@ -149,8 +166,19 @@ class AdvancedTab(Base):
                     Label(label="Unconditional guidance scale"),
                 ]),
                 HorizontalInterface(widgets=[
-                    SpinBox(min=1, max=250, config_name="n_samples", step=1),
-                    SpinBox(min=1.0, max=50.0, config_name="scale", step=0.1, double=True),
+                    SpinBox(
+                        min=1,
+                        max=250,
+                        config_name="n_samples",
+                        step=1
+                    ),
+                    SpinBox(
+                        min=1.0,
+                        max=50.0,
+                        config_name="scale",
+                        step=0.1,
+                        double=True
+                    ),
                 ]),
             ]),
             VerticalInterface(widgets=[

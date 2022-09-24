@@ -268,11 +268,13 @@ class Connection:
         print("Stopping connection thread...")
         for n in range(len(self.threads)):
             thread = self.threads[n]
-            print(f"{n+1} of {len(self.threads)} Stopping thread {thread.getName()} from {self.name}...")
+            total = len(self.threads)
+            tname = thread.getName()
+            print(f"{n+1} of {total} Stopping thread {tname} from {self.name}")
             try:
                 thread.join()
             except RuntimeError:
-                print(f"Thread {thread.getName()} from {self.name} is not running.")
+                print(f"Thread {thread.getName()} from {self.name} not running")
             print(f"Stopped thread {thread.getName()}...")
         print("All threads stopped")
 
@@ -568,6 +570,7 @@ class SimpleEnqueueSocketServer(SocketServer):
     """
     Creates a SimpleQueue and waits for messages to append to it.
     """
+
     @property
     def message(self):
         return ""
@@ -580,10 +583,10 @@ class SimpleEnqueueSocketServer(SocketServer):
         print("SERVER WORKER: enqueue worker started")
         while True:
             print("SERVER WORKER: await connection")
-            if self.has_connection:     # if a client is connected...
+            if self.has_connection:  # if a client is connected...
                 print("SERVER WORKER: waiting for queue")
                 msg = self.queue.get()  # get a message from the queue
-                try:                    # send to callback
+                try:  # send to callback
                     self.callback(msg)
                 except Exception as err:
                     print(f"SERVER: callback error: {err}")
@@ -602,6 +605,7 @@ class SimpleEnqueueSocketClient(SocketClient):
     """
     Creates a SimpleQueue and waits for messages to append to it.
     """
+
     @property
     def message(self):
         return ""
@@ -701,7 +705,10 @@ class SimpleEnqueueSocketClient(SocketClient):
 
     def __init__(self, *args, **kwargs):
         self._failed_messages = []
-        self.handle_response = kwargs.get("handle_response", self.handle_response_default)
+        self.handle_response = kwargs.get(
+            "handle_response",
+            self.handle_response_default
+        )
         super().__init__(*args, **kwargs)
         self.start_thread(
             self.response_worker,
@@ -724,14 +731,13 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         if response is not None and response != b'':
             self.response_queue.put(response)
 
-
     def response_queue_worker(self):
         while True:
             print("SERVER: response queue worker")
             response = self.response_queue.get()
             if response == "quit":
                 break
-            res = json.dumps({ "response": response })
+            res = json.dumps({"response": response})
             if res is not None and res != b'':
                 print("SERVER: sending response")
                 try:
@@ -775,4 +781,3 @@ class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-

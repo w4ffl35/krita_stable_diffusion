@@ -11,6 +11,7 @@ from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.interface.widgets.spin_box import SpinBox
 from krita_stable_diffusion.settings import UPSCALERS, SAMPLERS
 
+
 class Txt2ImgTab(Base):
     """
     Txt2ImgTab interface for the Krita Stable Diffusion plugin.

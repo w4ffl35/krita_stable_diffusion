@@ -43,15 +43,18 @@ Some of the things we are working towards:
 
 1. [Download and unzip the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.0/krita_stable_diffusion-0.2.0.zip)
 2. Move the contents of the PLUGIN folder into your pykrita folder `/home/USER/.local/share/krita/pykrita/`
+
 ```
 ~/.local/share/krita/pykrita/
 └── krita-stable-diffusion
     ├── krita-stable-diffusion
     └── Krita Stable Diffusion Plugin
 ```
+
 3. Move the stablediffusion folder to your home directory `/home/$USER/stablediffusion/`
 4. [Download the Stable Diffusion model](https://huggingface.co/CompVis/stable-diffusion-v1-4)
 5. Rename it to `model.ckpt` and place it into `/home/$HOME/stablediffusion/models/ldm/stable-diffusion-v1/model.ckpt`
+
 ```
 ~/stablediffusion/
 ├── configs
@@ -85,9 +88,8 @@ You may need to restart Krita.
 This plugin will run on a variety of systems. As it is tested the results will
 be listed below.
 
-If you have a different system than the one listed below, [please post your 
+If you have a different system than the one listed below, [please post your
 results in this discussion thread](https://github.com/w4ffl35/krita_stable_diffusion/discussions/16).
-
 
 | OS |    GPU    |      CPU      | HD Space | RAM | Krita | Cuda Drivers |
 |:---:|:---------:|:-------------:|:---------:|:---:|:-----:|:------------:|
@@ -97,4 +99,5 @@ results in this discussion thread](https://github.com/w4ffl35/krita_stable_diffu
 
 
 
-Please post your results on the [stablediffusiond discussion board](https://github.com/w4ffl35/stablediffusiond/discussions).
+Please post your results on
+the [stablediffusiond discussion board](https://github.com/w4ffl35/stablediffusiond/discussions).
