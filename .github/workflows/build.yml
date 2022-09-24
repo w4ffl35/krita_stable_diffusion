@@ -19,6 +19,7 @@ jobs:
         username: w4ffl35
         password: ${{ secrets.docker_hub_password }}
     steps:
+      - uses: actions/checkout@v3
       - name: Run build
         run: |
           cd /home/dev/ksd-build
