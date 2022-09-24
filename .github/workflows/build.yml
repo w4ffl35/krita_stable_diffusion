@@ -4,23 +4,25 @@ name: CI
 
 on:
   push:
-    branches: [ "feature/build-actions" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "feature/build-actions" ]
+    branches: [ "master" ]
 
   workflow_dispatch:
 
 jobs:
   build:
+    runs-on: ubuntu-20.04
     container:
-      image: w4ffl35/ksdapp:latest
+      image: ghcr.io/w4ffl35/ksd-build:master
       credentials:
         username: w4ffl35
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.docker_hub_password }}
     steps:
       - uses: actions/checkout@v3
+      - name: Run build
+        run:
       - name: Run a multi-line script
         run: |
           cd /home/dev/ksd-build
           ./bin/linux/package --clean true --system linux --target production
-
