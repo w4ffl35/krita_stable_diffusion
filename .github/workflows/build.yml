@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     container:
-      image: ghcr.io/w4ffl35/ksd-build:master
+      image: w4ffl35/ksd-build:master
       credentials:
         username: w4ffl35
         password: ${{ secrets.GITHUB_TOKEN }}
