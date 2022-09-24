@@ -12,12 +12,16 @@ jobs:
     runs-on: ubuntu-20.04
     container:
       image: w4ffl35/ksd-build:master
-      credentials:
-        username: w4ffl35
-        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
       - name: Run build
+      - uses: actions/checkout@v3
+
+      - name Log in to container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd /home/dev/ksd-build
           ./bin/linux/package --clean true --system linux --target production
