@@ -14,7 +14,7 @@ jobs:
       image: ghcr.io/w4ffl35/ksd-build:master
       credentials:
         username: w4ffl35
-        password: ${{ secrets.docker_hub_password }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
       - name: Run build
