@@ -21,8 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run build
-        run:
-      - name: Run a multi-line script
         run: |
           cd /home/dev/ksd-build
           ./bin/linux/package --clean true --system linux --target production
