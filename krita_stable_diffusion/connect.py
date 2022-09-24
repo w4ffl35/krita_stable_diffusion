@@ -103,6 +103,23 @@ SCRIPTS = {
     ],
 }
 
+try:
+    from stablediffusion.classes.txt2img import Txt2Img
+    from stablediffusion.classes.img2img import Img2Img
+except ModuleNotFoundError:
+    pass
+try:
+    from classes.txt2img import Txt2Img
+    from classes.img2img import Img2Img
+except ModuleNotFoundError:
+    pass
+try:
+    from txt2img import Txt2Img
+    from img2img import Img2Img
+except ModuleNotFoundError:
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    raise ModuleNotFoundError("UNABLE TO IMPORT CLASSES " + HERE)
+
 
 class StableDiffusionRunner:
     """
@@ -111,12 +128,6 @@ class StableDiffusionRunner:
     stablediffusion = None
     model = None
     device = None
-
-    def connect(self):
-        pass
-
-    def start(self):
-        pass
 
     def process_data_value(self, key, value):
         """
@@ -191,27 +202,6 @@ class StableDiffusionRunner:
         if self.img2img_options is None:
             raise Exception("img2img_options is required")
 
-        while True:
-            try:
-                from stablediffusion.classes.txt2img import Txt2Img
-                from stablediffusion.classes.img2img import Img2Img
-                break
-            except ModuleNotFoundError:
-                pass
-            try:
-                from classes.txt2img import Txt2Img
-                from classes.img2img import Img2Img
-                break
-            except ModuleNotFoundError:
-                pass
-            try:
-                from txt2img import Txt2Img
-                from img2img import Img2Img
-                break
-            except ModuleNotFoundError:
-                HERE = os.path.dirname(os.path.abspath(__file__))
-                raise Exception("UNABLE TO IMPORT CLASSES " + HERE)
-
         # start a txt2img loader instance
         self._txt2img_loader = Txt2Img(
             options=self.txt2img_options,
@@ -234,17 +224,20 @@ class Connection:
     threads = []
     pid = None  # keep track of krita process id
 
-    @property
-    def name(self):
-        return self.__str__()
-
     def start_thread(self, target, daemon=False, name=None):
-        t = threading.Thread(target=target, daemon=daemon)
+        """
+        Start a thread.
+        :param target: target
+        :param daemon: daemon
+        :param name: name
+        return: thread
+        """
+        thread = threading.Thread(target=target, daemon=daemon)
         if name:
-            t.setName(name)
-        t.start()
-        self.threads.append(t)
-        return t
+            thread.setName(name)
+        thread.start()
+        self.threads.append(thread)
+        return thread
 
     def connect(self):
         """
@@ -255,14 +248,12 @@ class Connection:
         Use the start() method which starts this method in a new thread.
         :return: None
         """
-        pass
 
     def disconnect(self):
         """
         Override this method to disconnect from something.
         :return: None
         """
-        pass
 
     def reconnect(self):
         """
@@ -289,15 +280,15 @@ class Connection:
         """
         self.disconnect()
         print("Stopping connection thread...")
-        for n in range(len(self.threads)):
-            thread = self.threads[n]
+        for index in range(len(self.threads)):
+            thread = self.threads[index]
             total = len(self.threads)
-            tname = thread.getName()
-            print(f"{n+1} of {total} Stopping thread {tname} from {self.name}")
+            name = thread.getName()
+            print(f"{index+1} of {total} Stopping thread {name}")
             try:
                 thread.join()
             except RuntimeError:
-                print(f"Thread {thread.getName()} from {self.name} not running")
+                print(f"Thread {thread.getName()} not running")
             print(f"Stopped thread {thread.getName()}...")
         print("All threads stopped")
 
@@ -340,7 +331,6 @@ class SocketConnection(Connection):
         Override this method to handle open socket
         :return:
         """
-        pass
 
     def connect(self):
         """
@@ -406,7 +396,6 @@ class SocketServer(SocketConnection):
         :param msg:
         :return:
         """
-        pass
 
     def worker(self):
         """
@@ -415,7 +404,6 @@ class SocketServer(SocketConnection):
         method. The callback method should be overridden to handle the message.
         :return:
         """
-        pass
 
     def open_socket(self):
         """
@@ -434,6 +422,10 @@ class SocketServer(SocketConnection):
         print(f"Socket opened {self.soc}")
 
     def try_quit(self):
+        """
+        Try to quit the thread
+        :return: None
+        """
         has_krita_process = False
         for proc in psutil.process_iter():
             if int(proc.pid) == int(self.pid):
@@ -470,8 +462,8 @@ class SocketServer(SocketConnection):
                         self.has_connection = True
                 except socket.timeout:
                     print("ERROR: SERVER: socket timeout")
-                except Exception as e:
-                    print("ERROR: SERVER: socket error", e)
+                except Exception as exc:
+                    print("ERROR: SERVER: socket error", exc)
                 print(f"SERVER: connection established with {self.soc_addr}")
 
             if self.has_connection:
@@ -489,9 +481,13 @@ class SocketServer(SocketConnection):
                     print("SERVER: connection reset")
                     self.reset_connection()
 
-            if self.quit_event.is_set(): break
+            if self.quit_event.is_set():
+                break
+
             time.sleep(1)
-        print(f"SERVER: server stopped")
+
+        print("SERVER: server stopped")
+
         self.stop()
 
     def watch_connection(self):
@@ -501,7 +497,7 @@ class SocketServer(SocketConnection):
         """
         while True:
             if self.try_quit():
-                print(f"SERVER: shutting down")
+                print("SERVER: shutting down")
                 break
             time.sleep(1)
 
@@ -534,7 +530,6 @@ class SocketClient(SocketConnection):
         :param msg:
         :return:
         """
-        pass
 
     def worker(self):
         """
@@ -543,18 +538,29 @@ class SocketClient(SocketConnection):
         method. The callback method should be overridden to handle the message.
         :return:
         """
-        pass
 
     def reset_connection(self):
+        """
+        Reset connection to service
+        :return: None
+        """
         self.disconnect()
         self.initialize_socket()
         self.has_connection = False
 
     def handle_response(self, response):
+        """
+        Handle the response from the server
+        :param response:
+        :return:
+        """
         self.queue.put(response)
 
     def connect(self):
-        ping = None
+        """
+        Connect to the server
+        :return:
+        """
         while True:
             # check self.soc for connection
             if not self.has_connection:
@@ -563,11 +569,11 @@ class SocketClient(SocketConnection):
                     print("CLIENT: connecting")
                     self.soc.connect((self.host, self.port))
                     self.has_connection = True
-                    self.Application.__setattr__("connected_to_sd", True)
+                    setattr(self.Application, "connected_to_sd", True)
                     self.soc.settimeout(None)
                     print("CLIENT: connected")
-                except Exception as e:
-                    print("CLIENT: failed to connect", e)
+                except Exception as exc:
+                    print("CLIENT: failed to connect", exc)
                     self.has_connection = False
 
             if self.quit_event.is_set():
@@ -579,24 +585,25 @@ class SocketClient(SocketConnection):
                     print("Waiting for response from server")
                     response = self.soc.recv(1024)
                     print("CLIENT: response received", response)
-                    if self.quit_event.is_set(): break
-                    if response != b'pong' and response != b'ping':
-                        print("CLIENT: enqueuing reseponse")
-                        self.handle_response(response)
-                    if response == b'pong':
-                        print("received pong")
-                        ping = 'pong'
+                    if self.quit_event.is_set():
+                        break
                 except socket.timeout:
                     self.has_connection = False
                     print("CLIENT: connection timed out")
-                except Exception as e:
+                except Exception as exc:
                     self.has_connection = False
-                    print("CLIENT: Connection lost", e)
-                if self.quit_event.is_set(): break
-            if self.quit_event.is_set(): break
+                    print("CLIENT: Connection lost", exc)
+                if self.quit_event.is_set():
+                    break
+            if self.quit_event.is_set():
+                break
             time.sleep(1)
 
     def close(self):
+        """
+        Close the socket
+        :return:
+        """
         print("Do Close")
         self.res_queue.put("quit")
         self.soc.shutdown(socket.SHUT_RDWR)
@@ -621,8 +628,10 @@ class SocketClient(SocketConnection):
 
 
 class SimpleEnqueueSocketServer(SocketServer):
-    # list to hold failed messages
-    _failed_messages = []
+    """
+    Simple socket server that enqueues messages to a queue
+    """
+    _failed_messages = []  # list to hold failed messages
 
     """
     Creates a SimpleQueue and waits for messages to append to it.
@@ -630,13 +639,22 @@ class SimpleEnqueueSocketServer(SocketServer):
 
     @property
     def message(self):
+        """
+        Does nothing. Only used for the setter.
+        """
         return ""
 
     @message.setter
     def message(self, msg):
+        """
+        Place incoming messages onto the queue
+        """
         self.queue.put(msg)
 
     def worker(self):
+        """
+        Start a worker to handle request queue
+        """
         print("SERVER WORKER: enqueue worker started")
         while True:
             print("SERVER WORKER: await connection")
@@ -665,22 +683,42 @@ class SimpleEnqueueSocketClient(SocketClient):
 
     @property
     def message(self):
+        """
+        Does nothing. Only used for the setter.
+        """
         return ""
 
     @message.setter
     def message(self, msg):
+        """
+        Set the message property
+        """
         print("CLIENT: MESSAGE RECEIVED", msg)
         self.queue.put(msg)
 
     @property
     def response(self):
+        """
+        Get the response from the server
+        :return: response string
+        """
         return ""
 
     @response.setter
     def response(self, msg):
+        """
+        Set the response
+        :param msg:
+        :return: None
+        """
         self.res_queue.put(msg)
 
     def handle_response(self, response):
+        """
+        Handle the response from the server
+        :param response:
+        :return: None
+        """
         print("CLIENT: handle response")
         res = json.loads(response.decode("utf-8"))
         print(res)
@@ -705,6 +743,11 @@ class SimpleEnqueueSocketClient(SocketClient):
                 pass
 
     def callback(self, message):
+        """
+        Callback function to handle messages
+        :param message:
+        :return: None
+        """
         try:
             self.soc.sendall(json.dumps(message).encode("utf-8"))
         except BrokenPipeError:
@@ -717,17 +760,29 @@ class SimpleEnqueueSocketClient(SocketClient):
             print("CLIENT: lost connection to server")
         except Exception as err:
             print(f"CLIENT: error in callback: {err}")
-            pass
 
     def handle_response_default(self, msg):
+        """
+        Handle the response from the server
+        :param msg:
+        :return: None
+        """
         print("CLIENT: Pass handle_response to kwargs to override this method")
 
     def quit(self):
+        """
+        Quit the client
+        :return: None
+        """
         self.quit_event.set()
         self.res_queue.put("quit")
         self.queue.put("quit")
 
     def worker(self):
+        """
+        Worker thread to handle responses from the server
+        :return: None
+        """
         while True:
             if self.quit_event.is_set():
                 break
@@ -740,6 +795,10 @@ class SimpleEnqueueSocketClient(SocketClient):
             time.sleep(1)
 
     def response_worker(self):
+        """
+        Wait for responses from the server
+        :return: None
+        """
         while True:
             print("Client waiting for message...")
             msg = self.res_queue.get()
@@ -777,6 +836,9 @@ class SimpleEnqueueSocketClient(SocketClient):
 
 
 class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
+    """
+    A socket server that listens for requests and enqueues them to a queue
+    """
     def callback(self, data):
         """
         Handle a stable diffusion request message
@@ -843,6 +905,9 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
 
 
 class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
+    """
+    A socket server that listens for responses and enqueues them to a queue
+    """
     def callback(self, message):
         """
         Handle a stable diffusion response message
