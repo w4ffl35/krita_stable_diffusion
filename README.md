@@ -86,4 +86,4 @@ results in this discussion thread](https://github.com/w4ffl35/krita_stable_diffu
 ---
 
 Please post your results on
-the [stablediffusiond discussion board](https://github.com/w4ffl35/stablediffusiond/discussions).
+the [discussion board](https://github.com/w4ffl35/krita_stable_diffusion/discussions).
