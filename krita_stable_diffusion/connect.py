@@ -6,7 +6,6 @@ import socket
 import threading
 import time
 import torch
-import psutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
@@ -103,24 +102,6 @@ SCRIPTS = {
     ],
 }
 
-try:
-    from stablediffusion.classes.txt2img import Txt2Img
-    from stablediffusion.classes.img2img import Img2Img
-except ModuleNotFoundError:
-    pass
-try:
-    from classes.txt2img import Txt2Img
-    from classes.img2img import Img2Img
-except ModuleNotFoundError:
-    pass
-try:
-    from txt2img import Txt2Img
-    from img2img import Img2Img
-except ModuleNotFoundError:
-    HERE = os.path.dirname(os.path.abspath(__file__))
-    raise ModuleNotFoundError("UNABLE TO IMPORT CLASSES " + HERE)
-
-
 class StableDiffusionRunner:
     """
     Run Stable Diffusion.
@@ -194,7 +175,22 @@ class StableDiffusionRunner:
         """
         Initialize the runner.
         """
-        super().__init__(*args, **kwargs)
+        try:
+            from stablediffusion.classes.txt2img import Txt2Img
+            from stablediffusion.classes.img2img import Img2Img
+        except ModuleNotFoundError:
+            pass
+        try:
+            from classes.txt2img import Txt2Img
+            from classes.img2img import Img2Img
+        except ModuleNotFoundError:
+            pass
+        try:
+            from txt2img import Txt2Img
+            from img2img import Img2Img
+        except ModuleNotFoundError:
+            HERE = os.path.dirname(os.path.abspath(__file__))
+            raise ModuleNotFoundError("UNABLE TO IMPORT CLASSES " + HERE)
         self.txt2img_options = kwargs.get("txt2img_options", None)
         self.img2img_options = kwargs.get("img2img_options", None)
         if self.txt2img_options is None:
@@ -427,6 +423,7 @@ class SocketServer(SocketConnection):
         :return: None
         """
         has_krita_process = False
+        import psutil
         for proc in psutil.process_iter():
             if int(proc.pid) == int(self.pid):
                 has_krita_process = True
@@ -587,6 +584,7 @@ class SocketClient(SocketConnection):
                     print("CLIENT: response received", response)
                     if self.quit_event.is_set():
                         break
+                    self.handle_response(response)
                 except socket.timeout:
                     self.has_connection = False
                     print("CLIENT: connection timed out")

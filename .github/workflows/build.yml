@@ -2,19 +2,19 @@ name: CI
 
 on:
   push:
-    branches: [ "feature/build-actions" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "feature/build-actions" ]
+    branches: [ "master" ]
 jobs:
   build:
-    runs-on: ubuntu-20.04
     container:
-      image: ghcr.io/w4ffl35/ksd-build:master
+      image: ghcr.io/capsize-games/ksd-build:master
       credentials:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: capsize-games
+        password: ${{ secrets. }}
     steps:
       - name: Build the plugin
         run: |
+          bash
           cd /home/dev/ksd-build
           ./bin/linux/package --clean true --system linux --target production
