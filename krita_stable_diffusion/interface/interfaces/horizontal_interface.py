@@ -7,6 +7,7 @@ class HorizontalInterface(QHBoxLayout):
     :param widgets: A list of widgets to add to the layout
     :param interfaces: A list of interfaces to add to the layout
     """
+
     def __init__(self, widgets=[], interfaces=[]):
         super().__init__()
         self.add_widgets(widgets)

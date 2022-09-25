@@ -77,7 +77,7 @@ class Base:
         """
         # prepare request data
         data = {}
-        for k,v in self.default_setting_values.items():
+        for k, v in self.default_setting_values.items():
             if k == "seed":
                 v = self.seed()
             else:
