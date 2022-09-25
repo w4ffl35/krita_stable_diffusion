@@ -27,6 +27,8 @@
 
 ## Installation
 
+[See installation video here](https://youtu.be/qesSTVdDP6A)
+
 1. [Download and unzip the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.1/krita_stable_diffusion-0.2.1.zip)
 2. Unzip
 3. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
