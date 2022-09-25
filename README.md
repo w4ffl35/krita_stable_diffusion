@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![test](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://drive.google.com/drive/folders/16em41HpWOjnLRlYlKgJ2adyJ16CQ937H)
+[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
@@ -26,11 +26,23 @@
 
 ## Installation
 
-1. [Download and unzip the latest release from github](https://drive.google.com/drive/folders/16em41HpWOjnLRlYlKgJ2adyJ16CQ937H)
-2. Unzip
-3. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
-4. Follow the prompts to download the model (requires hugging face account)
-5. Start Krita and enable the plugin
+1. [Download and untar the latest release from github](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar)
+2. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
+
+The following command will do that for you:
+
+```
+wget https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar && \
+tar -xf krita-stable-diffusion_multifile-0.2.1.tar && \
+cd krita-stable-diffusion_multifile-0.2.1 && \
+./install
+```
+
+Follow the prompts to download the model if you don't have it already (requires hugging face account)
+
+Start Krita and enable the plugin.
+
+If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
 
 Provided you have a standard Krita installation everything should work as
 expected. Your directory stucture for the plugin should look like this:
@@ -84,4 +96,4 @@ results in this discussion thread](https://github.com/w4ffl35/krita_stable_diffu
 ---
 
 Please post your results on
-the [stablediffusiond discussion board](https://github.com/w4ffl35/stablediffusiond/discussions).
+the [discussion board](https://github.com/w4ffl35/krita_stable_diffusion/discussions).
