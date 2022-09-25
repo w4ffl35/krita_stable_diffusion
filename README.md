@@ -26,10 +26,21 @@
 
 ## Installation
 
-1. [Download and unzip the latest release from github](https://drive.google.com/drive/folders/16em41HpWOjnLRlYlKgJ2adyJ16CQ937H)
+1. [Download and untar the latest release from github](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar)
 2. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
-3. Follow the prompts to download the model if you don't have it already (requires hugging face account)
-4. Start Krita and enable the plugin
+
+The following command will do that for you:
+
+```
+wget https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar && \
+tar -xf krita-stable-diffusion_multifile-0.2.1.tar && \
+cd krita-stable-diffusion_multifile-0.2.1 && \
+./install
+```
+
+Follow the prompts to download the model if you don't have it already (requires hugging face account)
+
+Start Krita and enable the plugin.
 
 If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
 
