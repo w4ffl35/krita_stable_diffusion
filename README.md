@@ -13,7 +13,7 @@
 
 ---
 
-A Krita plugin for Stable Diffusion.
+![img_3.png](img_3.png)
 
 - Run Stable Diffusion locally in Krita without the need for a Python environment.
 - **Easy installation: no need to install Python, no need to install dependencies**
