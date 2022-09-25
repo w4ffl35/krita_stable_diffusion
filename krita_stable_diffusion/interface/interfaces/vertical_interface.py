@@ -7,6 +7,7 @@ class VerticalInterface(QVBoxLayout):
     :param widgets: A list of widgets to add to the interface
     :param interfaces: A list of interfaces to add to the interface
     """
+
     def __init__(self, widgets=[], interfaces=[]):
         super().__init__()
         self.add_widgets(widgets)

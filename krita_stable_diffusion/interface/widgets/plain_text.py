@@ -8,6 +8,7 @@ class PlainText(Widget):
     :param placeholder: The placeholder text of the plain text
     :param config_name: The name of the config to be set
     """
+
     def create_widget(self):
         element = QPlainTextEdit()
         element.setPlaceholderText(self.placeholder)

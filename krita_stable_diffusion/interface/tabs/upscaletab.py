@@ -34,7 +34,8 @@ class UpscaleTab(Base):
                 DropDown(options=UPSCALERS, config_name="upscale_upscaler_name"),
                 Button(label="Update list", release_callback=self.update_list_release_callback),
                 Label(label="Downscale image x0.5 before upscaling"),
-                CheckBox(label="Enable", config_name="downscale", default_value=self.default_setting_values["downscale"]),
+                CheckBox(label="Enable", config_name="downscale",
+                         default_value=self.default_setting_values["downscale"]),
                 Button(label="Apply upscaler", callback=self.upscale_release_callback),
             ]),
         ])
