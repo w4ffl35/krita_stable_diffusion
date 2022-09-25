@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![test](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://drive.google.com/drive/folders/16em41HpWOjnLRlYlKgJ2adyJ16CQ937H)
+[![test](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
