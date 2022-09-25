@@ -34,6 +34,8 @@
 3. Follow the prompts to download the model if you don't have it already (requires hugging face account)
 4. Start Krita and enable the plugin
 
+If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
+
 Provided you have a standard Krita installation everything should work as
 expected. Your directory stucture for the plugin should look like this:
 
