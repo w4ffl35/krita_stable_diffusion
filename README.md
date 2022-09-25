@@ -29,11 +29,10 @@
 
 [See installation video here](https://youtu.be/qesSTVdDP6A)
 
-1. [Download and unzip the latest release from github](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.1/krita_stable_diffusion-0.2.1.zip)
-2. Unzip
-3. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
-4. Follow the prompts to download the model (requires hugging face account)
-5. Start Krita and enable the plugin
+1. [Download and unzip the latest release from github releases page (click the google drive download link)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.1/krita_stable_diffusion-0.2.1.zip)
+2. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
+3. Follow the prompts to download the model if you don't have it already (requires hugging face account)
+4. Start Krita and enable the plugin
 
 Provided you have a standard Krita installation everything should work as
 expected. Your directory stucture for the plugin should look like this:
