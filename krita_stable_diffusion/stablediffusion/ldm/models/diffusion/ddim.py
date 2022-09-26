@@ -10,6 +10,7 @@ from stablediffusion.ldm.modules.diffusionmodules.util import make_ddim_sampling
 HALF_PRECISION=16
 FULL_PRECISION=32
 PRECISION=HALF_PRECISION
+DEVICE="cuda"
 
 class DDIMSampler(object):
     def __init__(self, model, schedule="linear", **kwargs):
@@ -20,8 +21,8 @@ class DDIMSampler(object):
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
-            if attr.device != torch.device("cuda"):
-                attr = attr.to(torch.device("cuda"))
+            if attr.device != torch.device(DEVICE):
+                attr = attr.to(torch.device(DEVICE))
         setattr(self, name, attr)
 
     def make_schedule(

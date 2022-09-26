@@ -38,7 +38,9 @@ class Img2Img(BaseModel):
         :return: None
         """
         super().sample(options)
-        torch.cuda.empty_cache()
+
+        self.clear_cache()
+
         opt = self.opt
         batch_size = self.batch_size
         model = self.model
@@ -72,7 +74,7 @@ class Img2Img(BaseModel):
 
         saved_files = []
         with torch.no_grad():
-            with precision_scope("cuda"):
+            with precision_scope(DEVICE):
                 with model.ema_scope():
                     all_samples = list()
                     uc = None
@@ -118,7 +120,7 @@ class Img2Img(BaseModel):
                                 base_count += 1
 
                             all_samples.append(x_samples)
+                        self.update_seed()
 
-        torch.cuda.empty_cache()
-
+        self.clear_cache()
         return saved_files

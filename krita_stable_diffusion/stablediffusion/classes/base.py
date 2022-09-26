@@ -1,6 +1,7 @@
 import argparse
 import os
 import torch
+import random
 import numpy as np
 import logging
 from PIL import Image
@@ -20,6 +21,7 @@ HOME = os.path.expanduser("~")
 safety_model_id = f"{HOME}/stablediffusion/models/CompVis/stable-diffusion-safety-checker"
 safety_feature_extractor = AutoFeatureExtractor.from_pretrained(safety_model_id)
 safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model_id)
+DEVICE="cuda"
 
 
 def load_model_from_config(config, ckpt, verbose=False):
@@ -60,7 +62,8 @@ def chunk(it, size):
 
 class BaseModel:
     """
-    Base model class which is inherited by model classes (see classes.txt2img.py and classes.img2img.py)
+    Base model class which is inherited by model classes
+    (see classes.txt2img.py and classes.img2img.py)
     :attribute args: list of arguments to be parsed by argparse, set this in each child class
     :attribute opt: parsed arguments, set by parse_arguments()
     :attribute parser: argparse parser, set by parse_arguments()
@@ -80,6 +83,24 @@ class BaseModel:
     :attribute initialized: whether the model has been initialized, set by initialize()
     """
     args = []
+    change_seed = True
+    change_seed_type = "incremental"
+    seed = 42
+    current_seed = 42
+    batch_size = 1
+    do_save = False
+
+    def random_seed(self):
+        return random.randint(0, 1000000)
+
+    def update_seed(self):
+        if not self.change_seed:
+            return
+        if self.change_seed_type == "increment":
+            self.current_seed += 1
+        elif self.change_seed_type == "random":
+            self.current_seed = self.random_seed()
+        self.set_seed(seed=self.current_seed)
 
     def __init__(self, *args, **kwargs):
         self.opt = {}
@@ -162,7 +183,8 @@ class BaseModel:
 
     def initialize_options(self):
         """
-        Initialize options, by default check for laion400m and set the corresponding options
+        Initialize options, by default check for laion400m and set the
+        corresponding options
         :return:
         """
         if self.opt.__contains__("laion400m") and self.opt.laion400m:
@@ -171,13 +193,14 @@ class BaseModel:
             self.opt.ckpt = "models/ldm/text2img-large/model.ckpt"
             self.opt.outdir = "outputs/txt2img-samples-laion400m"
 
-    def set_seed(self):
+    def set_seed(self, seed=None):
         """
         Seed everything using the current seed.
-        This allows us to re-seed the model with a new seed that can remain static or be modified, e.g. when sampling.
+        This allows us to re-seed the model with a new seed that can remain
+        static or be modified, e.g. when sampling.
         :return:
         """
-        seed_everything(self.opt.seed)
+        seed_everything(seed if seed else self.opt.seed)
 
     def load_config(self):
         """
@@ -192,7 +215,8 @@ class BaseModel:
         :return:
         """
         self.model = load_model_from_config(self.config, f"{self.opt.ckpt}")
-        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        self.device = torch.device("cuda") if torch.cuda.is_available() \
+            else torch.device("cpu")
         self.model = self.model.to(self.device)
 
     def initialize_outdir(self):
@@ -222,8 +246,14 @@ class BaseModel:
         :param x_image: image to check
         :return:
         """
-        safety_checker_input = safety_feature_extractor(self.numpy_to_pil(x_image), return_tensors="pt")
-        x_checked_image, has_nsfw_concept = safety_checker(images=x_image, clip_input=safety_checker_input.pixel_values)
+        safety_checker_input = safety_feature_extractor(
+            self.numpy_to_pil(x_image),
+            return_tensors="pt"
+        )
+        x_checked_image, has_nsfw_concept = safety_checker(
+            images=x_image,
+            clip_input=safety_checker_input.pixel_values
+        )
         assert x_checked_image.shape[0] == len(has_nsfw_concept)
         for i in range(len(has_nsfw_concept)):
             if has_nsfw_concept[i]:
@@ -232,7 +262,8 @@ class BaseModel:
 
     def filter_nsfw_content(self, x_samples_ddim):
         """
-        Check if the samples are safe for work, replace them with a placeholder if not
+        Check if the samples are safe for work, replace them with a
+        placeholder if not
         :param x_samples_ddim:
         :return:
         """
@@ -290,7 +321,8 @@ class BaseModel:
         Define the precision scope
         :return:
         """
-        self.precision_scope = autocast if self.opt.precision=="autocast" else nullcontext
+        self.precision_scope = autocast if self.opt.precision=="autocast" \
+            else nullcontext
 
     def get_first_stage_sample(self, model, samples):
         samples_ddim = model.decode_first_stage(samples)
@@ -330,3 +362,7 @@ class BaseModel:
             file_name = os.path.join(sample_path, f"{base_count:05}.png")
             img.save(file_name)
             return file_name
+
+    def clear_cache(self):
+        if DEVICE == "cuda":
+            torch.cuda.empty_cache()
