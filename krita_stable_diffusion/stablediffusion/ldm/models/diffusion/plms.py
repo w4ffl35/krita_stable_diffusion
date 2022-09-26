@@ -7,6 +7,10 @@ from functools import partial
 
 from stablediffusion.ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, make_ddim_timesteps, noise_like
 
+HALF_PRECISION=16
+FULL_PRECISION=32
+PRECISION=HALF_PRECISION
+
 
 class PLMSSampler(object):
     def __init__(self, model, schedule="linear", **kwargs):
@@ -28,7 +32,11 @@ class PLMSSampler(object):
                                                   num_ddpm_timesteps=self.ddpm_num_timesteps,verbose=verbose)
         alphas_cumprod = self.model.alphas_cumprod
         assert alphas_cumprod.shape[0] == self.ddpm_num_timesteps, 'alphas have to be defined for each timestep'
-        to_torch = lambda x: x.clone().detach().to(torch.float32).to(self.model.device)
+        to_torch = lambda x: x.clone().detach().to(
+            torch.float32 if PRECISION == FULL_PRECISION else torch.float16
+        ).to(
+            self.model.device
+        )
 
         self.register_buffer('betas', to_torch(self.model.betas))
         self.register_buffer('alphas_cumprod', to_torch(alphas_cumprod))

@@ -13,6 +13,10 @@ from natsort import natsorted
 from stablediffusion.ldm.modules.diffusionmodules.openaimodel import EncoderUNetModel, UNetModel
 from stablediffusion.ldm.util import log_txt_as_img, default, ismap, instantiate_from_config
 
+HALF_PRECISION=16
+FULL_PRECISION=32
+PRECISION=HALF_PRECISION
+
 __models__ = {
     'class_label': EncoderUNetModel,
     'segmentation': UNetModel
@@ -120,13 +124,19 @@ class NoisyLatentImageClassifier(pl.LightningModule):
     def forward(self, x_noisy, t, *args, **kwargs):
         return self.model(x_noisy, t)
 
+    def precision(self, val):
+        if PRECISION == HALF_PRECISION:
+            return val.half()
+        else:
+            return val.float()
+
     @torch.no_grad()
     def get_input(self, batch, k):
         x = batch[k]
         if len(x.shape) == 3:
             x = x[..., None]
         x = rearrange(x, 'b h w c -> b c h w')
-        x = x.to(memory_format=torch.contiguous_format).float()
+        x = self.precision(x.to(memory_format=torch.contiguous_format))
         return x
 
     @torch.no_grad()
@@ -150,9 +160,9 @@ class NoisyLatentImageClassifier(pl.LightningModule):
     def compute_top_k(self, logits, labels, k, reduction="mean"):
         _, top_ks = torch.topk(logits, k, dim=1)
         if reduction == "mean":
-            return (top_ks == labels[:, None]).float().sum(dim=-1).mean().item()
+            return self.precision(top_ks == labels[:, None]).sum(dim=-1).mean().item()
         elif reduction == "none":
-            return (top_ks == labels[:, None]).float().sum(dim=-1)
+            return self.pecision(top_ks == labels[:, None]).sum(dim=-1)
 
     def on_train_epoch_start(self):
         # save some memory

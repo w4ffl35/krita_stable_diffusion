@@ -1,5 +1,3 @@
-import os
-import sys
 from krita import *
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.interface.tabs.base import Base
@@ -17,7 +15,6 @@ class ConfigTab(Base):
     display_name = "Config"
     default_setting_values = {
         "do_nsfw_filter": False,
-        "do_watermark": False,
         "purge_temp_files": True,
         "aspect_ratio_correction": True,
         "restrict_tiling": True,
@@ -36,8 +33,6 @@ class ConfigTab(Base):
             VerticalInterface(widgets=[
                 CheckBox(label="NSFW Filter", config_name="do_nsfw_filter",
                          default_value=self.default_setting_values["do_nsfw_filter"]),
-                CheckBox(label="Add Watermark", config_name="do_watermark",
-                         default_value=self.default_setting_values["do_watermark"]),
                 CheckBox(label="Auto delete temp files", config_name="purge_temp_files",
                          default_value=self.default_setting_values["purge_temp_files"]),
                 CheckBox(label="Try to fix aspect ratio for selections", config_name="aspect_ratio_correction",

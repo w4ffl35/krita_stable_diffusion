@@ -2,11 +2,9 @@ import argparse
 import os
 import torch
 import numpy as np
-import cv2
 import logging
 from PIL import Image
 from einops import rearrange
-from imwatermark import WatermarkEncoder
 from torch import autocast
 from pytorch_lightning import seed_everything  # FAILS
 from omegaconf import OmegaConf
@@ -16,9 +14,11 @@ from stablediffusion.ldm.models.diffusion.plms import PLMSSampler
 from stablediffusion.ldm.util import instantiate_from_config
 from itertools import islice
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+from transformers import AutoFeatureExtractor
 
 HOME = os.path.expanduser("~")
 safety_model_id = f"{HOME}/stablediffusion/models/CompVis/stable-diffusion-safety-checker"
+safety_feature_extractor = AutoFeatureExtractor.from_pretrained(safety_model_id)
 safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model_id)
 
 
@@ -40,14 +40,6 @@ def load_model_from_config(config, ckpt, verbose=False):
     model.cuda().half()
     model.eval()
     return model
-
-
-def put_watermark(img, wm_encoder=None):
-    if wm_encoder is not None:
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        img = wm_encoder.encode(img, 'dwtDct')
-        img = Image.fromarray(img[:, :, ::-1])
-    return img
 
 
 def load_replacement(x):
@@ -80,7 +72,6 @@ class BaseModel:
     :attribute sampler: sampler object, set by initialize_sampler()
     :attribute device: device to use, set by load_model()
     :attribute model: model object, set by load_model()
-    :attribute wm_encoder: watermark encoder object, set by initialize_watermark()
     :attribute base_count: base count, set by initialize_base_count()
     :attribute grid_count: grid count, set by initialize_grid_count()
     :attribute sample_path: sample path, set by create_sample_path()
@@ -143,7 +134,6 @@ class BaseModel:
         if not self.model or not self.device:
             self.load_model()
         self.initialize_outdir()
-        self.initialize_watermark()
         self.create_sample_path()
         self.initialize_start_code()
 
@@ -216,16 +206,6 @@ class BaseModel:
             pass
         self.outpath = self.opt.outdir
 
-    def initialize_watermark(self):
-        """
-        Initialize the watermark encoder
-        :return:
-        """
-        self.log.info("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-        wm = "StableDiffusionV1"
-        self.wm_encoder = WatermarkEncoder()
-        self.wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
-
     def numpy_to_pil(self, images):
         """
         Convert a numpy image or a batch of images to a PIL image.
@@ -242,7 +222,7 @@ class BaseModel:
         :param x_image: image to check
         :return:
         """
-        # safety_checker_input = safety_feature_extractor(self.numpy_to_pil(x_image), return_tensors="pt")
+        safety_checker_input = safety_feature_extractor(self.numpy_to_pil(x_image), return_tensors="pt")
         x_checked_image, has_nsfw_concept = safety_checker(images=x_image, clip_input=safety_checker_input.pixel_values)
         assert x_checked_image.shape[0] == len(has_nsfw_concept)
         for i in range(len(has_nsfw_concept)):
@@ -260,16 +240,6 @@ class BaseModel:
             x_samples_ddim, has_nsfw = self.check_safety(x_samples_ddim)
             return x_samples_ddim
         return x_samples_ddim
-
-    def add_watermark(self, img):
-        """
-        Adds digital watermark to image
-        :param img:
-        :return:
-        """
-        if self.opt.do_watermark != "":
-            img = put_watermark(img, self.wm_encoder)
-        return img
 
     def prepare_data(self):
         """
@@ -346,7 +316,7 @@ class BaseModel:
         self.base_count = len(os.listdir(self.sample_path))
         self.grid_count = len(os.listdir(self.outpath)) - 1
 
-    def save_image(self, samples, sample_path, base_count, watermark=True):
+    def save_image(self, samples, sample_path, base_count):
         """
         Save the image
         :param x_checked_image_torch:
@@ -357,7 +327,6 @@ class BaseModel:
         for x_sample in samples:
             x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
             img = Image.fromarray(x_sample.astype(np.uint8))
-            img = self.add_watermark(img)
             file_name = os.path.join(sample_path, f"{base_count:05}.png")
             img.save(file_name)
             return file_name

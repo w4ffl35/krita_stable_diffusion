@@ -34,7 +34,6 @@ SCRIPTS = {
         ('seed', 42),
         ('precision', 'autocast'),
         ('do_nsfw_filter', ''),
-        ('do_watermark', ''),
     ],
     'img2img': [
         ('prompt', ''),
@@ -61,7 +60,6 @@ SCRIPTS = {
         ('seed', 42),
         ('precision', 'autocast'),
         ('do_nsfw_filter', ''),
-        ('do_watermark', ''),
     ],
     'inpaint': [
         ('indir', f'{HOME}/inpaint/input'),

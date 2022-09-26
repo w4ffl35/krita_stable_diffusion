@@ -25,6 +25,10 @@ from stablediffusion.ldm.models.autoencoder import VQModelInterface, IdentityFir
 from stablediffusion.ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from stablediffusion.ldm.models.diffusion.ddim import DDIMSampler
 
+HALF_PRECISION=16
+FULL_PRECISION=32
+PRECISION=HALF_PRECISION
+
 
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
@@ -131,7 +135,10 @@ class DDPM(pl.LightningModule):
         self.linear_end = linear_end
         assert alphas_cumprod.shape[0] == self.num_timesteps, 'alphas have to be defined for each timestep'
 
-        to_torch = partial(torch.tensor, dtype=torch.float32)
+        to_torch = partial(
+            torch.tensor,
+            dtype=torch.float32 if PRECISION == FULL_PRECISION else torch.float16
+        )
 
         self.register_buffer('betas', to_torch(betas))
         self.register_buffer('alphas_cumprod', to_torch(alphas_cumprod))
@@ -240,13 +247,19 @@ class DDPM(pl.LightningModule):
         model_mean, posterior_variance, posterior_log_variance = self.q_posterior(x_start=x_recon, x_t=x, t=t)
         return model_mean, posterior_variance, posterior_log_variance
 
+    def precision(self, tensor):
+        if PRECISION == HALF_PRECISION:
+            return tensor.half()
+        else:
+            return tensor.full()
+
     @torch.no_grad()
     def p_sample(self, x, t, clip_denoised=True, repeat_noise=False):
         b, *_, device = *x.shape, x.device
         model_mean, _, model_log_variance = self.p_mean_variance(x=x, t=t, clip_denoised=clip_denoised)
         noise = noise_like(x.shape, device, repeat_noise)
         # no noise when t == 0
-        nonzero_mask = (1 - (t == 0).float()).reshape(b, *((1,) * (len(x.shape) - 1)))
+        nonzero_mask = (1 - self.precision((t == 0))).reshape(b, *((1,) * (len(x.shape) - 1)))
         return model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise
 
     @torch.no_grad()
@@ -331,7 +344,7 @@ class DDPM(pl.LightningModule):
         if len(x.shape) == 3:
             x = x[..., None]
         x = rearrange(x, 'b h w c -> b c h w')
-        x = x.to(memory_format=torch.contiguous_format).float()
+        x = self.precision(x.to(memory_format=torch.contiguous_format))
         return x
 
     def shared_step(self, batch):
@@ -868,20 +881,28 @@ class LatentDiffusion(DDPM):
         return loss
 
     def forward(self, x, c, *args, **kwargs):
-        t = torch.randint(0, self.num_timesteps, (x.shape[0],), device=self.device).long()
+        t = torch.randint(
+            0,
+            self.num_timesteps,
+            (x.shape[0],), device=self.device
+        ).long()
         if self.model.conditioning_key is not None:
             assert c is not None
             if self.cond_stage_trainable:
                 c = self.get_learned_conditioning(c)
             if self.shorten_cond_schedule:  # TODO: drop this option
                 tc = self.cond_ids[t].to(self.device)
-                c = self.q_sample(x_start=c, t=tc, noise=torch.randn_like(c.float()))
+                c = self.q_sample(
+                    x_start=c,
+                    t=tc,
+                    noise=torch.randn_like(self.precision(c))
+                )
         return self.p_losses(x, c, t, *args, **kwargs)
 
     def _rescale_annotations(self, bboxes, crop_coordinates):  # TODO: move to dataset
         def rescale_bbox(bbox):
-            x0 = clamp((bbox[0] - crop_coordinates[0]) / crop_coordinates[2])
-            y0 = clamp((bbox[1] - crop_coordinates[1]) / crop_coordinates[3])
+            x0 = torch.clamp((bbox[0] - crop_coordinates[0]) / crop_coordinates[2])
+            y0 = torch.clamp((bbox[1] - crop_coordinates[1]) / crop_coordinates[3])
             w = min(bbox[2] / crop_coordinates[2], 1 - x0)
             h = min(bbox[3] / crop_coordinates[3], 1 - y0)
             return x0, y0, w, h
@@ -1097,7 +1118,7 @@ class LatentDiffusion(DDPM):
         if noise_dropout > 0.:
             noise = torch.nn.functional.dropout(noise, p=noise_dropout)
         # no noise when t == 0
-        nonzero_mask = (1 - (t == 0).float()).reshape(b, *((1,) * (len(x.shape) - 1)))
+        nonzero_mask = (1 - self.precision(t == 0)).reshape(b, *((1,) * (len(x.shape) - 1)))
 
         if return_codebook_ids:
             return model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise, logits.argmax(dim=1)
@@ -1384,7 +1405,7 @@ class LatentDiffusion(DDPM):
 
     @torch.no_grad()
     def to_rgb(self, x):
-        x = x.float()
+        x = self.precision(x)
         if not hasattr(self, "colorize"):
             self.colorize = torch.randn(3, x.shape[1], 1, 1).to(x)
         x = nn.functional.conv2d(x, weight=self.colorize)
