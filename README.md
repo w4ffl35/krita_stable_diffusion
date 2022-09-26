@@ -16,7 +16,7 @@
 ![img_3.png](img_3.png)
 
 - Run Stable Diffusion locally in Krita without the need for a Python environment.
-- **Easy installation: no need to install Python, no need to install dependencies**
+- **Easy installation: no need to install Python, no need to install dependencies (cuda 11.3 drivers required)**
 - Non-blocking image generation: continue working in Krita while your images generate
 - No need for webui or a webserver at all
 - Ability to enqueue multiple requests, allowing you to generate multiple prompts and come back to see them after
