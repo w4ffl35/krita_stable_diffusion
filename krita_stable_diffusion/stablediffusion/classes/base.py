@@ -11,18 +11,13 @@ from torch import autocast
 from pytorch_lightning import seed_everything  # FAILS
 from omegaconf import OmegaConf
 from contextlib import  nullcontext
-# import common classes from stable diffusion
 from stablediffusion.ldm.models.diffusion.ddim import DDIMSampler
 from stablediffusion.ldm.models.diffusion.plms import PLMSSampler
 from stablediffusion.ldm.util import instantiate_from_config
 from itertools import islice
-# load safety model
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
-from transformers import AutoFeatureExtractor
 HOME = os.path.expanduser("~")
 safety_model_id = f"{HOME}/stablediffusion/models/CompVis/stable-diffusion-safety-checker"
-#safety_feature_extractor = AutoFeatureExtractor.from_pretrained(safety_model_id)
-print("SETTING UP StableDiffusionSafetyChecker FROM PRETRAINED")
 safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model_id)
 
 # import txt2img functions from stable diffusion
