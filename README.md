@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar)
+[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
@@ -26,17 +26,10 @@
 
 ## Installation
 
-1. [Download and untar the latest release from github](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar)
-2. Run the install script `~/krita_stable_diffusion-0.2.1/install.sh`
-
-The following command will do that for you:
-
-```
-wget https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.1.tar && \
-tar -xf krita-stable-diffusion_multifile-0.2.1.tar && \
-cd krita-stable-diffusion_multifile-0.2.1 && \
-./install
-```
+1. [Download the latest release](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar.xz)
+2. Unzip it `tar -xf krita-stable-diffusion_multifile-0.2.2.tar.xz`
+3. Change into the correct directory `cd plugin_dist/0.2.2/krita-stable-diffusion_multifile-0.2.2`
+4. Run install script `./install`
 
 Follow the prompts to download the model if you don't have it already (requires hugging face account)
 
@@ -76,6 +69,13 @@ You stablediffusion home directory should look like this:
 ![img_1.png](img_1.png)
 
 You may need to restart Krita.
+
+---
+
+## Uninstall
+
+1. `./plugin_dist/0.2.2/krita-stable-diffusion_multifile-0.2.2/uninstall`
+2. Follow the prompts
 
 ---
 
