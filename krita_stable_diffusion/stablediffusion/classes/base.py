@@ -16,11 +16,12 @@ from stablediffusion.ldm.models.diffusion.plms import PLMSSampler
 from stablediffusion.ldm.util import instantiate_from_config
 from itertools import islice
 from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+
 HOME = os.path.expanduser("~")
 safety_model_id = f"{HOME}/stablediffusion/models/CompVis/stable-diffusion-safety-checker"
 safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model_id)
 
-# import txt2img functions from stable diffusion
+
 def load_model_from_config(config, ckpt, verbose=False):
     print(f"Loading model from {ckpt}")
     pl_sd = torch.load(ckpt, map_location="cpu")
@@ -236,6 +237,11 @@ class BaseModel:
         return pil_images
 
     def check_safety(self, x_image):
+        """
+        Check if the image is safe to be saved.
+        :param x_image: image to check
+        :return:
+        """
         # safety_checker_input = safety_feature_extractor(self.numpy_to_pil(x_image), return_tensors="pt")
         x_checked_image, has_nsfw_concept = safety_checker(images=x_image, clip_input=safety_checker_input.pixel_values)
         assert x_checked_image.shape[0] == len(has_nsfw_concept)
