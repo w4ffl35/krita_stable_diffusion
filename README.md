@@ -33,6 +33,24 @@
 
 Follow the prompts to download the model if you don't have it already (requires hugging face account)
 
+---
+
+[REQUIRES CUDA 11.3 DRIVERS](https://developer.nvidia.com/cuda-11.3.0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local)
+
+You must manually install the drivers. This step will be added to the installation script in version 0.2.3
+
+If you are on Ubuntu 20.04 it is recommended that you use the runfile.
+
+```
+wget https://developer.download.nvidia.com/compute/cuda/11.3.0/local_installers/cuda_11.3.0_465.19.01_linux.run
+sudo sh cuda_11.3.0_465.19.01_linux.run
+```
+
+![image](https://user-images.githubusercontent.com/25737761/192189958-ca9d1587-263d-4d13-b67f-2fb66bf00451.png)
+
+
+---
+
 Start Krita and enable the plugin.
 
 If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
