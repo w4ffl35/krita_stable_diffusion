@@ -8,7 +8,7 @@ from PIL import Image
 from contextlib import nullcontext
 from tqdm import tqdm, trange
 from stablediffusion.classes.base import BaseModel
-from einops import rearrange, repeat
+from einops import repeat
 
 def load_img(path):
     image = Image.open(path).convert("RGB")
