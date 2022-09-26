@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar.xz)
+[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.2-alpha/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
@@ -26,7 +26,7 @@
 
 ## Installation
 
-1. [Download the latest release](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar.xz)
+1. [Download the latest release](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.2-alpha/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 2. Unzip it `tar -xf krita-stable-diffusion_multifile-0.2.2.tar.xz`
 3. Change into the correct directory `cd plugin_dist/0.2.2/krita-stable-diffusion_multifile-0.2.2`
 4. Run install script `./install`
