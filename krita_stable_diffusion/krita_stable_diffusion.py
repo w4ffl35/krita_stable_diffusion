@@ -1,16 +1,20 @@
+"""
+Krita stable diffusion Controller class.
+"""
 import json
 import subprocess
 import time
+import os
+import threading
+import krita_stable_diffusion.logger as log
 
 from krita import *
-import threading
-import os
-import krita_stable_diffusion.logger as log
 
 from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 
 HOME = os.path.expanduser("~")
+
 
 class Controller(QObject):
     krita_instance = None

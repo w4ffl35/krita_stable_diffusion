@@ -1,8 +1,6 @@
 import os
 import sys
 import queue
-import threading
-import time
 
 # path to here
 HERE=os.path.dirname(os.path.abspath(__file__))

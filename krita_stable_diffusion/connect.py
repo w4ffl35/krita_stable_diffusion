@@ -1,19 +1,14 @@
 import json
-import sys
 import os
 import queue
 import socket
 import threading
 import time
-import torch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
-sys.path.append(os.path.join("/home/dev/krita-stable-diffusion/krita_stable_diffusion"))
-sys.path.append(os.path.join("/home/dev"))
-sys.path.append(os.path.join("/home/dev/stablediffusion"))
-sys.path.append(os.path.join("/home/dev/stablediffusion/classes"))
+
 SCRIPTS = {
     'txt2img': [
         ('prompt', ''),
@@ -175,22 +170,8 @@ class StableDiffusionRunner:
         """
         Initialize the runner.
         """
-        try:
-            from stablediffusion.classes.txt2img import Txt2Img
-            from stablediffusion.classes.img2img import Img2Img
-        except ModuleNotFoundError:
-            pass
-        try:
-            from classes.txt2img import Txt2Img
-            from classes.img2img import Img2Img
-        except ModuleNotFoundError:
-            pass
-        try:
-            from txt2img import Txt2Img
-            from img2img import Img2Img
-        except ModuleNotFoundError:
-            HERE = os.path.dirname(os.path.abspath(__file__))
-            raise ModuleNotFoundError("UNABLE TO IMPORT CLASSES " + HERE)
+        from stablediffusion.classes.txt2img import Txt2Img
+        from stablediffusion.classes.img2img import Img2Img
         self.txt2img_options = kwargs.get("txt2img_options", None)
         self.img2img_options = kwargs.get("img2img_options", None)
         if self.txt2img_options is None:
@@ -881,6 +862,8 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
             txt2img_options=SCRIPTS["txt2img"],
             img2img_options=SCRIPTS["img2img"]
         )
+
+        import torch  # this is a hack to get torch to load on the server
         torch.cuda.empty_cache()
 
     def __init__(self, *args, **kwargs):
