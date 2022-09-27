@@ -30,4 +30,4 @@ if __name__ == "__main__":
     pid = sys.argv[2]
     # clear sys.argv
     sys.argv = sys.argv[:1]
-    StableDiffusionConnectionManager(pid=pid)
+    StableDiffusionConnectionManager(pid=0)

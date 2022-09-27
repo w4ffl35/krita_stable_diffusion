@@ -31,6 +31,10 @@ def info(msg):
     :param msg: Message to be logged
     :return: None
     """
+    try:
+        QtCore.qDebug(msg)
+    except NameError:
+        pass
     logging().info(format_message(msg))
 
 
@@ -40,6 +44,10 @@ def warning(msg):
     :param msg: Message to be logged
     :return: None
     """
+    try:
+        QtCore.qWarning(msg)
+    except NameError:
+        pass
     logging().warning(format_message(msg))
 
 
@@ -49,4 +57,8 @@ def error(msg):
     :param msg: Message to be logged
     :return: None
     """
+    try:
+        QtCore.qCritical(msg)
+    except NameError:
+        pass
     logging().error(format_message(msg))

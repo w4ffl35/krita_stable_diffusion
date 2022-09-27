@@ -224,28 +224,29 @@ class Controller(QObject):
         """
         here = os.path.dirname(os.path.realpath(__file__))
         pid = os.getpid()
-        while True:
-            if os.path.exists(f"{here}/kritastablediffusion/kritastablediffusion"):
-                p = subprocess.Popen(
-                    f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
-                    shell=True
-                )
-                break
-
-            if os.path.isfile(f"{here}/kritastablediffusion"):
-                p = subprocess.Popen(
-                    f"{here}/kritastablediffusion --pid {pid}",
-                    shell=True
-                )
-                break
-
-            if os.path.exists(f"{here}/kritastablediffusion.py"):
-                p = subprocess.Popen(
-                    f"{HOME}/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
-                    shell=True
-                )
-                break
-            raise Exception("Missing kritastablediffusion")
+        QtCore.qDebug(pid)
+        # while True:
+        #     if os.path.exists(f"{here}/kritastablediffusion/kritastablediffusion"):
+        #         p = subprocess.Popen(
+        #             f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
+        #             shell=True
+        #         )
+        #         break
+        #
+        #     if os.path.isfile(f"{here}/kritastablediffusion"):
+        #         p = subprocess.Popen(
+        #             f"{here}/kritastablediffusion --pid {pid}",
+        #             shell=True
+        #         )
+        #         break
+        #
+        #     if os.path.exists(f"{here}/kritastablediffusion.py"):
+        #         p = subprocess.Popen(
+        #             f"{HOME}/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+        #             shell=True
+        #         )
+        #         break
+        #     raise Exception("Missing kritastablediffusion")
 
     def request_prompt(self, message):
         """

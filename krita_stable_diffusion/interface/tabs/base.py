@@ -1,4 +1,4 @@
-import json
+import os
 import logging
 import random
 from krita import *
@@ -106,7 +106,7 @@ class Base:
         Application.stablediffusion.client.message = st
         if self.log_widget:
             self.log_widget.widget.setPlaceholderText(
-                f"Requesting {options['prompt']}..."
+                f"Requesting {options['prompt']} {os.getpid()}..."
             )
 
     def tab(self):
