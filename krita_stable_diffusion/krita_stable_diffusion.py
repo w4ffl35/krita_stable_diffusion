@@ -25,6 +25,14 @@ class Controller(QObject):
     first_run = True
     name = "Controller"
 
+    def popup(self, message):
+        # QMessageBox.information(
+        #     QWidget(),
+        #     "Stable Diffusion",
+        #     message
+        # )
+        pass
+
 
     def start_thread(self, target, daemon=False, name=None):
         t = threading.Thread(target=target, daemon=daemon)
@@ -225,28 +233,40 @@ class Controller(QObject):
         here = os.path.dirname(os.path.realpath(__file__))
         pid = os.getpid()
         QtCore.qDebug(pid)
-        # while True:
-        #     if os.path.exists(f"{here}/kritastablediffusion/kritastablediffusion"):
-        #         p = subprocess.Popen(
-        #             f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
-        #             shell=True
-        #         )
-        #         break
-        #
-        #     if os.path.isfile(f"{here}/kritastablediffusion"):
-        #         p = subprocess.Popen(
-        #             f"{here}/kritastablediffusion --pid {pid}",
-        #             shell=True
-        #         )
-        #         break
-        #
-        #     if os.path.exists(f"{here}/kritastablediffusion.py"):
-        #         p = subprocess.Popen(
-        #             f"{HOME}/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
-        #             shell=True
-        #         )
-        #         break
-        #     raise Exception("Missing kritastablediffusion")
+        while True:
+            if os.path.exists(f"{here}/kritastablediffusion/kritastablediffusion"):
+                p = subprocess.Popen(
+                    f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
+                    shell=True
+                )
+                break
+
+            if os.path.isfile(f"{here}/kritastablediffusion"):
+                p = subprocess.Popen(
+                    f"{here}/kritastablediffusion --pid {pid}",
+                    shell=True
+                )
+                break
+
+            # if (
+            #         os.path.exists(f"{here}/kritastablediffusion.py") and
+            #         os.path.exists(
+            #             f"G:\conda\envs\kritastablediffusion\python.exe"
+            #         )
+            # ):
+            #     p = subprocess.Popen(
+            #         f"G:\conda\envs\kritastablediffusion\python.exe {here}/kritastablediffusion.py --pid {pid}",
+            #         shell=True
+            #     )
+            #     break
+
+            # if os.path.exists(f"{here}/kritastablediffusion.py"):
+            #     p = subprocess.Popen(
+            #         f"{HOME}/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
+            #         shell=True
+            #     )
+            #     break
+            # raise Exception("Missing kritastablediffusion")
 
     def request_prompt(self, message):
         """
@@ -290,19 +310,22 @@ class Controller(QObject):
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
         self.create_stable_diffusion_panel()
+        self.popup(f"Plugin loaded {self}")
         Application.__setattr__("stablediffusion", self)
         # on Application quit, close the server
+        self.popup("Starting client")
         Krita.instance().eventFilter = self.eventFilter
+        self.popup("Loading client")
         self.client = SimpleEnqueueSocketClient(
             port=50006,
             handle_response=self.stablediffusion_response_callback,
             status_change_callback=self.handle_status_change,
             Application=Application
         )
-        self.start_thread(
-            target=self.kritastablediffusion_service_start,
-            name="kritastablediffusion"
-        )
+        # self.start_thread(
+        #     target=self.kritastablediffusion_service_start,
+        #     name="kritastablediffusion"
+        # )
         self.start_thread(
             target=self.watch_connection,
             name="watch_connection"

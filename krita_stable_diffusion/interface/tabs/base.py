@@ -98,15 +98,31 @@ class Base:
         self.send(data, request_type)
 
     def send(self, options, request_type):
-        st = {
+        """
+        Send request to stable diffusion
+        :param options: The options to send
+        :param request_type: The type of request to send
+        :return: None
+        """
+        self.log_message(f"Requesting {options['prompt']} {os.getpid()}...")
+        Application.stablediffusion.client.message = {
             "type": request_type,
             "options": options,
         }
-        # os.system(f"stablediffusion_client {self.string_to_binary(st)}")
-        Application.stablediffusion.client.message = st
+
+    message_log = []
+
+    def log_message(self, message, level="info"):
+        """
+        Log a message to the log widget
+        :param message: The message to log
+        :param level: The level of the message
+        :return: None
+        """
+        self.message_log.append(f"{level.upper()} {message}")
         if self.log_widget:
             self.log_widget.widget.setPlaceholderText(
-                f"Requesting {options['prompt']} {os.getpid()}..."
+                "\n".join(self.message_log)
             )
 
     def tab(self):
@@ -168,6 +184,8 @@ class Base:
 
     def __init__(self, interfaces):
         Application.__setattr__("connected_to_sd", False)
+        Application.__setattr__("log_message", self.send)
         self.initialize_settings()
         self.reset_default_values()
         self.initialize_interfaces(interfaces)
+        self.log_message(f"Initialized with PID {os.getpid()}")

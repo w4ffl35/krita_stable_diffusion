@@ -13,7 +13,7 @@
 
 ---
 
-![img_3.png](img_3.png)
+![img_3.png](src/img_3.png)
 
 - Run Stable Diffusion locally in Krita without the need for a Python environment.
 - **Easy installation: no need to install Python, no need to install dependencies**
@@ -66,7 +66,7 @@ You stablediffusion home directory should look like this:
 
 ## Enable the plugin
 
-![img_1.png](img_1.png)
+![img_1.png](src/img_1.png)
 
 You may need to restart Krita.
 

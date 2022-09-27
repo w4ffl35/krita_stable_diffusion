@@ -6,7 +6,7 @@ import queue
 HERE=os.path.dirname(os.path.abspath(__file__))
 sys.path.append(HERE)
 
-from connect import StableDiffusionRequestQueueWorker
+from stablediffusion.connect import StableDiffusionRequestQueueWorker
 
 
 class StableDiffusionConnectionManager:

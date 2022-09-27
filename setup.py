@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 # This line is required for the packager. Do not remove it.
-VERSION = "0.2.2"
+VERSION = "0.3.0"
 
 setup(
     name='krita_stable_diffusion',
@@ -9,8 +9,7 @@ setup(
     description='',
     packages=find_packages(),
     install_requires=[
-        'torch',
-        'numpy',
-        'tqdm',
+        "diffusers",
+        "stablediffusion @ git+https://github.com/w4ffl35/stable-diffusion.git#egg=stablediffusion",
     ],
 )
