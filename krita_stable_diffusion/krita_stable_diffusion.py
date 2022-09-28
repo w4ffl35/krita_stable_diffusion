@@ -2,15 +2,12 @@
 Krita stable diffusion Controller class.
 """
 import json
-import subprocess
+import threading
 import time
 import os
-import threading
-import krita_stable_diffusion.logger as log
-
+from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
 
-from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 
 HOME = os.path.expanduser("~")
@@ -24,6 +21,14 @@ class Controller(QObject):
     threads = []
     first_run = True
     name = "Controller"
+
+    def popup(self, message):
+        # QMessageBox.information(
+        #     QWidget(),
+        #     "Stable Diffusion",
+        #     message
+        # )
+        pass
 
 
     def start_thread(self, target, daemon=False, name=None):
@@ -148,7 +153,7 @@ class Controller(QObject):
         :param type:
         :return: a reference to the new layer
         """
-        log.info(f"creating layer")
+        print(f"creating layer")
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
         document.setVisible(visible)
@@ -160,7 +165,7 @@ class Controller(QObject):
         :param image:
         :return: QByteArray
         """
-        log.info(f"converting image to byte array")
+        print(f"converting image to byte array")
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
@@ -173,7 +178,7 @@ class Controller(QObject):
         :param visible:
         :return:
         """
-        log.info(f"adding image: {path}")
+        print(f"adding image: {path}")
         image = QImage()
         image.load(path, "PNG")
         print("Getting layer ", layer_name)
@@ -222,30 +227,7 @@ class Controller(QObject):
         Launches kritastablediffusion service
         :return:
         """
-        here = os.path.dirname(os.path.realpath(__file__))
-        pid = os.getpid()
-        while True:
-            if os.path.exists(f"{here}/kritastablediffusion/kritastablediffusion"):
-                p = subprocess.Popen(
-                    f"{here}/kritastablediffusion/kritastablediffusion --pid {pid}",
-                    shell=True
-                )
-                break
-
-            if os.path.isfile(f"{here}/kritastablediffusion"):
-                p = subprocess.Popen(
-                    f"{here}/kritastablediffusion --pid {pid}",
-                    shell=True
-                )
-                break
-
-            if os.path.exists(f"{here}/kritastablediffusion.py"):
-                p = subprocess.Popen(
-                    f"{HOME}/miniconda3/envs/kritastablediffusion/bin/python {here}/kritastablediffusion.py --pid {pid}",
-                    shell=True
-                )
-                break
-            raise Exception("Missing kritastablediffusion")
+        pass
 
     def request_prompt(self, message):
         """
@@ -256,7 +238,7 @@ class Controller(QObject):
         self.client.message = json.dumps(message).encode("ascii")
 
     def handle_sd_response(self, response):
-        log.info("Handle stable diffusion response")
+        print("Handle stable diffusion response")
         # TODO handle image insertion here
 
     def try_quit(self):
@@ -289,19 +271,22 @@ class Controller(QObject):
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
         self.create_stable_diffusion_panel()
+        self.popup(f"Plugin loaded {self}")
         Application.__setattr__("stablediffusion", self)
         # on Application quit, close the server
+        self.popup("Starting client")
         Krita.instance().eventFilter = self.eventFilter
+        self.popup("Loading client")
         self.client = SimpleEnqueueSocketClient(
             port=50006,
             handle_response=self.stablediffusion_response_callback,
             status_change_callback=self.handle_status_change,
             Application=Application
         )
-        self.start_thread(
-            target=self.kritastablediffusion_service_start,
-            name="kritastablediffusion"
-        )
+        # self.start_thread(
+        #     target=self.kritastablediffusion_service_start,
+        #     name="kritastablediffusion"
+        # )
         self.start_thread(
             target=self.watch_connection,
             name="watch_connection"

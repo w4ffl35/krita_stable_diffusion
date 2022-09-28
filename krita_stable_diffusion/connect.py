@@ -4,10 +4,32 @@ import queue
 import socket
 import threading
 import time
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+# log to a file
+logging.basicConfig(filename='stablediffusion.log', filemode='w', level=logging.DEBUG)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
+
+
+class StableDiffusionConnectionManager:
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize all connections and workers
+        """
+        # create queues
+        self.request_queue = kwargs.get("request_queue", queue.SimpleQueue())
+        self.response_queue = kwargs.get("response_queue", queue.SimpleQueue())
+
+        # create request client
+        print("creating request worker...")
+        self.request_worker = StableDiffusionRequestQueueWorker(
+            port=50006,
+            pid=kwargs.get("pid"),
+        )
 
 SCRIPTS = {
     'txt2img': [
@@ -97,101 +119,6 @@ SCRIPTS = {
     ],
 }
 
-class StableDiffusionRunner:
-    """
-    Run Stable Diffusion.
-    """
-    stablediffusion = None
-    model = None
-    device = None
-
-    def process_data_value(self, key, value):
-        """
-        Process the data value. Ensure that we use the correct types.
-        :param key: key
-        :param value: value
-        :return: processed value
-        """
-        if value == "true":
-            return True
-        if value == "false":
-            return False
-        if key in [
-            "ddim_steps", "n_iter", "H", "W", "C", "f",
-            "n_samples", "n_rows", "seed"
-        ]:
-            return int(value)
-        if key in ["ddim_eta", "scale", "strength"]:
-            return float(value)
-        return value
-
-    def process_options(self, options, data):
-        """
-        Process the data, compare aginast options.
-        :param options: options
-        :param data: data
-        return: processed options
-        """
-        # get all keys from data
-        keys = data.keys()
-        for index, opt in enumerate(options):
-            if opt[0] in keys:
-                options[index] = (
-                    opt[0],
-                    self.process_data_value(
-                        opt[0],
-                        data.get(opt[0], opt[1])
-                    )
-                )
-        return options
-
-    def txt2img_sample(self, data):
-        """
-        Run txt2img sample.
-        :param data: data
-        return: result
-        """
-        print("Sampling txt2img")
-        return self._txt2img_loader.sample(
-            options=self.process_options(self.txt2img_options, data)
-        )
-
-    def img2img_sample(self, data):
-        """
-        Run img2img sample.
-        :param data: data
-        return: result
-        """
-        return self._img2img_loader.sample(
-            options=self.process_options(self.img2img_options, data)
-        )
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the runner.
-        """
-        from stablediffusion.classes.txt2img import Txt2Img
-        from stablediffusion.classes.img2img import Img2Img
-        self.txt2img_options = kwargs.get("txt2img_options", None)
-        self.img2img_options = kwargs.get("img2img_options", None)
-        if self.txt2img_options is None:
-            raise Exception("txt2img_options is required")
-        if self.img2img_options is None:
-            raise Exception("img2img_options is required")
-
-        # start a txt2img loader instance
-        self._txt2img_loader = Txt2Img(
-            options=self.txt2img_options,
-            model=self.model,
-            device=self.device
-        )
-        # initialize img2img loader and pass it the same model and device
-        self._img2img_loader = Img2Img(
-            options=self.img2img_options,
-            model=self._txt2img_loader.model,
-            device=self._txt2img_loader.device
-        )
-
 
 class Connection:
     """
@@ -256,18 +183,18 @@ class Connection:
         :return: None
         """
         self.disconnect()
-        print("Stopping connection thread...")
+        logging.debug("Stopping connection thread...")
         for index in range(len(self.threads)):
             thread = self.threads[index]
             total = len(self.threads)
             name = thread.getName()
-            print(f"{index+1} of {total} Stopping thread {name}")
+            logging.debug(f"{index+1} of {total} Stopping thread {name}")
             try:
                 thread.join()
             except RuntimeError:
-                print(f"Thread {thread.getName()} not running")
-            print(f"Stopped thread {thread.getName()}...")
-        print("All threads stopped")
+                logging.debug(f"Thread {thread.getName()} not running")
+            logging.debug(f"Stopped thread {thread.getName()}...")
+        logging.debug("All threads stopped")
 
     def restart(self):
         """
@@ -392,11 +319,11 @@ class SocketServer(SocketConnection):
             self.soc.settimeout(1)
             self.soc.bind((self.host, self.port))
         except socket.error as err:
-            print(f"Failed to open a socket at {self.host}:{self.port}")
-            print(str(err))
+            logging.debug(f"Failed to open a socket at {self.host}:{self.port}")
+            logging.debug(str(err))
         except Exception as e:
-            print(f"Failed to open a socket at {self.host}:{self.port}")
-        print(f"Socket opened {self.soc}")
+            logging.error(f"Failed to open a socket at {self.host}:{self.port}")
+        logging.debug(f"Socket opened {self.soc}")
 
     def try_quit(self):
         """
@@ -410,7 +337,7 @@ class SocketServer(SocketConnection):
                 has_krita_process = True
                 break
         if not has_krita_process:
-            print("krita process not found, quitting")
+            logging.error("krita process not found, quitting")
             self.quit_event.set()
             self.response_queue.put("quit")
             if self.soc_connection:
@@ -425,24 +352,23 @@ class SocketServer(SocketConnection):
         Listen for incoming connections.
         Returns:
         """
-        print("Handle open socket")
+        logging.debug("Handle open socket")
         self.soc.listen(self.max_client_connections)
         self.soc_connection = None
         self.soc_addr = None
         while True:
             if not self.has_connection:
                 try:
-                    print("SERVER: awaiting connection")
+                    logging.debug("SERVER: awaiting connection")
                     if not self.quit_event.is_set():
                         self.soc_connection, self.soc_addr = self.soc.accept()
                     if self.soc_connection:
-                        print(f"SERVER: connection from {self.soc_addr}")
                         self.has_connection = True
+                        logging.debug(f"SERVER: connection established with {self.soc_addr}")
                 except socket.timeout:
-                    print("ERROR: SERVER: socket timeout")
+                    logging.error("ERROR: SERVER: socket timeout")
                 except Exception as exc:
-                    print("ERROR: SERVER: socket error", exc)
-                print(f"SERVER: connection established with {self.soc_addr}")
+                    logging.error("ERROR: SERVER: socket error", exc)
 
             if self.has_connection:
                 msg = None
@@ -452,11 +378,11 @@ class SocketServer(SocketConnection):
                     except AttributeError:
                         pass
                     if msg is not None and msg != b'':
-                        print(f"SERVER: message received")
+                        logging.debug(f"SERVER: message received")
                         # push directly to queue
                         self.message = msg
                 except ConnectionResetError:
-                    print("SERVER: connection reset")
+                    logging.debug("SERVER: connection reset")
                     self.reset_connection()
 
             if self.quit_event.is_set():
@@ -464,7 +390,7 @@ class SocketServer(SocketConnection):
 
             time.sleep(1)
 
-        print("SERVER: server stopped")
+        logging.debug("SERVER: server stopped")
 
         self.stop()
 
@@ -474,8 +400,9 @@ class SocketServer(SocketConnection):
         is lost.
         """
         while True:
+            logging.debug("watching connection")
             if self.try_quit():
-                print("SERVER: shutting down")
+                logging.debug("SERVER: shutting down")
                 break
             time.sleep(1)
 
@@ -497,6 +424,160 @@ class SocketServer(SocketConnection):
             target=self.watch_connection,
             name="watch connection"
         )
+
+
+class Connection:
+    """
+    Connects to Stable Diffusion service
+    """
+
+    threads = []
+    pid = None  # keep track of krita process id
+
+    def start_thread(self, target, daemon=False, name=None):
+        """
+        Start a thread.
+        :param target: target
+        :param daemon: daemon
+        :param name: name
+        return: thread
+        """
+        thread = threading.Thread(target=target, daemon=daemon)
+        if name:
+            thread.setName(name)
+        thread.start()
+        self.threads.append(thread)
+        return thread
+
+    def connect(self):
+        """
+        Override this method to set up a connection to something.
+
+        Do not call connect directly, it should be used in a thread.
+
+        Use the start() method which starts this method in a new thread.
+        :return: None
+        """
+
+    def disconnect(self):
+        """
+        Override this method to disconnect from something.
+        :return: None
+        """
+
+    def reconnect(self):
+        """
+        Disconnects then reconnects to service. Does not stop the thread.
+        :return: None
+        """
+        self.disconnect()
+        self.connect()
+
+    def start(self):
+        """
+        Starts a new thread with a connection to service.
+        :return: None
+        """
+        self.start_thread(
+            target=self.connect,
+            name="Connection thread"
+        )
+
+    def stop(self):
+        """
+        Disconnects from service and stops the thread
+        :return: None
+        """
+        self.disconnect()
+        print("Stopping connection thread...")
+        for index in range(len(self.threads)):
+            thread = self.threads[index]
+            total = len(self.threads)
+            name = thread.getName()
+            print(f"{index+1} of {total} Stopping thread {name}")
+            try:
+                thread.join()
+            except RuntimeError:
+                print(f"Thread {thread.getName()} not running")
+            print(f"Stopped thread {thread.getName()}...")
+        print("All threads stopped")
+
+    def restart(self):
+        """
+        Stops the thread and starts a new one which in turn stops and starts
+        connection to service.
+        :return: None
+        """
+        self.stop()
+        self.start()
+
+    def __init__(self, *args, **kwargs):
+        self.kwargs = kwargs
+        self.start()
+
+class SocketConnection(Connection):
+    """
+    Opens a socket on a server and port.
+
+    parameters:
+    :host: Hostname or IP address of the service
+    :port: Port of the service
+    """
+    port = 50006
+    host = "localhost"
+    soc = None
+    soc_connection = None
+    soc_addr = None
+
+    def open_socket(self):
+        """
+        Open a socket conenction
+        :return:
+        """
+
+    def handle_open_socket(self):
+        """
+        Override this method to handle open socket
+        :return:
+        """
+
+    def connect(self):
+        """
+        Open a socket and handle connection
+        :return: None
+        """
+        self.open_socket()
+        self.handle_open_socket()
+
+    def disconnect(self):
+        """
+        Disconnect from socket
+        :return: None
+        """
+        if self.soc_connection:
+            self.soc_connection.close()
+        self.soc.close()
+        self.soc_connection = None
+
+    def initialize_socket(self):
+        """
+        Initialize a socket. Use timeout to prevent constant blocking.
+        :return: None
+        """
+        self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.soc.settimeout(3)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the socket connection, call initialize socket prior
+        to calling super because super will start a thread calling connect,
+        and connect opens a socket.
+
+        Failing to call initialize socket prior to super will result in an error
+        """
+        self.initialize_socket()
+        super().__init__(*args, **kwargs)
+        self.queue = queue.SimpleQueue()
 
 
 class SocketClient(SocketConnection):
@@ -604,56 +685,6 @@ class SocketClient(SocketConnection):
             target=self.connect,
             name="socket client connect"
         )
-
-
-class SimpleEnqueueSocketServer(SocketServer):
-    """
-    Simple socket server that enqueues messages to a queue
-    """
-    _failed_messages = []  # list to hold failed messages
-
-    """
-    Creates a SimpleQueue and waits for messages to append to it.
-    """
-
-    @property
-    def message(self):
-        """
-        Does nothing. Only used for the setter.
-        """
-        return ""
-
-    @message.setter
-    def message(self, msg):
-        """
-        Place incoming messages onto the queue
-        """
-        self.queue.put(msg)
-
-    def worker(self):
-        """
-        Start a worker to handle request queue
-        """
-        print("SERVER WORKER: enqueue worker started")
-        while True:
-            print("SERVER WORKER: await connection")
-            if self.has_connection:  # if a client is connected...
-                print("SERVER WORKER: waiting for queue")
-                msg = self.queue.get()  # get a message from the queue
-                try:  # send to callback
-                    self.callback(msg)
-                except Exception as err:
-                    print(f"SERVER: callback error: {err}")
-                    pass
-            if self.quit_event.is_set(): break
-            time.sleep(1)
-        print("SERVER WORKER: worker stopped")
-
-    def __init__(self, *args, **kwargs):
-        self.do_run = True
-        self.queue = queue.SimpleQueue()
-        super().__init__(*args, **kwargs)
-
 
 class SimpleEnqueueSocketClient(SocketClient):
     """
@@ -813,6 +844,54 @@ class SimpleEnqueueSocketClient(SocketClient):
             name="response worker"
         )
 
+class SimpleEnqueueSocketServer(SocketServer):
+    """
+    Simple socket server that enqueues messages to a queue
+    """
+    _failed_messages = []  # list to hold failed messages
+
+    """
+    Creates a SimpleQueue and waits for messages to append to it.
+    """
+
+    @property
+    def message(self):
+        """
+        Does nothing. Only used for the setter.
+        """
+        return ""
+
+    @message.setter
+    def message(self, msg):
+        """
+        Place incoming messages onto the queue
+        """
+        self.queue.put(msg)
+
+    def worker(self):
+        """
+        Start a worker to handle request queue
+        """
+        logging.debug("SERVER WORKER: enqueue worker started")
+        while True:
+            logging.debug("SERVER WORKER: await connection")
+            if self.has_connection:  # if a client is connected...
+                logging.debug("SERVER WORKER: waiting for queue")
+                msg = self.queue.get()  # get a message from the queue
+                try:  # send to callback
+                    self.callback(msg)
+                except Exception as err:
+                    logging.debug(f"SERVER: callback error: {err}")
+                    pass
+            if self.quit_event.is_set(): break
+            time.sleep(1)
+        logging.debug("SERVER WORKER: worker stopped")
+
+    def __init__(self, *args, **kwargs):
+        self.do_run = True
+        self.queue = queue.SimpleQueue()
+        super().__init__(*args, **kwargs)
+
 
 class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
     """
@@ -838,17 +917,17 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         them to the client
         """
         while True:
-            print("SERVER: response queue worker")
+            logging.debug("SERVER: response queue worker")
             response = self.response_queue.get()
             if response == "quit":
                 break
             res = json.dumps({"response": response})
             if res is not None and res != b'':
-                print("SERVER: sending response")
+                logging.debug("SERVER: sending response")
                 try:
                     self.soc_connection.sendall(res.encode("utf-8"))
                 except Exception as e:
-                    print("SERVER: failed to send response", e)
+                    logging.debug("SERVER: failed to send response", e)
             if self.quit_event.is_set(): break
             time.sleep(1)
 
@@ -857,14 +936,7 @@ class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
         Initialize the stable diffusion runner
         return: None
         """
-        print("SERVER: starting Stable Diffusion runner")
-        self.sdrunner = StableDiffusionRunner(
-            txt2img_options=SCRIPTS["txt2img"],
-            img2img_options=SCRIPTS["img2img"]
-        )
-
-        import torch  # this is a hack to get torch to load on the server
-        torch.cuda.empty_cache()
+        pass
 
     def __init__(self, *args, **kwargs):
         """

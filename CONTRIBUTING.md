@@ -22,7 +22,7 @@
 
 ### How to make a pull request
 
-![img_2.png](img_2.png)
+![img_2.png](src/img_2.png)
 
 - Pull requests will go through a review process
 - You may be asked to make changes
