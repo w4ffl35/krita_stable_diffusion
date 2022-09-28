@@ -5,8 +5,7 @@ import json
 import threading
 import time
 import os
-import krita_stable_diffusion.logger as log
-from connect import SimpleEnqueueSocketClient
+from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
 
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
@@ -154,7 +153,7 @@ class Controller(QObject):
         :param type:
         :return: a reference to the new layer
         """
-        log.info(f"creating layer")
+        print(f"creating layer")
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
         document.setVisible(visible)
@@ -166,7 +165,7 @@ class Controller(QObject):
         :param image:
         :return: QByteArray
         """
-        log.info(f"converting image to byte array")
+        print(f"converting image to byte array")
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
@@ -179,7 +178,7 @@ class Controller(QObject):
         :param visible:
         :return:
         """
-        log.info(f"adding image: {path}")
+        print(f"adding image: {path}")
         image = QImage()
         image.load(path, "PNG")
         print("Getting layer ", layer_name)
@@ -239,7 +238,7 @@ class Controller(QObject):
         self.client.message = json.dumps(message).encode("ascii")
 
     def handle_sd_response(self, response):
-        log.info("Handle stable diffusion response")
+        print("Handle stable diffusion response")
         # TODO handle image insertion here
 
     def try_quit(self):
