@@ -34,3 +34,5 @@ dependencies:
       - torchmetrics==0.6.0
       - kornia==0.6
       - natsort==8.2.0
+      - git+https://github.com/w4ffl35/taming-transformers.git
+      - git+https://github.com/w4ffl35/CLIP.git
