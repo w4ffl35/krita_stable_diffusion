@@ -10,6 +10,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "diffusers",
-        "stablediffusion @ git+https://github.com/w4ffl35/stable-diffusion.git@feature/windows-support#egg=stablediffusion",
+        "stablediffusion @ git+https://github.com/w4ffl35/stable-diffusion.git@feature/windows-support#egg=stablediffusion-feature-windows-support",
     ],
 )
