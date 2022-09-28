@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![Windows](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=windows&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha/krita-stable-diffusion-windows-0.3.0-alpha.7z)
+[![Windows](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=windows&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha-win/krita-stable-diffusion-windows-0.3.0-alpha.7z)
 [![Linux](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=linux&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.2-alpha/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
@@ -45,9 +45,9 @@ It is recommended that you first sign up for a hugging face account, then follow
 
 Otherwise, you can download the model and set it up manually.
 
-[![Windows](https://img.shields.io/static/v1?label=Download&message=Windows&color=0044cc&style=for-the-badge&logo=windows&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha/krita-stable-diffusion-windows-0.3.0-alpha.tar.7z)
+[![Windows](https://img.shields.io/static/v1?label=Download&message=Windows&color=0044cc&style=for-the-badge&logo=windows&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha-win/krita-stable-diffusion-windows-0.3.0-alpha.7z)
 
-1. [Download the latest release](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha/krita-stable-diffusion-windows-0.3.0-alpha.7z)
+1. [Download the latest release](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha-win/krita-stable-diffusion-windows-0.3.0-alpha.7z)
 2. Unzip it ``
 3. Double click `install.bat`
 4. Follow the prompts
