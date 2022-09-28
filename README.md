@@ -47,16 +47,11 @@ Otherwise, you can download the model and set it up manually.
 
 [![Windows](https://img.shields.io/static/v1?label=Download&message=Windows&color=0044cc&style=for-the-badge&logo=windows&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha/krita-stable-diffusion-windows-0.3.0-alpha.tar.xz)
 
-1. [Download the latest release](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha/krita-stable-diffusion-windows-0.3.0-alpha.tar.xz)
+1. [Download the latest release](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.3.0-alpha/krita-stable-diffusion-windows-0.3.0-alpha.zip)
 2. Unzip it ``
 3. Double click `install.bat`
 4. Follow the prompts
-
-### Enable the plugin
-
-1. After installing, start or restart Krita
-2. Enable the plugin
-3. Restart Krita again
+5. Enable the plugin (see below for more info)
 
 ### Linux
 
@@ -69,13 +64,46 @@ Otherwise, you can download the model and set it up manually.
 4. Run install script `./install`
 5. Follow the prompts to download the model if you don't have it already (requires hugging face account)
 
+### Enable the plugin
+
+1. Start Krita 
+2. Click `Settings > Configure Krita...`
+3. In the side bar scroll down to `Python Plugin Manager` and click it
+4. In the right panel look for Krita Stable Diffusion Plugin and check the box next to it
+5. Click Ok
+6. Restart Krita
+
+If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
+
+![img_1.png](src/img_1.png)
+
 ---
 
-[REQUIRES CUDA 11.3 DRIVERS](https://developer.nvidia.com/cuda-11.3.0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local)
+## Uninstall (linux only)
 
-You must manually install the drivers. This step will be added to the installation script in version 0.2.3
+1. `./plugin_dist/0.2.2/krita-stable-diffusion_multifile-0.2.2/uninstall`
+2. Follow the prompts
 
-If you are on Ubuntu 20.04 it is recommended that you use the runfile.
+---
+
+## Cuda Drivers
+
+[MAY REQUIRE CUDA 11.3 DRIVERS](https://developer.nvidia.com/cuda-11.3.0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local)
+
+First try the plugin without installing Cuda drivers. 
+
+If you see errors, install Cuda 11.3 drivers and see if this resolves your issues.
+
+Do not use a different version of CUDA, only 11.3.
+
+### Windows
+
+1. [Download Cuda Toolkit 11.3](https://developer.download.nvidia.com/compute/cuda/11.3.0/local_installers/cuda_11.3.0_465.89_win10.exe)
+2. Install it
+
+### Linux
+
+If you are on Ubuntu 20.04, use the runfile.
 
 ```
 wget https://developer.download.nvidia.com/compute/cuda/11.3.0/local_installers/cuda_11.3.0_465.19.01_linux.run
@@ -84,52 +112,6 @@ sudo sh cuda_11.3.0_465.19.01_linux.run
 
 ![image](https://user-images.githubusercontent.com/25737761/192189958-ca9d1587-263d-4d13-b67f-2fb66bf00451.png)
 
-
----
-
-Start Krita and enable the plugin.
-
-If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
-
-Provided you have a standard Krita installation everything should work as
-expected. Your directory stucture for the plugin should look like this:
-
-```
-~/.local/share/krita/pykrita/
-└── krita-stable-diffusion
-    ├── krita-stable-diffusion
-    └── Krita Stable Diffusion Plugin
-```
-
-You stablediffusion home directory should look like this: 
-
-```
-~/stablediffusion/
-├── configs
-├── img2img
-├── licenses
-├── models
-│   └── ldm
-│       └── stable-diffusion-v1
-│           └── model.ckpt
-└── txt2img
-└── stablediffusiond.log
-```
-
----
-
-## Enable the plugin
-
-![img_1.png](src/img_1.png)
-
-You may need to restart Krita.
-
----
-
-## Uninstall
-
-1. `./plugin_dist/0.2.2/krita-stable-diffusion_multifile-0.2.2/uninstall`
-2. Follow the prompts
 
 ---
 
