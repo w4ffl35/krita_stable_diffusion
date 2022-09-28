@@ -52,6 +52,31 @@ Otherwise, you can download the model and set it up manually.
 3. Double click `install.bat`
 4. Follow the prompts
 5. Enable the plugin (see below for more info)
+6. [Run the server](#run-the-server)
+
+#### Troubleshooting
+
+If you run into issues with the installation script, you can try a manual installation.
+
+1. Download the relase
+2. Unzip it
+3. Open Krita, go to `Settings > Manage Resources... >`
+
+![img_1.png](img_1.png)
+
+4. Click the `Open Resources Folder` button
+
+![img_2.png](img_2.png)
+
+5. Inside of the Resources folder, open the `pykrita` folder1
+6. Copy everything inside of your downloaded `pykrita` folder into the resources `pykrita` folder
+
+**From:** `krita-stable-diffusion-windows-0.3.0\0.3.0\multifile\pykrita\<EVERYTHING IN HERE>` 
+
+**To:** `%AppData%\krita\pykrita` (default location)
+
+7. Copy the stablediffusion folder `krita-stable-diffusion-windows-0.3.0\0.3.0\stablediffusion\` into your home folder
+8. Enable the plugin
 
 ### Linux
 
@@ -76,6 +101,47 @@ Otherwise, you can download the model and set it up manually.
 If you have difficulty finding the model, [look at the FAQ](https://github.com/w4ffl35/krita_stable_diffusion/wiki/FAQ).
 
 ![img_1.png](src/img_1.png)
+
+---
+
+## Using the plugin
+
+These instructions are for Windows users only.
+
+For now, its necessary to manually run the server and pass it a PID each sesson. 
+This is an extra step that will be eliminated soon.
+
+## Run the server
+
+After enabling the plugin and starting Krita you will notice an info panel which
+displays a PID
+
+![img_3.png](img_3.png)
+
+Make note of the PID, you need it to run the server, and you need the server 
+in order to generate images.
+
+**Open a command prompt**
+
+![img_6.png](img_6.png)
+
+**Change into the pykrita resources folder**
+
+Assuming default location:
+
+```
+cd %AppData%\krita\pykrita\krita_stable_diffusion\stablediffusion\sdrunner --pid <YOUR PID HERE>
+```
+
+**press enter** and you will see the server starting up.
+
+![img_4.png](img_4.png)
+
+Once you see this, you know it is ready: 
+
+![img_5.png](img_5.png)
+
+Now switch back to krita and start generating images.
 
 ---
 
