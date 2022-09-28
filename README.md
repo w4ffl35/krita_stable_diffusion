@@ -130,7 +130,7 @@ in order to generate images.
 Assuming default location:
 
 ```
-cd %AppData%\krita\pykrita\krita_stable_diffusion\stablediffusion\sdrunner.exe --pid <YOUR PID HERE>
+%AppData%\krita\pykrita\krita_stable_diffusion\stablediffusion\sdrunner.exe --pid <YOUR PID HERE>
 ```
 
 **press enter** and you will see the server starting up.
