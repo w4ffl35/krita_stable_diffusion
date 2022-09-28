@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar.xz)
+[![Download](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=github&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.2-alpha/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
@@ -16,7 +16,7 @@
 ![img_3.png](img_3.png)
 
 - Run Stable Diffusion locally in Krita without the need for a Python environment.
-- **Easy installation: no need to install Python, no need to install dependencies**
+- **Easy installation: no need to install Python, no need to install dependencies (cuda 11.3 drivers required)**
 - Non-blocking image generation: continue working in Krita while your images generate
 - No need for webui or a webserver at all
 - Ability to enqueue multiple requests, allowing you to generate multiple prompts and come back to see them after
@@ -26,12 +26,30 @@
 
 ## Installation
 
-1. [Download the latest release](https://sddist.s3.amazonaws.com/krita-stable-diffusion_multifile-0.2.2.tar.xz)
+1. [Download the latest release](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.2-alpha/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 2. Unzip it `tar -xf krita-stable-diffusion_multifile-0.2.2.tar.xz`
 3. Change into the correct directory `cd plugin_dist/0.2.2/krita-stable-diffusion_multifile-0.2.2`
 4. Run install script `./install`
 
 Follow the prompts to download the model if you don't have it already (requires hugging face account)
+
+---
+
+[REQUIRES CUDA 11.3 DRIVERS](https://developer.nvidia.com/cuda-11.3.0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local)
+
+You must manually install the drivers. This step will be added to the installation script in version 0.2.3
+
+If you are on Ubuntu 20.04 it is recommended that you use the runfile.
+
+```
+wget https://developer.download.nvidia.com/compute/cuda/11.3.0/local_installers/cuda_11.3.0_465.19.01_linux.run
+sudo sh cuda_11.3.0_465.19.01_linux.run
+```
+
+![image](https://user-images.githubusercontent.com/25737761/192189958-ca9d1587-263d-4d13-b67f-2fb66bf00451.png)
+
+
+---
 
 Start Krita and enable the plugin.
 
