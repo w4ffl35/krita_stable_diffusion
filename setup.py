@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 # This line is required for the packager. Do not remove it.
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 setup(
     name='krita_stable_diffusion',
@@ -10,6 +10,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "diffusers",
-        "stablediffusion @ git+https://github.com/w4ffl35/stable-diffusion.git#egg=stablediffusion",
+        "stablediffusion @ git+https://github.com/w4ffl35/stable-diffusion.git@feature/krita-plugin#egg=stablediffusion",
     ],
 )
