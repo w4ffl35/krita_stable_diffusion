@@ -13,6 +13,8 @@ logging.basicConfig(filename='stablediffusion.log', filemode='w', level=logging.
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOME = os.path.expanduser("~")
 SDPATH = os.path.join(HOME, "stablediffusion")
+DEFAULT_PORT=50006
+DEFAULT_HOST="192.168.1.122"
 
 
 class StableDiffusionConnectionManager:
@@ -27,7 +29,7 @@ class StableDiffusionConnectionManager:
         # create request client
         print("creating request worker...")
         self.request_worker = StableDiffusionRequestQueueWorker(
-            port=50006,
+            port=DEFAULT_PORT,
             pid=kwargs.get("pid"),
         )
 
@@ -218,8 +220,8 @@ class SocketConnection(Connection):
     :host: Hostname or IP address of the service
     :port: Port of the service
     """
-    port = 50006
-    host = "localhost"
+    port = DEFAULT_PORT
+    host = DEFAULT_HOST
     soc = None
     soc_connection = None
     soc_addr = None
@@ -523,8 +525,8 @@ class SocketConnection(Connection):
     :host: Hostname or IP address of the service
     :port: Port of the service
     """
-    port = 50006
-    host = "localhost"
+    port = DEFAULT_PORT
+    host = DEFAULT_HOST
     soc = None
     soc_connection = None
     soc_addr = None
