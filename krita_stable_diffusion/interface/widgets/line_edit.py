@@ -14,7 +14,7 @@ class LineEdit(Widget):
         element = QLineEdit()
         element.setPlaceholderText(self.placeholder)
         element.textChanged.connect(
-            lambda: self.config.setValue(self.config_name, element.text())
+            lambda: self.update_value(self.config_name, element.text())
         )
         element.setText(self.config.value(self.config_name))
         self.widget = self.initialize_widget(element)

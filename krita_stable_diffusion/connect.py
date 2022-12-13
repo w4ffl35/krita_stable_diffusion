@@ -16,7 +16,6 @@ SDPATH = os.path.join(HOME, "stablediffusion")
 DEFAULT_PORT=50006
 DEFAULT_HOST="192.168.1.122"
 
-
 class StableDiffusionConnectionManager:
     def __init__(self, *args, **kwargs):
         """
@@ -32,6 +31,7 @@ class StableDiffusionConnectionManager:
             port=DEFAULT_PORT,
             pid=kwargs.get("pid"),
         )
+
 
 SCRIPTS = {
     'txt2img': [
@@ -517,6 +517,7 @@ class Connection:
         self.kwargs = kwargs
         self.start()
 
+
 class SocketConnection(Connection):
     """
     Opens a socket on a server and port.
@@ -617,11 +618,16 @@ class SocketClient(SocketConnection):
         """
         self.queue.put(response)
 
+    connecting = False
+
     def connect(self):
         """
         Connect to the server
         :return:
         """
+        if self.connecting:
+            return
+        self.connecting = True
         while True:
             # check self.soc for connection
             if not self.has_connection:
@@ -643,12 +649,22 @@ class SocketClient(SocketConnection):
 
             if self.has_connection:
                 try:
-                    print("Waiting for response from server")
-                    response = self.soc.recv(1024)
-                    print("CLIENT: response received", response)
-                    if self.quit_event.is_set():
-                        break
-                    self.handle_response(response)
+                    print("Connected to server")
+
+                    # recieve message in 1024 byte chunks
+                    response = b""
+                    total_bytes_recieved = 0
+                    chunk_size = 1024
+                    n = 0
+                    while True:
+                        chunk = self.soc.recv(chunk_size)
+                        if len(chunk) in [0, 1]:
+                            print("CLIENT: chunk size 1 BREAKING")
+                            break
+                        response += chunk
+                        total_bytes_recieved += len(chunk)
+                        print(f"recieved chunk {n} {len(chunk)} for a total of {total_bytes_recieved}")
+                        n+=1
                 except socket.timeout:
                     self.has_connection = False
                     print("CLIENT: connection timed out")
@@ -657,6 +673,13 @@ class SocketClient(SocketConnection):
                     print("CLIENT: Connection lost", exc)
                 if self.quit_event.is_set():
                     break
+
+                # response = self.soc.recv(1024) #786432
+                # print the bytes receieved in size
+                print(f"CLIENT: received {len(response)} bytes")
+                if self.quit_event.is_set():
+                    break
+                self.handle_response(response)
             if self.quit_event.is_set():
                 break
             time.sleep(1)
@@ -688,6 +711,7 @@ class SocketClient(SocketConnection):
             name="socket client connect"
         )
 
+
 class SimpleEnqueueSocketClient(SocketClient):
     """
     Creates a SimpleQueue and waits for messages to append to it.
@@ -705,7 +729,7 @@ class SimpleEnqueueSocketClient(SocketClient):
         """
         Set the message property
         """
-        print("CLIENT: MESSAGE RECEIVED", msg)
+        print("Putting message in queue")
         self.queue.put(msg)
 
     @property
@@ -760,9 +784,23 @@ class SimpleEnqueueSocketClient(SocketClient):
         :param message:
         :return: None
         """
+        print("CLIENT: callback")
         try:
-            self.soc.sendall(json.dumps(message).encode("utf-8"))
+            # encode the message
+            message = json.dumps(message).encode("utf-8")
+
+            # message = message.ljust(5610434, b"\0")
+
+            # send the message
+            print(f"Sending message of size {len(message)}")
+            self.soc.sendall(message)
+
+            # send a byte string consisting of 1024 null bytes
+            # this tells the server we are done sending messages
+            print("Sending null byte message")
+            self.soc.sendall(b"\x00")
         except BrokenPipeError:
+            print("BrokenPipeError")
             # keep track of failed messages and resend them
             # when we regain a connection
             self._failed_messages.append(message)
@@ -795,6 +833,7 @@ class SimpleEnqueueSocketClient(SocketClient):
         Worker thread to handle responses from the server
         :return: None
         """
+        print("STARTING WORKER")
         while True:
             if self.quit_event.is_set():
                 break
@@ -846,129 +885,131 @@ class SimpleEnqueueSocketClient(SocketClient):
             name="response worker"
         )
 
-class SimpleEnqueueSocketServer(SocketServer):
-    """
-    Simple socket server that enqueues messages to a queue
-    """
-    _failed_messages = []  # list to hold failed messages
 
-    """
-    Creates a SimpleQueue and waits for messages to append to it.
-    """
-
-    @property
-    def message(self):
-        """
-        Does nothing. Only used for the setter.
-        """
-        return ""
-
-    @message.setter
-    def message(self, msg):
-        """
-        Place incoming messages onto the queue
-        """
-        self.queue.put(msg)
-
-    def worker(self):
-        """
-        Start a worker to handle request queue
-        """
-        logging.debug("SERVER WORKER: enqueue worker started")
-        while True:
-            logging.debug("SERVER WORKER: await connection")
-            if self.has_connection:  # if a client is connected...
-                logging.debug("SERVER WORKER: waiting for queue")
-                msg = self.queue.get()  # get a message from the queue
-                try:  # send to callback
-                    self.callback(msg)
-                except Exception as err:
-                    logging.debug(f"SERVER: callback error: {err}")
-                    pass
-            if self.quit_event.is_set(): break
-            time.sleep(1)
-        logging.debug("SERVER WORKER: worker stopped")
-
-    def __init__(self, *args, **kwargs):
-        self.do_run = True
-        self.queue = queue.SimpleQueue()
-        super().__init__(*args, **kwargs)
-
-
-class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
-    """
-    A socket server that listens for requests and enqueues them to a queue
-    """
-    def callback(self, data):
-        """
-        Handle a stable diffusion request message
-        :return: None
-        """
-        response = None
-        data = json.loads(data.decode("utf-8"))
-        if data["type"] == "txt2img":
-            response = self.sdrunner.txt2img_sample(data["options"])
-        elif data["type"] == "img2img":
-            response = self.sdrunner.img2img_sample(data["options"])
-        if response is not None and response != b'':
-            self.response_queue.put(response)
-
-    def response_queue_worker(self):
-        """
-        Wait for responses from the stable diffusion runner and send
-        them to the client
-        """
-        while True:
-            logging.debug("SERVER: response queue worker")
-            response = self.response_queue.get()
-            if response == "quit":
-                break
-            res = json.dumps({"response": response})
-            if res is not None and res != b'':
-                logging.debug("SERVER: sending response")
-                try:
-                    self.soc_connection.sendall(res.encode("utf-8"))
-                except Exception as e:
-                    logging.debug("SERVER: failed to send response", e)
-            if self.quit_event.is_set(): break
-            time.sleep(1)
-
-    def init_sd_runner(self):
-        """
-        Initialize the stable diffusion runner
-        return: None
-        """
-        pass
-
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize the worker
-        """
-        self.response_queue = queue.SimpleQueue()
-        self.pid = kwargs.get("pid")
-        # create a stable diffusion runner service
-        self.start_thread(
-            target=self.response_queue_worker,
-            name="response queue worker"
-        )
-        thread = self.start_thread(
-            target=self.init_sd_runner,
-            name="init stable diffusion runner"
-        )
-        thread.join()
-        super().__init__(*args, **kwargs)
-
-
-class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
-    """
-    A socket server that listens for responses and enqueues them to a queue
-    """
-    def callback(self, message):
-        """
-        Handle a stable diffusion response message
-        :return: None
-        """
-        pass
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+# class SimpleEnqueueSocketServer(SocketServer):
+#     """
+#     Simple socket server that enqueues messages to a queue
+#     """
+#     _failed_messages = []  # list to hold failed messages
+#
+#     """
+#     Creates a SimpleQueue and waits for messages to append to it.
+#     """
+#
+#     @property
+#     def message(self):
+#         """
+#         Does nothing. Only used for the setter.
+#         """
+#         return ""
+#
+#     @message.setter
+#     def message(self, msg):
+#         """
+#         Place incoming messages onto the queue
+#         """
+#         self.queue.put(msg)
+#
+#     def worker(self):
+#         """
+#         Start a worker to handle request queue
+#         """
+#         logging.debug("SERVER WORKER: enqueue worker started")
+#         while True:
+#             logging.debug("SERVER WORKER: await connection")
+#             if self.has_connection:  # if a client is connected...
+#                 logging.debug("SERVER WORKER: waiting for queue")
+#                 msg = self.queue.get()  # get a message from the queue
+#                 try:  # send to callback
+#                     self.callback(msg)
+#                 except Exception as err:
+#                     logging.debug(f"SERVER: callback error: {err}")
+#                     pass
+#             if self.quit_event.is_set(): break
+#             time.sleep(1)
+#         logging.debug("SERVER WORKER: worker stopped")
+#
+#     def __init__(self, *args, **kwargs):
+#         self.do_run = True
+#         self.queue = queue.SimpleQueue()
+#         super().__init__(*args, **kwargs)
+#
+#
+# class StableDiffusionRequestQueueWorker(SimpleEnqueueSocketServer):
+#     """
+#     A socket server that listens for requests and enqueues them to a queue
+#     """
+#     def callback(self, data):
+#         """
+#         Handle a stable diffusion request message
+#         :return: None
+#         """
+#         print("callback 1")
+#         response = None
+#         data = json.loads(data.decode("utf-8"))
+#         if data["action"] == "txt2img":
+#             response = self.sdrunner.txt2img_sample(data["options"])
+#         elif data["action"] == "img2img":
+#             response = self.sdrunner.img2img_sample(data["options"])
+#         if response is not None and response != b'':
+#             self.response_queue.put(response)
+#
+#     def response_queue_worker(self):
+#         """
+#         Wait for responses from the stable diffusion runner and send
+#         them to the client
+#         """
+#         while True:
+#             logging.debug("SERVER: response queue worker")
+#             response = self.response_queue.get()
+#             if response == "quit":
+#                 break
+#             res = json.dumps({"response": response})
+#             if res is not None and res != b'':
+#                 logging.debug("SERVER: sending response")
+#                 try:
+#                     self.soc_connection.sendall(res.encode("utf-8"))
+#                 except Exception as e:
+#                     logging.debug("SERVER: failed to send response", e)
+#             if self.quit_event.is_set(): break
+#             time.sleep(1)
+#
+#     def init_sd_runner(self):
+#         """
+#         Initialize the stable diffusion runner
+#         return: None
+#         """
+#         pass
+#
+#     def __init__(self, *args, **kwargs):
+#         """
+#         Initialize the worker
+#         """
+#         self.response_queue = queue.SimpleQueue()
+#         self.pid = kwargs.get("pid")
+#         # create a stable diffusion runner service
+#         self.start_thread(
+#             target=self.response_queue_worker,
+#             name="response queue worker"
+#         )
+#         thread = self.start_thread(
+#             target=self.init_sd_runner,
+#             name="init stable diffusion runner"
+#         )
+#         thread.join()
+#         super().__init__(*args, **kwargs)
+#
+#
+# class StableDiffusionResponseQueueWorker(SimpleEnqueueSocketServer):
+#     """
+#     A socket server that listens for responses and enqueues them to a queue
+#     """
+#     def callback(self, message):
+#         """
+#         Handle a stable diffusion response message
+#         :return: None
+#         """
+#         pass
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)

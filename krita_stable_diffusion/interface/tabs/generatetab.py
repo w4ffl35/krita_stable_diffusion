@@ -21,7 +21,7 @@ class Txt2ImgTab(Base):
     HOME = os.path.expanduser("~")
     SDDIR = os.path.join(HOME, "stablediffusion")
     name = "Txt2ImgTab"
-    display_name = "Text to Image"
+    display_name = "Generate images"
     default_setting_values = {
         "prompt": "A cat",
         "outdir": os.path.join(SDDIR, "txt2img"),
@@ -44,7 +44,9 @@ class Txt2ImgTab(Base):
         "seed": 42,
         "precision": "autocast",
         "init_img": os.path.join(SDDIR, "img2img/output.png"),
-        "negative_prompt": ""
+        "negative_prompt": "",
+        "model": 0,
+        "model_path": "",
     }
     photo_types = [
         "polaroid",
@@ -113,6 +115,11 @@ class Txt2ImgTab(Base):
         )
         super().__init__([
             VerticalInterface(widgets=[
+                Label(label="Model"),
+                DropDown(
+                    options=self.available_models,
+                    config_name="model"
+                ),
                 Label(
                     label="Prompt"
                 ),
@@ -142,6 +149,42 @@ class Txt2ImgTab(Base):
                         placeholder="Random seed",
                         config_name="seed"
                     ),
+                ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Sampler")
+                ]),
+                HorizontalInterface(widgets=[
+                    DropDown(options=SAMPLERS, config_name="sampler")
+                ]),
+            ]),
+            VerticalInterface(interfaces=[
+                HorizontalInterface(widgets=[
+                    Label(label="Strength"),
+                    Label(label="Steps"),
+                    Label(label="Scale"),
+                ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(
+                        min=0,
+                        max=1,
+                        config_name="strength",
+                        step=0.1,
+                        double=True
+                    ),
+                    SpinBox(
+                        min=1,
+                        max=250,
+                        config_name="ddim_steps",
+                        step=1
+                    ),
+                    SpinBox(
+                        min=1.0,
+                        max=30.0,
+                        config_name="cfg_scale",
+                        step=0.5, double=True
+                    )
                 ]),
             ]),
             VerticalInterface(interfaces=[

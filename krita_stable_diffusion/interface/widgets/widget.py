@@ -24,6 +24,7 @@ class Widget(QWidget):
         # generate the widget
         self.create_widget()
 
+
     def initialize_widget(self, widget):
         if self.min_width:
             widget.setMinimumWidth(self.min_width)
@@ -41,6 +42,7 @@ class Widget(QWidget):
         :return:
         """
         for k, v in kwargs.items():
+            v = self.config.value(k, v)
             setattr(self, k, v)
 
     def create_widget(self):
@@ -49,3 +51,11 @@ class Widget(QWidget):
         :return:
         """
         pass
+
+    def update_value(self, name, val):
+        self.config.setValue(name, val)
+        # save the config to disk
+        self.config.sync()
+        if name == "model_path":
+            print("MODEL PATH")
+            print(self.config.value(name))

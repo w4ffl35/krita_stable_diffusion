@@ -29,8 +29,7 @@ class KritaDockWidget(DockWidget):
     def create_interface(self):
         tabs = QTabWidget()
         tabs.addTab(*(Txt2ImgTab().tab()))
-        tabs.addTab(*(AdvancedTab().tab()))
-        tabs.addTab(*(UpscaleTab().tab()))
+        # tabs.addTab(*(UpscaleTab().tab()))
         tabs.addTab(*(ConfigTab().tab()))
 
         layout = QVBoxLayout()

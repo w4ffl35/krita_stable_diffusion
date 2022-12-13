@@ -23,6 +23,10 @@ class Base:
     layout = None
     default_setting_values = {}
     log_widget = None
+    available_models = [
+        "runwayml/stable-diffusion-v1-5",
+        "w4ffl35/kqz",
+    ]
 
     @property
     def active_document(self):
@@ -95,6 +99,7 @@ class Base:
         )
 
         # send request
+        print("HANDLE BUTTON PRESS")
         self.send(data, request_type)
 
     def send(self, options, request_type):
@@ -106,7 +111,7 @@ class Base:
         """
         self.log_message(f"Requesting {options['prompt']} {os.getpid()}...")
         Application.stablediffusion.client.message = {
-            "type": request_type,
+            "action": request_type,
             "options": options,
         }
 
@@ -134,6 +139,8 @@ class Base:
         do_watermark = self.config.value("do_watermark", True)
         data["do_nsfw_filter"] = False if do_nsfw_filter == 0 else True
         data["do_watermark"] = False if do_watermark == 0 else True
+        data["model"] = self.available_models[int(self.config.value("model", 0))]
+        data["model_path"] = self.config.value("model_path", "")
         self.config.setValue("log", Application.stablediffusion.log)
         return data
 
@@ -186,6 +193,7 @@ class Base:
         Application.__setattr__("connected_to_sd", False)
         Application.__setattr__("log_message", self.send)
         self.initialize_settings()
-        self.reset_default_values()
+        #self.reset_default_values()
+        self.config.sync()
         self.initialize_interfaces(interfaces)
         self.log_message(f"Initialized with PID {os.getpid()}")

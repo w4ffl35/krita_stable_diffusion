@@ -5,6 +5,9 @@ from krita_stable_diffusion.interface.interfaces.vertical_interface import Verti
 from krita_stable_diffusion.interface.tabs.base import Base
 from krita_stable_diffusion.interface.widgets.checkbox import CheckBox
 from krita_stable_diffusion.interface.widgets.button import Button
+from krita_stable_diffusion.interface.widgets.dropdown import DropDown
+from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
+from krita_stable_diffusion.interface.widgets.label import Label
 
 
 class ConfigTab(Base):
@@ -34,16 +37,16 @@ class ConfigTab(Base):
     def __init__(self):
         super().__init__([
             VerticalInterface(widgets=[
+                # drop down for selecting the model
+                Label(label="Extra models path"),
+                LineEdit(
+                    placeholder="Extra models path",
+                    config_name="model_path"
+                ),
                 CheckBox(label="NSFW Filter", config_name="do_nsfw_filter",
                          default_value=self.default_setting_values["do_nsfw_filter"]),
                 CheckBox(label="Add Watermark", config_name="do_watermark",
                          default_value=self.default_setting_values["do_watermark"]),
-                CheckBox(label="Auto delete temp files", config_name="purge_temp_files",
-                         default_value=self.default_setting_values["purge_temp_files"]),
-                CheckBox(label="Try to fix aspect ratio for selections", config_name="aspect_ratio_correction",
-                         default_value=self.default_setting_values["aspect_ratio_correction"]),
-                CheckBox(label="Allow tiling only with no selection (on full image)", config_name="restrict_tiling",
-                         default_value=self.default_setting_values["restrict_tiling"]),
                 Button(label="Restart Stable Diffusion", release_callback=self.restart_stable_diffusion),
             ])
         ])

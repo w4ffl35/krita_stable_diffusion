@@ -9,6 +9,7 @@ from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
 
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
+from krita_stable_diffusion.api import API
 
 HOME = os.path.expanduser("~")
 
@@ -130,9 +131,12 @@ class Controller(QObject):
         """
         self.insert_images(response)
         self.active_document.refreshProjection()
-        self.delete_generated_images(response)
+        #self.delete_generated_images(response)
 
-    def insert_images(self, image_paths):
+    def insert_images(self, image_data):
+        self.add_image_from_bytes("name", image_data)
+
+    def insert_images_old(self, image_paths):
         """
         Inserts images into the active document
         :param image_paths:
@@ -142,8 +146,8 @@ class Controller(QObject):
         print("Inserting images")
         for image_data in image_paths:
             print("IMAGE DATA", image_data)
-            seed = image_data.__contains__("seed") or ""
-            image_path = image_data["file_name"]
+            seed = 42#image_data.__contains__("seed") or ""
+            image_path = ""#image_data["file_name"]
             self.add_image(f"{layer_name_prefix}:{seed}:{image_path}", image_path)
 
     def create_layer(self, name, visible=True, type="paintLayer"):
@@ -166,9 +170,30 @@ class Controller(QObject):
         :return: QByteArray
         """
         print(f"converting image to byte array")
+        print(type(image))
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
+
+    def add_image_from_bytes(self, name, image_bytes):
+        """
+        Adds image from bytes
+        :param name:
+        :param image_bytes:
+        :return:
+        """
+        print(f"adding image from bytes")
+
+        # conver image_bytes byte string to byte array and set layer
+        image = QImage()
+        image.loadFromData(image_bytes)
+        layer = self.create_layer(name)
+        layer.setPixelData(self.byte_array(image), 0, 0, self.width(), self.height())
+
+        # the layer is not visible until we refresh the projection
+        self.active_document.refreshProjection()
+
+        return layer
 
     def add_image(self, layer_name, path, visible=True):
         """
@@ -215,12 +240,11 @@ class Controller(QObject):
         )
 
     def stablediffusion_response_callback(self, msg):
-        print("STABLE DIFFUSION RESPONSE CALLBACK", msg)
-        msg = json.loads(msg.decode("utf-8"))
-        print(msg)
-        print(type(msg))
-        print(msg["response"])
-        self.insert_images(msg["response"])
+        #msg = json.loads(msg)
+        # print byte size of msg["response"]
+        print("RESPONSE SIZE", len(msg))
+        if len(msg) > 1:
+            self.insert_images(msg)
 
     def kritastablediffusion_service_start(self):
         """
