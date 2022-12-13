@@ -157,7 +157,6 @@ class Controller(QObject):
         :param type:
         :return: a reference to the new layer
         """
-        print(f"creating layer")
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
         document.setVisible(visible)

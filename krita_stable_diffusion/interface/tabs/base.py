@@ -100,6 +100,18 @@ class Base:
 
         # send request
         print("HANDLE BUTTON PRESS")
+
+        # if there is no self.active_document, create one
+        if not self.active_document:
+            document = self.krita.createDocument(
+                512, 512, "StableDiffusion", "RGBA", "U8", "", 300.0
+            )
+            self.krita.activeWindow().addView(document)
+            # activate the document
+            self.krita.activeDocument().setActiveNode(
+                self.krita.activeDocument().rootNode()
+            )
+
         self.send(data, request_type)
 
     def send(self, options, request_type):
