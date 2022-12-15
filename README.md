@@ -4,7 +4,7 @@
 [![Linux](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=linux&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/0.2.2-alpha/krita-stable-diffusion_multifile-0.2.2.tar.xz)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.com/channels/839511291466219541/1022298294338191381)
 
-[https://discord.gg/PUVDDCJ7gz](Join the Discord community)
+(https://discord.gg/PUVDDCJ7gz)[Join the Discord community]
 
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
 ![GitHub all releases](https://img.shields.io/github/downloads/w4ffl35/krita_stable_diffusion/total)
