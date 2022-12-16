@@ -3,13 +3,13 @@ from krita_stable_diffusion.interface.interfaces.horizontal_interface import Hor
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.interface.tabs.base import Base
 from krita_stable_diffusion.interface.widgets.button import Button
-from krita_stable_diffusion.interface.widgets.checkbox import CheckBox
 from krita_stable_diffusion.interface.widgets.dropdown import DropDown
 from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
 from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.interface.widgets.spin_box import SpinBox
-from krita_stable_diffusion.settings import UPSCALERS, SAMPLERS
+from krita_stable_diffusion.interface.widgets.progress_bar import ProgressBar
+from krita_stable_diffusion.settings import SAMPLERS
 
 
 class Txt2ImgTab(Base):
@@ -43,31 +43,10 @@ class Txt2ImgTab(Base):
         "from-file": False,
         "seed": 42,
         "precision": "autocast",
-        "init_img": os.path.join(SDDIR, "img2img/output.png"),
         "negative_prompt": "",
         "model": 0,
         "model_path": "",
     }
-    photo_types = [
-        "polaroid",
-        "CCTV",
-        "body cam",
-        "professional",
-        "abstract",
-        "artistic"
-    ]
-    painting_types = []
-
-    def img2img_release_callback(self, _element):
-        """
-        Callback for the img2img button.
-        :param _element: passed by the button but not used
-        :return: None, sends request to stable diffusion
-        """
-        path = self.default_setting_values["init_img"]
-        self.config.setValue("init_img", path)
-        self.save_active_node_to_png(path, False)
-        self.handle_button_press("img2img")
 
     def txt2img_button_release_callback(self, _element):
         """
@@ -77,12 +56,16 @@ class Txt2ImgTab(Base):
         """
         self.handle_button_press("txt2img")
 
-    def txt2img_photo_release_callback(self, _element):
-        self.handle_button_press(
-            "txt2img",
-            image_type="photo",
-            style=self.photo_types[int(self.config.value("photo_type"))]
-        )
+    def img2img_release_callback(self, _element):
+        """
+        Callback for the img2img button.
+        :param _element: passed by the button but not used
+        :return: None, sends request to stable diffusion
+        """
+        self.handle_button_press("img2img")
+
+    def inpaint_release_callback(self, _element):
+        self.handle_button_press("inpaint")
 
     def txt2img_painting_release_callback(self, _element):
         self.handle_button_press(
@@ -99,32 +82,45 @@ class Txt2ImgTab(Base):
             disabled=True
         )
         txt2img_button = Button(
-            label="text ➔ image",
+            label="Generate txt2img",
             release_callback=self.txt2img_button_release_callback,
             config_name="server_connected",
         )
         img2img_button = Button(
-            label="text + image ➔ image",
+            label="Generate img2img",
             release_callback=self.img2img_release_callback,
             config_name="server_connected",
         )
-        photo_button = Button(
-            label="PHOTO",
-            release_callback=self.txt2img_photo_release_callback,
+        inpaint_button = Button(
+            label="Generate inpaint",
+            release_callback=self.inpaint_release_callback,
             config_name="server_connected",
         )
+        progress_bar = ProgressBar(
+            label="Generating image"
+        )
+        self.progress_bar = progress_bar
+        # add progress_bar to the main Controller
+        Application.__setattr__("progress_bar", progress_bar)
+        Application.__setattr__("connection_label", Label(
+            label=f"Not connected to localhost:5000",
+            alignment="right",
+        ))
         super().__init__([
             VerticalInterface(widgets=[
+                Application.connection_label,
                 Label(label="Model"),
                 DropDown(
                     options=self.available_models,
                     config_name="model"
                 ),
-                Label(
-                    label="Prompt"
-                ),
+                Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt", config_name="prompt"
+                ),
+                Label(label="Negative Prompt"),
+                PlainText(
+                    placeholder="negative_prompt", config_name="negative_prompt"
                 ),
             ]),
             VerticalInterface(interfaces=[
@@ -187,21 +183,13 @@ class Txt2ImgTab(Base):
                     )
                 ]),
             ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Photo type"),
-                ]),
-                HorizontalInterface(widgets=[
-                    DropDown(
-                        options=self.photo_types,
-                        config_name="photo_type"
-                    ),
-                    photo_button,
-                ]),
-            ]),
-            HorizontalInterface(widgets=[
+            VerticalInterface(widgets=[
                 txt2img_button,
                 img2img_button,
+                inpaint_button
+            ]),
+            HorizontalInterface(widgets=[
+                progress_bar,
             ]),
             HorizontalInterface(widgets=[
                 self.log_widget,

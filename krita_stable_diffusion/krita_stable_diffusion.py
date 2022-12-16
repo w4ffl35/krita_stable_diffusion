@@ -2,6 +2,7 @@
 Krita stable diffusion Controller class.
 """
 import json
+import sys
 import threading
 import time
 import os
@@ -12,7 +13,6 @@ from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.api import API
 
 HOME = os.path.expanduser("~")
-
 
 class Controller(QObject):
     krita_instance = None
@@ -134,7 +134,7 @@ class Controller(QObject):
         #self.delete_generated_images(response)
 
     def insert_images(self, image_data):
-        self.add_image_from_bytes("name", image_data)
+        Application.image_queue.append(image_data)
 
     def insert_images_old(self, image_paths):
         """
@@ -159,7 +159,6 @@ class Controller(QObject):
         """
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
-        document.setVisible(visible)
         return document
 
     def byte_array(self, image):
@@ -168,8 +167,6 @@ class Controller(QObject):
         :param image:
         :return: QByteArray
         """
-        print(f"converting image to byte array")
-        print(type(image))
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
@@ -238,12 +235,38 @@ class Controller(QObject):
             )
         )
 
+    def update_progress_bar(self, step, total):
+        Application.progress_bar.setmaximum(total)
+
     def stablediffusion_response_callback(self, msg):
-        #msg = json.loads(msg)
-        # print byte size of msg["response"]
-        print("RESPONSE SIZE", len(msg))
         if len(msg) > 1:
-            self.insert_images(msg)
+            # strip zero bytes from end of msg
+            msg = msg.rstrip(b'\x00')
+
+            # decode msg from binary string to json
+            og_message = msg
+            try:
+                msg = msg.decode("utf-8", "ignore")
+            except UnicodeDecodeError:
+                print("UnicodeDecodeError")
+                return
+
+            # convert msg string to dict
+            try:
+                msg = json.loads(msg)
+                if "action" in msg:
+                    if msg["action"] == 4:  # progress
+                        # get a reference to the main thread
+                        Application.__setattr__("step", int(msg["step"]))
+                        Application.__setattr__("total_steps", int(msg["total"]))
+                        return
+            except json.decoder.JSONDecodeError:
+                # JSON decode error means that we have received
+                # a potential image
+                pass
+
+            # insert image into krita document
+            self.insert_images(og_message)
 
     def kritastablediffusion_service_start(self):
         """
@@ -306,10 +329,11 @@ class Controller(QObject):
             status_change_callback=self.handle_status_change,
             Application=Application
         )
-        # self.start_thread(
-        #     target=self.kritastablediffusion_service_start,
-        #     name="kritastablediffusion"
-        # )
+        Application.__setattr__("client", self.client)
+        KRITA_INSTANCE = Krita.instance()
+        if not KRITA_INSTANCE:
+            print("No Krita instance!")
+            sys.exit()
         self.start_thread(
             target=self.watch_connection,
             name="watch_connection"

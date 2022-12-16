@@ -9,12 +9,14 @@ class LineEdit(Widget):
     :param placeholder: The placeholder text of the line edit
     :param config_name: The name of the config to be set when the line edit is changed
     """
+    config_name = None
 
     def create_widget(self):
         element = QLineEdit()
         element.setPlaceholderText(self.placeholder)
-        element.textChanged.connect(
-            lambda: self.update_value(self.config_name, element.text())
-        )
-        element.setText(self.config.value(self.config_name))
+        if self.config_name:
+            element.textChanged.connect(
+                lambda: self.update_value(self.config_name, element.text())
+            )
+            element.setText(self.config.value(self.config_name))
         self.widget = self.initialize_widget(element)

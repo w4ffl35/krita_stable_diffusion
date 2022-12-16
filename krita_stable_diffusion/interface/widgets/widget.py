@@ -14,6 +14,7 @@ class Widget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.widget = None
+        self.label = kwargs.get("label", "")
 
         # set the config object so that variables are accessible to all widgets
         self.config = Application.krita_stable_diffusion_config

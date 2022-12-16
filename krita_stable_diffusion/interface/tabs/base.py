@@ -1,3 +1,4 @@
+import base64
 import os
 import logging
 import random
@@ -15,6 +16,7 @@ class Base:
     :param layout: The layout to add the widget to
     :param default_setting_values: The default values of the settings object
     """
+    inserting_image = False
     krita_instance = None
     display_name = ""
     name = ""
@@ -27,6 +29,22 @@ class Base:
         "runwayml/stable-diffusion-v1-5",
         "w4ffl35/kqz",
     ]
+
+    @property
+    def color_mode(self):
+        return self.config.value("color_mode", "RGBA")
+
+    @property
+    def resolution(self):
+        return float(self.config.value("resolution", 300.0))
+
+    @property
+    def width(self):
+        return int(self.config.value("width", 512))
+
+    @property
+    def height(self):
+        return int(self.config.value("height", 512))
 
     @property
     def active_document(self):
@@ -49,14 +67,6 @@ class Base:
         return 0 if self.selection is None else self.selection.y()
 
     @property
-    def width(self):
-        return self.active_document.width() if self.selection is None else self.selection.width()
-
-    @property
-    def height(self):
-        return self.active_document.height() if self.selection is None else self.selection.height()
-
-    @property
     def krita(self):
         if not self.krita_instance:
             self.krita_instance = Krita.instance()
@@ -72,6 +82,77 @@ class Base:
                 data["prompt"]
             ])
         return data
+
+    def get_active_layer_binary(self):
+        """
+        Saves image to path
+        :param path:
+        :param is_mask:
+        :return:
+        """
+        logging.info(f"saving layer...")
+        item = self.active_document.activeNode()
+        pixels = item.pixelData(self.x, self.y, self.width, self.height)
+        image_data = QImage(
+            pixels,
+            self.width,
+            self.height,
+            QImage.Format_RGB32
+        ).rgbSwapped()
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        buffer.open(QIODevice.WriteOnly)
+        image_data.save(buffer, "PNG", -1)
+        return bytes(byte_array)
+
+    def get_mask(self):
+        item = self.active_document.topLevelNodes()[1]
+        # print name
+        print(item.name())
+        pixels = item.pixelData(self.x, self.y, self.width, self.height)
+        image_data = QImage(
+            pixels,
+            self.width,
+            self.height,
+            QImage.Format_RGB32
+        ).rgbSwapped()
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        buffer.open(QIODevice.WriteOnly)
+        image_data.save(buffer, "PNG", -1)
+        return bytes(byte_array)
+
+    def get_mask_old(self):
+        """
+        Get the mask from the top mask layer
+        :return: mask as bytes
+        """
+        mask = None
+        node = self.active_document.activeNode()
+        childNodes = node.childNodes()
+        for childNode in childNodes:
+            # check if is transparency mask
+            if childNode.type() == "transparencymask":
+                mask = childNode.pixelData(
+                    0,
+                    0,
+                    self.width,
+                    self.height
+                )
+        if mask is None:
+            return None
+        pixels = mask
+        image_data = QImage(
+            pixels,
+            self.width,
+            self.height,
+            QImage.Format_RGB32
+        )
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        buffer.open(QIODevice.WriteOnly)
+        image_data.save(buffer, "PNG", -1)
+        return bytes(byte_array)
 
     def handle_button_press(self, request_type, **kwargs):
         """
@@ -101,18 +182,133 @@ class Base:
         # send request
         print("HANDLE BUTTON PRESS")
 
+        if request_type in ["img2img", "inpaint"]:
+            pixels = base64.b64encode(
+                self.get_active_layer_binary()
+            ).decode("utf-8")
+            data["pixels"] = pixels
+
+            if request_type == "inpaint":
+                # get mask from top mask layer
+                mask = self.get_mask()
+                if mask:
+                    print("FOUND MASK")
+                    data["mask"] = base64.b64encode(mask).decode("utf-8")
+                else:
+                    print("NO MASK")
+                    data["mask"] = mask
+
         # if there is no self.active_document, create one
         if not self.active_document:
             document = self.krita.createDocument(
-                512, 512, "StableDiffusion", "RGBA", "U8", "", 300.0
+                self.width,
+                self.height,
+                "StableDiffusion",
+                self.color_mode,
+                "U8",
+                "",
+                self.resolution
             )
             self.krita.activeWindow().addView(document)
             # activate the document
             self.krita.activeDocument().setActiveNode(
                 self.krita.activeDocument().rootNode()
             )
-
         self.send(data, request_type)
+
+    def update_progressbar(self):
+        if Application.step != Application.progress_bar.value:
+            Application.progress_bar.setvalue(
+                Application.step,
+                Application.total_steps
+            )
+
+    def update_image_insert(self):
+        if len(Application.image_queue) > 0 and not self.inserting_image:
+            self.inserting_image = True
+            image = Application.image_queue.pop(0)
+            self.insert_image(image)
+
+    def progressbar_timed_update(self):
+        self.progressbar_update_timer = QTimer()
+        self.progressbar_update_timer.timeout.connect(self.update_progressbar)
+        self.progressbar_update_timer.start(100)
+
+    def image_insert_timed_update(self):
+        self.image_insert_timer = QTimer()
+        self.image_insert_timer.timeout.connect(self.update_image_insert)
+        self.image_insert_timer.start(100)
+
+    def byte_array(self, image):
+        """
+        Convert QImage to QByteArray
+        :param image:
+        :return: QByteArray
+        """
+        print(f"converting image to byte array")
+        print(type(image))
+        bits = image.bits()
+        bits.setsize(image.byteCount())
+        return QByteArray(bits.asstring())
+
+    def create_layer(self, name, visible=True, type="paintLayer"):
+        """
+        Creates a new layer in the active document
+        :param name:
+        :param type:
+        :return: a reference to the new layer
+        """
+        document = self.active_document.createNode(name, type)
+        self.root_node.addChildNode(document, None)
+        return document
+
+    def add_image_from_bytes(self, name, image_bytes):
+        """
+        Adds image from bytes
+        :param name:
+        :param image_bytes:
+        :return:
+        """
+        print(f"adding image from bytes")
+
+        # conver image_bytes byte string to byte array and set layer
+        image = QImage()
+        image.loadFromData(image_bytes)
+        layer = self.create_layer(name)
+        layer.setPixelData(self.byte_array(image), 0, 0, self.width, self.height)
+
+        # the layer is not visible until we refresh the projection
+        self.active_document.refreshProjection()
+
+        return layer
+
+    @property
+    def root_node(self):
+        doc = self.krita.activeDocument()
+        if not doc:
+            raise Exception("NO ACTIVE DOCUMENT")
+        try:
+            root = doc.rootNode()
+        except RuntimeError:
+            print("runtime error")
+            # check if doc has been deleted
+            if not doc:
+                print("NO ACTIVE DOCUMENT")
+            # rootNode has been deleted, fix it
+            doc.setRootNode(doc.createNode("root", "paintLayer"))
+            root = doc.rootNode()
+        return root
+
+    def insert_image(self, image):
+        """
+        Insert an image into the document
+        :param image: The image to insert
+        :return: None
+        """
+        total_layers = len(self.root_node.childNodes()) + 1
+        self.add_image_from_bytes(f"Layer {total_layers}", image)
+
+        self.inserting_image = False
 
     def send(self, options, request_type):
         """
@@ -181,20 +377,6 @@ class Base:
         self.widget = QWidget()
         self.widget.setLayout(self.layout)
 
-    def save_active_node_to_png(self, path, is_mask=False):
-        """
-        Saves image to path
-        :param path:
-        :param is_mask:
-        :return:
-        """
-        logging.info(f"saving layer...")
-        # get pixels from active node or document
-        item = self.active_node if is_mask else self.active_document
-        pixels = item.pixelData(self.x, self.y, self.width, self.height)
-        image_data = QImage(pixels, self.width, self.height, QImage.Format_RGBA8888).rgbSwapped()
-        image_data.save(path, "PNG", -1)
-
     def seed(self):
         seed = self.config.value("seed")
         if seed == "" or seed is None:
@@ -204,8 +386,15 @@ class Base:
     def __init__(self, interfaces):
         Application.__setattr__("connected_to_sd", False)
         Application.__setattr__("log_message", self.send)
+        Application.__setattr__("app", self)
+        # get steps from config
         self.initialize_settings()
         #self.reset_default_values()
         self.config.sync()
+        Application.__setattr__("step", 0)
+        Application.__setattr__("total_steps", int(self.config.value("ddim_steps", 50)))
+        Application.__setattr__("image_queue", [])
         self.initialize_interfaces(interfaces)
         self.log_message(f"Initialized with PID {os.getpid()}")
+        self.progressbar_timed_update()
+        self.image_insert_timed_update()
