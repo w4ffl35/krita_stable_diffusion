@@ -106,23 +106,6 @@ class Base:
         return bytes(byte_array)
 
     def get_mask(self):
-        item = self.active_document.topLevelNodes()[1]
-        # print name
-        print(item.name())
-        pixels = item.pixelData(self.x, self.y, self.width, self.height)
-        image_data = QImage(
-            pixels,
-            self.width,
-            self.height,
-            QImage.Format_RGB32
-        ).rgbSwapped()
-        byte_array = QByteArray()
-        buffer = QBuffer(byte_array)
-        buffer.open(QIODevice.WriteOnly)
-        image_data.save(buffer, "PNG", -1)
-        return bytes(byte_array)
-
-    def get_mask_old(self):
         """
         Get the mask from the top mask layer
         :return: mask as bytes
@@ -131,23 +114,21 @@ class Base:
         node = self.active_document.activeNode()
         childNodes = node.childNodes()
         for childNode in childNodes:
-            # check if is transparency mask
             if childNode.type() == "transparencymask":
-                mask = childNode.pixelData(
-                    0,
-                    0,
-                    self.width,
-                    self.height
-                )
+                mask = childNode
+                break
         if mask is None:
             return None
-        pixels = mask
+        pixels = mask.pixelData(0, 0, self.width, self.height)
         image_data = QImage(
             pixels,
             self.width,
             self.height,
-            QImage.Format_RGB32
+            QImage.Format_Indexed8
         )
+
+        image_data.invertPixels()
+
         byte_array = QByteArray()
         buffer = QBuffer(byte_array)
         buffer.open(QIODevice.WriteOnly)
