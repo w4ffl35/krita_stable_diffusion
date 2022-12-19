@@ -272,15 +272,15 @@ class Controller(QObject):
         else:
             self.config.setValue("sever_connected", False)
 
-    def __init__(self, *args, **kwargs):
-        Application.__setattr__("connected_to_sd", False)
-        self.client = None
-        super().__init__(*args, **kwargs)
-        self.init_settings(**kwargs)
-        self.create_stable_diffusion_panel()
-        self.popup(f"Plugin loaded {self}")
-        Application.__setattr__("stablediffusion", self)
-        # on Application quit, close the server
+    def window_created(self):
+        StableDiffusionMenu()
+
+    def initialize_client(self):
+        Application.__setattr__("connection_label", Label(
+            label=f"Not connected to localhost:5000",
+            alignment="right",
+            padding=10
+        ))
         self.popup("Starting client")
         Krita.instance().eventFilter = self.eventFilter
         self.popup("Loading client")
@@ -299,6 +299,25 @@ class Controller(QObject):
             target=self.watch_connection,
             name="watch_connection"
         )
+
+    def __init__(self, *args, **kwargs):
+        self.client = None
+        Application.__setattr__("connected_to_sd", False)
+        super().__init__(*args, **kwargs)
+        self.init_settings(**kwargs)
+        self.create_stable_diffusion_panel()
+        # self.popup(f"Plugin loaded {self}")
+        Application.__setattr__("stablediffusion", self)
+        self.initialize_client()
+        Application.addDockWidgetFactory(
+            DockWidgetFactory(
+                "krita_stable_diffusion",
+                DockWidgetFactoryBase.DockRight,
+                KritaDockWidget
+            )
+        )
+        # krita notifier for windowCreated
+        Application.notifier().windowCreated.connect(self.window_created)
 
 
 controller = Controller()
