@@ -384,7 +384,7 @@ class Base:
             root = doc.rootNode()
         return root
 
-    def insert_image(self, image):
+    def insert_image(self, image_response):
         """
         Insert an image into the document
         :param image: The image to insert
@@ -441,8 +441,10 @@ class Base:
         # add config options
         do_nsfw_filter = self.config.value("do_nsfw_filter", True)
         do_watermark = self.config.value("do_watermark", True)
+        enable_community_models = self.config.value("enable_community_models", False)
         data["do_nsfw_filter"] = False if do_nsfw_filter == 0 else True
         data["do_watermark"] = False if do_watermark == 0 else True
+        data["enable_community_models"] = False if enable_community_models == 0 else True
         data["model"] = self.available_models[int(self.config.value("model", 0))]
         data["model_path"] = self.config.value("model_path", "")
         self.config.setValue("log", Application.stablediffusion.log)
