@@ -5,7 +5,7 @@ import random
 from krita import *
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.settings import APPLICATION_ID
-
+from krita_stable_diffusion.settings import MODELS
 
 class Base:
     """
@@ -25,10 +25,7 @@ class Base:
     layout = None
     default_setting_values = {}
     log_widget = None
-    available_models = [
-        "runwayml/stable-diffusion-v1-5",
-        "w4ffl35/kqz",
-    ]
+    available_models = MODELS
 
     @property
     def color_mode(self):
