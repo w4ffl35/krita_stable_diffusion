@@ -80,7 +80,7 @@ class Base:
             ])
         return data
 
-    def get_active_layer_binary(self):
+    def get_active_layer_binary(self, pos_x, pos_y):
         """
         Saves image to path
         :param path:
@@ -89,20 +89,20 @@ class Base:
         """
         logging.info(f"saving layer...")
         item = self.active_document.activeNode()
-        pixels = item.pixelData(self.x, self.y, self.width, self.height)
+        pixels = item.pixelData(pos_x, pos_y, self.width, self.height)
         image_data = QImage(
             pixels,
             self.width,
             self.height,
             QImage.Format_RGB32
-        ).rgbSwapped()
+        )
         byte_array = QByteArray()
         buffer = QBuffer(byte_array)
         buffer.open(QIODevice.WriteOnly)
         image_data.save(buffer, "PNG", -1)
         return bytes(byte_array)
 
-    def get_mask(self):
+    def get_mask(self, pos_x, pos_y):
         """
         Get the mask from the top mask layer
         :return: mask as bytes
@@ -116,7 +116,7 @@ class Base:
                 break
         if mask is None:
             return None
-        pixels = mask.pixelData(0, 0, self.width, self.height)
+        pixels = mask.pixelData(pos_x, pos_y, self.width, self.height)
         image_data = QImage(
             pixels,
             self.width,
@@ -132,6 +132,106 @@ class Base:
         image_data.save(buffer, "PNG", -1)
         return bytes(byte_array)
 
+    def handle_outpaint(self, data):
+        """
+        Get the pixels from the active layer based on the location of
+        outpaint layer. Also create a mask based on the overlap.
+        :param data:
+        :return:
+        """
+
+        childNodes = self.active_document.topLevelNodes()
+        for childNode in childNodes:
+            name = childNode.name()
+            # get layer named outpaint
+            if name == "outpaint":
+                node = childNode
+                pos_x = node.position().x()
+                pos_y = node.position().y()
+
+                # select the pixels in the active layer
+                item = self.active_document.activeNode()
+                pixels = item.pixelData(pos_x, pos_y, self.width, self.height)
+
+                # # create a QByteArray containing 512 * 512 * 4 bytes
+                # # (4 bytes per pixel) - white pixels
+                mask_pixels = QByteArray(b'\xff' * (self.width * self.height * 4))
+
+                image_data = QImage(
+                    pixels,
+                    self.width,
+                    self.height,
+                    QImage.Format_ARGB32
+                )
+                byte_array = QByteArray()
+                buffer = QBuffer(byte_array)
+                buffer.open(QIODevice.WriteOnly)
+                image_data.save(buffer, "PNG", -1)
+
+                mask_image_data = QImage(
+                    mask_pixels,
+                    self.width,
+                    self.height,
+                    QImage.Format_RGB32
+                )
+
+                # iterate over the pixels in image_data
+                # and set the mask_pixels pixels to black if the pixel is not transparent
+                for x in range(self.width):
+                    for y in range(self.height):
+                        pixel = image_data.pixel(x, y)
+                        if pixel != 0:
+                            mask_image_data.setPixel(x, y, 0)
+
+                mask_byte_array = QByteArray()
+                mask_buffer = QBuffer(mask_byte_array)
+                mask_buffer.open(QIODevice.WriteOnly)
+                mask_image_data.save(mask_buffer, "PNG", -1)
+
+                data["pixels"] = base64.b64encode(bytes(byte_array)).decode("utf-8")
+                data["mask"] = base64.b64encode(bytes(mask_byte_array)).decode("utf-8")
+                data["pos_x"] = pos_x
+                data["pos_y"] = pos_y
+        return data
+
+    def handle_inpaint(self, data):
+        """
+        Get the pixels from the active layer and mask from its transparency mask
+        :param data:
+        :return:
+        """
+        pos_x = 0
+        pos_y = 0
+        pixels = base64.b64encode(
+            self.get_active_layer_binary(pos_x, pos_y)
+        ).decode("utf-8")
+
+        # get mask from top mask layer
+        mask = self.get_mask(pos_x, pos_y)
+        if mask:
+            data["mask"] = base64.b64encode(mask).decode("utf-8")
+            # save mask to file
+            with open("mask.png", "wb") as f:
+                f.write(mask)
+        else:
+            data["mask"] = mask
+        data["pixels"] = pixels
+        return data
+
+    def handle_img2img(self, data):
+        """
+        Get the pixels from the active layer.
+        :param data:
+        :return:
+        """
+        pos_x = 0
+        pos_y = 0
+        pixels = base64.b64encode(
+            self.get_active_layer_binary(pos_x, pos_y)
+        ).decode("utf-8")
+        data["pixels"] = pixels
+        return data
+
     def handle_button_press(self, request_type, **kwargs):
         """
         Callback for the txt2img button.
@@ -141,10 +241,7 @@ class Base:
         # prepare request data
         data = {}
         for k, v in self.default_setting_values.items():
-            if k == "seed":
-                v = self.seed()
-            else:
-                v = self.config.value(k, v)
+            v = self.config.value(k, v)
             data[k] = v
 
         # add config options to request data
@@ -157,24 +254,16 @@ class Base:
             kwargs.get("style", None)
         )
 
-        # send request
-        print("HANDLE BUTTON PRESS")
+        data["pos_x"] = 0
+        data["pos_y"] = 0
 
-        if request_type in ["img2img", "inpaint"]:
-            pixels = base64.b64encode(
-                self.get_active_layer_binary()
-            ).decode("utf-8")
-            data["pixels"] = pixels
-
-            if request_type == "inpaint":
-                # get mask from top mask layer
-                mask = self.get_mask()
-                if mask:
-                    print("FOUND MASK")
-                    data["mask"] = base64.b64encode(mask).decode("utf-8")
-                else:
-                    print("NO MASK")
-                    data["mask"] = mask
+        # handle request types that require image data to be sent
+        if request_type == "outpaint":
+            data = self.handle_outpaint(data)
+        elif request_type in ["inpaint"]:
+            data = self.handle_inpaint(data)
+        elif request_type == "img2img":
+            data = self.handle_img2img(data)
 
         # if there is no self.active_document, create one
         if not self.active_document:
@@ -188,6 +277,7 @@ class Base:
                 self.resolution
             )
             self.krita.activeWindow().addView(document)
+
             # activate the document
             self.krita.activeDocument().setActiveNode(
                 self.krita.activeDocument().rootNode()
@@ -223,8 +313,6 @@ class Base:
         :param image:
         :return: QByteArray
         """
-        print(f"converting image to byte array")
-        print(type(image))
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
@@ -240,20 +328,29 @@ class Base:
         self.root_node.addChildNode(document, None)
         return document
 
-    def add_image_from_bytes(self, name, image_bytes):
+    def add_image_from_bytes(
+            self,
+            reqype,
+            name,
+            image_bytes,
+            pos_x=0,
+            pos_y=0,
+    ):
         """
         Adds image from bytes
         :param name:
         :param image_bytes:
         :return:
         """
-        print(f"adding image from bytes")
-
-        # conver image_bytes byte string to byte array and set layer
         image = QImage()
         image.loadFromData(image_bytes)
-        layer = self.create_layer(name)
-        layer.setPixelData(self.byte_array(image), 0, 0, self.width, self.height)
+
+        if reqype == "outpaint":
+            # get active layer
+            layer = self.active_document.activeNode()
+        else:
+            layer = self.create_layer(name)
+        layer.setPixelData(self.byte_array(image), pos_x, pos_y, self.width, self.height)
 
         # the layer is not visible until we refresh the projection
         self.active_document.refreshProjection()
@@ -283,9 +380,20 @@ class Base:
         :param image: The image to insert
         :return: None
         """
+        image = image_response["image"]
+        reqtype = image_response["reqtype"]
+        pos_x = image_response["pos_x"]
+        pos_y = image_response["pos_y"]
+        # convert base64 image to bytes
+        image_bytes = base64.b64decode(image)
         total_layers = len(self.root_node.childNodes()) + 1
-        self.add_image_from_bytes(f"Layer {total_layers}", image)
-
+        self.add_image_from_bytes(
+            reqtype,
+            f"Layer {total_layers}",
+            image_bytes,
+            pos_x,
+            pos_y
+        )
         self.inserting_image = False
 
     def send(self, options, request_type):
@@ -295,7 +403,7 @@ class Base:
         :param request_type: The type of request to send
         :return: None
         """
-        self.log_message(f"Requesting {options['prompt']} {os.getpid()}...")
+        self.log_message(f"Requesting...")
         Application.stablediffusion.client.message = {
             "action": request_type,
             "options": options,
@@ -350,16 +458,12 @@ class Base:
             self.config.setValue(k, v)
 
     def initialize_interfaces(self, interfaces):
+        if len(interfaces) == 0:
+            return
         interfaces[0].addStretch()
         self.layout = VerticalInterface(interfaces=interfaces)
         self.widget = QWidget()
         self.widget.setLayout(self.layout)
-
-    def seed(self):
-        seed = self.config.value("seed")
-        if seed == "" or seed is None:
-            seed = random.randint(0, 1000000)
-        return seed
 
     def __init__(self, interfaces):
         Application.__setattr__("connected_to_sd", False)
@@ -367,10 +471,11 @@ class Base:
         Application.__setattr__("app", self)
         # get steps from config
         self.initialize_settings()
-        #self.reset_default_values()
+        self.reset_default_values()
         self.config.sync()
         Application.__setattr__("step", 0)
         Application.__setattr__("total_steps", int(self.config.value("ddim_steps", 50)))
+        Application.__setattr__("cur_reqtype", None)
         Application.__setattr__("image_queue", [])
         self.initialize_interfaces(interfaces)
         self.log_message(f"Initialized with PID {os.getpid()}")
