@@ -13,20 +13,26 @@ class DropDown(Widget):
     """
     callback = None
 
+    def default_callback(self, val):
+        self.config.setValue(self.config_name, val)
+
     def create_widget(self):
         element = QComboBox()
         element.addItems(self.options)
         current_index = 0
+        if not self.callback:
+            self.callback = self.default_callback
         for opt_index in range(len(self.options)):
             if self.options[opt_index] == self.config.value(self.config_name, type=str):
                 current_index = opt_index
         element.setCurrentIndex(current_index)
         if self.callback:
             element.currentIndexChanged.connect(
-                lambda: self.callback()
+                lambda: self.callback(element.currentText())
             )
         else:
+            value = self.options[current_index]
             element.currentIndexChanged.connect(
-                partial(self.config.setValue, self.config_name)
+                partial(self.config.setValue, self.config_name, value)
             )
         self.widget = self.initialize_widget(element)
