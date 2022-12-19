@@ -18,7 +18,7 @@ class ProgressBar(Widget):
 
     def setvalue(self, val, max):
         self.widget.setValue(val)
-        self.widget.setMaximum(max)
+        self.widget.setMaximum(max - 1)
 
     def reset(self):
         self.widget.reset()
