@@ -1,4 +1,3 @@
-import random
 import http.client
 import json
 import socket
@@ -25,8 +24,6 @@ class API:
 
     def send_request(self):
         url = 'http://localhost:5000/'
-        # random seed
-        seed = random.randint(0, 1000000)
         conn = http.client.HTTPConnection("localhost", 5000)
         conn.request(
             "POST",
