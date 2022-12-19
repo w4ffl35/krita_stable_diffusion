@@ -8,9 +8,9 @@ import time
 import os
 from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
-
+from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
-from krita_stable_diffusion.api import API
+from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 
 HOME = os.path.expanduser("~")
 
@@ -100,14 +100,6 @@ class Controller(QObject):
         self.config.setValue('img2img_max_size', value)
 
     @property
-    def txt2img_seed(self):
-        return self.config.value('txt2img_seed', int)
-
-    @txt2img_seed.setter
-    def txt2img_seed(self, value):
-        self.config.setValue('txt2img_seed', value)
-
-    @property
     def workaround_timeout(self):
         self.config.value('workaround_timeout', bool)
 
@@ -115,40 +107,8 @@ class Controller(QObject):
     def workaround_timeout(self, value):
         self.config.setValue('workaround_timeout', value)
 
-    @property
-    def img2img_seed(self):
-        self.config.value('img2img_seed', bool)
-
-    @img2img_seed.setter
-    def img2img_seed(self, value):
-        self.config.setValue('img2img_seed', value)
-
-    def stablediffusion_responsed_callback(self, response):
-        """
-        Handles response from Stable Diffusion service
-        :param response:
-        :return:
-        """
-        self.insert_images(response)
-        self.active_document.refreshProjection()
-        #self.delete_generated_images(response)
-
-    def insert_images(self, image_data):
-        Application.image_queue.append(image_data)
-
-    def insert_images_old(self, image_paths):
-        """
-        Inserts images into the active document
-        :param image_paths:
-        :return:
-        """
-        layer_name_prefix = "SD_txt2img:"
-        print("Inserting images")
-        for image_data in image_paths:
-            print("IMAGE DATA", image_data)
-            seed = 42#image_data.__contains__("seed") or ""
-            image_path = ""#image_data["file_name"]
-            self.add_image(f"{layer_name_prefix}:{seed}:{image_path}", image_path)
+    def insert_images(self, msg):
+        Application.image_queue.append(msg)
 
     def create_layer(self, name, visible=True, type="paintLayer"):
         """
@@ -254,19 +214,20 @@ class Controller(QObject):
             # convert msg string to dict
             try:
                 msg = json.loads(msg)
-                if "action" in msg:
+                if "image" in msg:
+                    self.insert_images(msg)
+                elif "action" in msg:
                     if msg["action"] == 4:  # progress
                         # get a reference to the main thread
                         Application.__setattr__("step", int(msg["step"]))
                         Application.__setattr__("total_steps", int(msg["total"]))
+                        Application.__setattr__("cur_reqtype", msg["reqtype"])
                         return
             except json.decoder.JSONDecodeError:
+                print("JSONDecodeError")
                 # JSON decode error means that we have received
                 # a potential image
                 pass
-
-            # insert image into krita document
-            self.insert_images(og_message)
 
     def kritastablediffusion_service_start(self):
         """
