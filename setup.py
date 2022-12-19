@@ -8,8 +8,5 @@ setup(
     version=VERSION,
     description='',
     packages=find_packages(),
-    install_requires=[
-        "diffusers",
-        "stablediffusion @ git+https://github.com/w4ffl35/stable-diffusion.git@feature/krita-plugin#egg=stablediffusion",
-    ],
+    install_requires=[],
 )

@@ -2,16 +2,17 @@
 Krita stable diffusion Controller class.
 """
 import json
+import sys
 import threading
 import time
 import os
 from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
-
+from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
+from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 
 HOME = os.path.expanduser("~")
-
 
 class Controller(QObject):
     krita_instance = None
@@ -99,14 +100,6 @@ class Controller(QObject):
         self.config.setValue('img2img_max_size', value)
 
     @property
-    def txt2img_seed(self):
-        return self.config.value('txt2img_seed', int)
-
-    @txt2img_seed.setter
-    def txt2img_seed(self, value):
-        self.config.setValue('txt2img_seed', value)
-
-    @property
     def workaround_timeout(self):
         self.config.value('workaround_timeout', bool)
 
@@ -114,37 +107,8 @@ class Controller(QObject):
     def workaround_timeout(self, value):
         self.config.setValue('workaround_timeout', value)
 
-    @property
-    def img2img_seed(self):
-        self.config.value('img2img_seed', bool)
-
-    @img2img_seed.setter
-    def img2img_seed(self, value):
-        self.config.setValue('img2img_seed', value)
-
-    def stablediffusion_responsed_callback(self, response):
-        """
-        Handles response from Stable Diffusion service
-        :param response:
-        :return:
-        """
-        self.insert_images(response)
-        self.active_document.refreshProjection()
-        self.delete_generated_images(response)
-
-    def insert_images(self, image_paths):
-        """
-        Inserts images into the active document
-        :param image_paths:
-        :return:
-        """
-        layer_name_prefix = "SD_txt2img:"
-        print("Inserting images")
-        for image_data in image_paths:
-            print("IMAGE DATA", image_data)
-            seed = image_data.__contains__("seed") or ""
-            image_path = image_data["file_name"]
-            self.add_image(f"{layer_name_prefix}:{seed}:{image_path}", image_path)
+    def insert_images(self, msg):
+        Application.image_queue.append(msg)
 
     def create_layer(self, name, visible=True, type="paintLayer"):
         """
@@ -153,10 +117,8 @@ class Controller(QObject):
         :param type:
         :return: a reference to the new layer
         """
-        print(f"creating layer")
         document = self.active_document.createNode(name, type)
         self.root_node.addChildNode(document, None)
-        document.setVisible(visible)
         return document
 
     def byte_array(self, image):
@@ -165,10 +127,29 @@ class Controller(QObject):
         :param image:
         :return: QByteArray
         """
-        print(f"converting image to byte array")
         bits = image.bits()
         bits.setsize(image.byteCount())
         return QByteArray(bits.asstring())
+
+    def add_image_from_bytes(self, name, image_bytes):
+        """
+        Adds image from bytes
+        :param name:
+        :param image_bytes:
+        :return:
+        """
+        print(f"adding image from bytes")
+
+        # conver image_bytes byte string to byte array and set layer
+        image = QImage()
+        image.loadFromData(image_bytes)
+        layer = self.create_layer(name)
+        layer.setPixelData(self.byte_array(image), 0, 0, self.width(), self.height())
+
+        # the layer is not visible until we refresh the projection
+        self.active_document.refreshProjection()
+
+        return layer
 
     def add_image(self, layer_name, path, visible=True):
         """
@@ -214,13 +195,39 @@ class Controller(QObject):
             )
         )
 
+    def update_progress_bar(self, step, total):
+        Application.progress_bar.setmaximum(total)
+
     def stablediffusion_response_callback(self, msg):
-        print("STABLE DIFFUSION RESPONSE CALLBACK", msg)
-        msg = json.loads(msg.decode("utf-8"))
-        print(msg)
-        print(type(msg))
-        print(msg["response"])
-        self.insert_images(msg["response"])
+        if len(msg) > 1:
+            # strip zero bytes from end of msg
+            msg = msg.rstrip(b'\x00')
+
+            # decode msg from binary string to json
+            og_message = msg
+            try:
+                msg = msg.decode("utf-8", "ignore")
+            except UnicodeDecodeError:
+                print("UnicodeDecodeError")
+                return
+
+            # convert msg string to dict
+            try:
+                msg = json.loads(msg)
+                if "image" in msg:
+                    self.insert_images(msg)
+                elif "action" in msg:
+                    if msg["action"] == 4:  # progress
+                        # get a reference to the main thread
+                        Application.__setattr__("step", int(msg["step"]))
+                        Application.__setattr__("total_steps", int(msg["total"]))
+                        Application.__setattr__("cur_reqtype", msg["reqtype"])
+                        return
+            except json.decoder.JSONDecodeError:
+                print("JSONDecodeError")
+                # JSON decode error means that we have received
+                # a potential image
+                pass
 
     def kritastablediffusion_service_start(self):
         """
@@ -265,15 +272,15 @@ class Controller(QObject):
         else:
             self.config.setValue("sever_connected", False)
 
-    def __init__(self, *args, **kwargs):
-        Application.__setattr__("connected_to_sd", False)
-        self.client = None
-        super().__init__(*args, **kwargs)
-        self.init_settings(**kwargs)
-        self.create_stable_diffusion_panel()
-        self.popup(f"Plugin loaded {self}")
-        Application.__setattr__("stablediffusion", self)
-        # on Application quit, close the server
+    def window_created(self):
+        StableDiffusionMenu()
+
+    def initialize_client(self):
+        Application.__setattr__("connection_label", Label(
+            label=f"Not connected to localhost:5000",
+            alignment="right",
+            padding=10
+        ))
         self.popup("Starting client")
         Krita.instance().eventFilter = self.eventFilter
         self.popup("Loading client")
@@ -283,14 +290,34 @@ class Controller(QObject):
             status_change_callback=self.handle_status_change,
             Application=Application
         )
-        # self.start_thread(
-        #     target=self.kritastablediffusion_service_start,
-        #     name="kritastablediffusion"
-        # )
+        Application.__setattr__("client", self.client)
+        KRITA_INSTANCE = Krita.instance()
+        if not KRITA_INSTANCE:
+            print("No Krita instance!")
+            sys.exit()
         self.start_thread(
             target=self.watch_connection,
             name="watch_connection"
         )
+
+    def __init__(self, *args, **kwargs):
+        self.client = None
+        Application.__setattr__("connected_to_sd", False)
+        super().__init__(*args, **kwargs)
+        self.init_settings(**kwargs)
+        self.create_stable_diffusion_panel()
+        # self.popup(f"Plugin loaded {self}")
+        Application.__setattr__("stablediffusion", self)
+        self.initialize_client()
+        Application.addDockWidgetFactory(
+            DockWidgetFactory(
+                "krita_stable_diffusion",
+                DockWidgetFactoryBase.DockRight,
+                KritaDockWidget
+            )
+        )
+        # krita notifier for windowCreated
+        Application.notifier().windowCreated.connect(self.window_created)
 
 
 controller = Controller()
