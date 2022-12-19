@@ -17,6 +17,7 @@ SDPATH = os.path.join(HOME, "stablediffusion")
 DEFAULT_PORT=50006
 DEFAULT_HOST="192.168.1.122"
 
+
 class StableDiffusionConnectionManager:
     def __init__(self, *args, **kwargs):
         """
@@ -32,95 +33,6 @@ class StableDiffusionConnectionManager:
             port=DEFAULT_PORT,
             pid=kwargs.get("pid"),
         )
-
-
-SCRIPTS = {
-    'txt2img': [
-        ('prompt', ''),
-        ('outdir', os.path.join(SDPATH, "txt2img")),
-        ('skip_grid', ''),
-        # ('skip_save', ''),
-        ('ddim_steps', 50),
-        ('plms', ''),
-        # ('laion400m', ''),
-        ('fixed_code', ''),
-        ('ddim_eta', 0.0),
-        ('n_iter', 1),
-        ('H', 512),
-        ('W', 512),
-        ('C', 4),
-        ('f', 8),
-        ('n_samples', 1),
-        ('n_rows', 0),
-        ('scale', 7.5),
-        # ('from-file', ''),
-        ('config', os.path.join(SDPATH, 'configs/stable-diffusion/v1-inference.yaml')),
-        ('ckpt', os.path.join(SDPATH, 'models/ldm/stable-diffusion-v1/model.ckpt')),
-        ('seed', 42),
-        ('precision', 'autocast'),
-        ('do_nsfw_filter', ''),
-        ('do_watermark', ''),
-    ],
-    'img2img': [
-        ('prompt', ''),
-        ('init_img', ''),
-        ('outdir', os.path.join(SDPATH, "img2img")),
-        ('skip_grid', True),
-        ('skip_save', False),
-        ('ddim_steps', 50),
-        ('plms', ''),
-        ('fixed_code', True),
-        ('ddim_eta', 0.0),
-        ('n_iter', 1),
-        ('H', 512),
-        ('W', 512),
-        ('C', 4),
-        ('f', 8),
-        ('n_samples', 2),
-        ('n_rows', 0),
-        ('scale', 5.0),
-        ('strength', 0.75),
-        ('from-file', ''),
-        ('config', os.path.join(SDPATH, 'configs/stable-diffusion/v1-inference.yaml')),
-        ('ckpt', os.path.join(SDPATH, 'models/ldm/stable-diffusion-v1/model.ckpt')),
-        ('seed', 42),
-        ('precision', 'autocast'),
-        ('do_nsfw_filter', ''),
-        ('do_watermark', ''),
-    ],
-    'inpaint': [
-        ('indir', f'{HOME}/inpaint/input'),
-        ('outdir', f'{HOME}/inpaint'),
-        ('steps', 50),
-    ],
-    'knn2img': [
-        ('prompt', ''),
-        ('outdir', f'{HOME}/knn2img'),
-        ('skip_grid', True),
-        ('ddim_steps', 50),
-        ('n_repeat', 1),
-        ('plms', True),
-        ('ddim_eta', 0.0),
-        ('n_iter', 1),
-        ('H', 768),
-        ('W', 768),
-        ('n_samples', 1),
-        ('n_rows', 0),
-        ('scale', 5.0),
-        ('from-file', ''),
-        ('config', os.path.join(SDPATH, 'configs/retrieval-augmented-diffusion/768x768.yaml')),
-        ('ckpt', os.path.join(SDPATH, 'models/rdm/rdm768x768/model.ckpt')),
-        ('clip_type', 'ViT-L/14'),
-        ('database', 'artbench-surrealism'),
-        ('use_neighbors', False),
-        ('knn', 10),
-    ],
-    'train_searcher': [
-        ('d', 'stablediffusion/data/rdm/retrieval_database/openimages'),
-        ('target_path', 'stablediffusion/data/rdm/searchers/openimages'),
-        ('knn', 20),
-    ],
-}
 
 
 class Connection:
@@ -324,12 +236,12 @@ class SocketClient(SocketConnection):
         if self.connecting:
             return
         self.connecting = True
+        print("CLIENT: connecting")
         while True:
             # check self.soc for connection
             if not self.has_connection:
                 self.reset_connection()
                 try:
-                    print("CLIENT: connecting")
                     self.soc.connect((self.host, self.port))
                     self.has_connection = True
                     setattr(self.Application, "connected_to_sd", True)
@@ -342,7 +254,7 @@ class SocketClient(SocketConnection):
                     self.soc.settimeout(None)
                     print("CLIENT: connected")
                 except ConnectionRefusedError as exc:
-                    print("CLIENT: failed to connect - connection refused", exc)
+                    # print("CLIENT: failed to connect - connection refused", exc)
                     self.has_connection = False
 
             if self.quit_event.is_set():
@@ -351,7 +263,6 @@ class SocketClient(SocketConnection):
 
             if self.has_connection:
                 try:
-
                     # recieve message in 1024 byte chunks
                     response = b""
                     total_bytes_recieved = 0
@@ -392,7 +303,6 @@ class SocketClient(SocketConnection):
                     self.Application.connection_label.setText(
                         "Not connected to localhost:5000"
                     )
-
                 self.handle_response(response)
             if self.quit_event.is_set():
                 break
@@ -585,12 +495,14 @@ class SimpleEnqueueSocketClient(SocketClient):
             try:
                 msg = msg.decode("utf-8")
             except Exception as err:
+                print("Failed to decode message", err)
                 pass
             try:
                 keys = msg.keys()
                 self.callback(msg)
                 continue
-            except:
+            except Exception as err:
+                print("Something went wrong ", err)
                 pass
             if msg != "" and msg is not None:
                 self.handle_response(msg)
