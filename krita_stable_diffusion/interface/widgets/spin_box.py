@@ -15,6 +15,17 @@ class SpinBox(Widget):
     """
     double = None
 
+    def __init__(self, *args, **kwargs):
+        self.callback = kwargs.pop("callback", None)
+        super().__init__(*args, **kwargs)
+
+    def on_change(self, val):
+        if self.config_name:
+            self.config.setValue(self.config_name, val)
+            self.config.sync()
+        if self.callback:
+            self.callback()
+
     def create_widget(self):
         if self.double:
             element = QDoubleSpinBox()
@@ -31,6 +42,5 @@ class SpinBox(Widget):
             element.setValue(self.config.value(self.config_name, type=float))
         else:
             element.setValue(self.config.value(self.config_name, type=int))
-        element.valueChanged.connect(partial(self.config.setValue, self.config_name))
-        element.text
+        element.valueChanged.connect(self.on_change)
         self.widget = self.initialize_widget(element)
