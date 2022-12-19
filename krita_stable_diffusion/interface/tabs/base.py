@@ -282,11 +282,21 @@ class Base:
             self.krita.activeDocument().setActiveNode(
                 self.krita.activeDocument().rootNode()
             )
+
+        # send request to the server
         self.send(data, request_type)
 
     def update_progressbar(self):
-        if Application.step != Application.progress_bar.value:
-            Application.progress_bar.setvalue(
+        progress_bar = None
+        if Application.cur_reqtype == "txt2img":
+            progress_bar = Application.txt2img_progress_bar
+        elif Application.cur_reqtype == "img2img":
+            progress_bar = Application.img2img_progress_bar
+        elif Application.cur_reqtype == "inpaint":
+            progress_bar = Application.inpaint_progress_bar
+
+        if progress_bar and Application.step != progress_bar.value:
+            progress_bar.setvalue(
                 Application.step,
                 Application.total_steps
             )
