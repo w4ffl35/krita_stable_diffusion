@@ -3,8 +3,6 @@ from krita_stable_diffusion.interface.tabs.txt2imgtab import Txt2ImgTab
 from krita_stable_diffusion.interface.tabs.img2imgtab import Img2ImgTab
 from krita_stable_diffusion.interface.tabs.inpainttab import InpaintTab
 from krita_stable_diffusion.interface.tabs.outpainttab import OutpaintTab
-from krita_stable_diffusion.interface.tabs.logintab import LoginTab
-from krita_stable_diffusion.interface.tabs.prompttab import PromptTab
 
 
 class KritaDockWidget(DockWidget):
@@ -18,7 +16,7 @@ class KritaDockWidget(DockWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Stable Diffusion (v0.1.0)")
+        self.setWindowTitle("Krita Stable Diffusion (v1.0.0)")
         self.create_interface()
 
         try:
