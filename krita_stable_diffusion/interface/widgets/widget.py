@@ -10,11 +10,15 @@ class Widget(QWidget):
     max_width = None
     max_height = None
     disabled = False
+    config_name = None
+    placeholder = ""
 
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.widget = None
+        self.config_name = kwargs.get("config_name", None)
         self.label = kwargs.get("label", "")
+        self.update_value = kwargs.get("update_value", self.update_value)
 
         # set the config object so that variables are accessible to all widgets
         self.config = Application.krita_stable_diffusion_config
@@ -57,6 +61,3 @@ class Widget(QWidget):
         self.config.setValue(name, val)
         # save the config to disk
         self.config.sync()
-        if name == "model_path":
-            print("MODEL PATH")
-            print(self.config.value(name))
