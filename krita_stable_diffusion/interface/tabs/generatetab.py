@@ -1,51 +1,88 @@
 import os
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
-from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.interface.tabs.base import Base
-from krita_stable_diffusion.interface.widgets.button import Button
-from krita_stable_diffusion.interface.widgets.dropdown import DropDown
-from krita_stable_diffusion.interface.widgets.label import Label
-from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
 from krita_stable_diffusion.interface.widgets.plain_text import PlainText
-from krita_stable_diffusion.interface.widgets.spin_box import SpinBox
-from krita_stable_diffusion.interface.widgets.progress_bar import ProgressBar
-from krita_stable_diffusion.settings import SAMPLERS
+from krita_stable_diffusion.settings import DEFAULT_MODEL, DEFAULT_SCHEDULER
 
-
-class Txt2ImgTab(Base):
+class GenerateTab(Base):
     """
-    Txt2ImgTab interface for the Krita Stable Diffusion plugin.
+    GenerateTab interface for the Krita Stable Diffusion plugin.
     :param name: The name of the tab
     :param interfaces: The interfaces to be added to the tab
     """
     HOME = os.path.expanduser("~")
     SDDIR = os.path.join(HOME, "stablediffusion")
-    name = "Txt2ImgTab"
+    name = "GenerateTab"
+    submit_button = None
     display_name = "Generate images"
     default_setting_values = {
-        "prompt": "A cat",
-        "outdir": os.path.join(SDDIR, "txt2img"),
-        "skip_grid": True,
-        "skip_save": False,
-        "ddim_steps": 50,
-        "plms": True,
-        "laion400m": False,
-        "fixed_code": True,
-        "ddim_eta": 0.0,
-        "n_iter": 1,
-        "H": 512,
-        "W": 512,
-        "C": 4,
-        "f": 8,
-        "n_samples": 1,
-        "n_rows": 0,
-        "scale": 7.5,
-        "from-file": False,
-        "seed": 42,
-        "precision": "autocast",
-        "negative_prompt": "",
-        "model": 0,
-        "model_path": "",
+        "txt2img_prompt": "",
+        "txt2img_ddim_steps": 50,
+        "txt2img_ddim_eta": 0.0,
+        "txt2img_n_iter": 1,
+        "txt2img_H": 512,
+        "txt2img_W": 512,
+        "txt2img_C": 4,
+        "txt2img_f": 8,
+        "txt2img_n_samples": 1,
+        "txt2img_scale": 7.5,
+        "txt2img_from-file": False,
+        "txt2img_seed": 42,
+        "txt2img_negative_prompt": "",
+        "txt2img_model": DEFAULT_MODEL,
+        "txt2img_scheduler": DEFAULT_SCHEDULER,
+        "txt2img_model_path": "",
+
+        "img2img_prompt": "",
+        "img2img_ddim_steps": 50,
+        "img2img_ddim_eta": 0.0,
+        "img2img_n_iter": 1,
+        "img2img_H": 512,
+        "img2img_W": 512,
+        "img2img_C": 4,
+        "img2img_f": 8,
+        "img2img_n_samples": 1,
+        "img2img_scale": 7.5,
+        "img2img_from-file": False,
+        "img2img_seed": 42,
+        "img2img_negative_prompt": "",
+        "img2img_model": DEFAULT_MODEL,
+        "img2img_scheduler": DEFAULT_SCHEDULER,
+        "img2img_model_path": "",
+
+        "inpaint_prompt": "",
+        "inpaint_ddim_steps": 50,
+        "inpaint_ddim_eta": 0.0,
+        "inpaint_n_iter": 1,
+        "inpaint_H": 512,
+        "inpaint_W": 512,
+        "inpaint_C": 4,
+        "inpaint_f": 8,
+        "inpaint_n_samples": 1,
+        "inpaint_scale": 7.5,
+        "inpaint_from-file": False,
+        "inpaint_seed": 42,
+        "inpaint_negative_prompt": "",
+        "inpaint_model": DEFAULT_MODEL,
+        "inpaint_scheduler": DEFAULT_SCHEDULER,
+        "inpaint_model_path": "",
+
+        "outpaint_prompt": "",
+        "outpaint_ddim_steps": 50,
+        "outpaint_ddim_eta": 0.0,
+        "outpaint_n_iter": 1,
+        "outpaint_H": 512,
+        "outpaint_W": 512,
+        "outpaint_C": 4,
+        "outpaint_f": 8,
+        "outpaint_n_samples": 1,
+        "outpaint_scale": 7.5,
+        "outpaint_from-file": False,
+        "outpaint_seed": 42,
+        "outpaint_negative_prompt": "",
+        "outpaint_model": DEFAULT_MODEL,
+        "outpaint_scheduler": DEFAULT_SCHEDULER,
+        "outpaint_model_path": "",
     }
 
     def txt2img_button_release_callback(self, _element):
@@ -67,6 +104,9 @@ class Txt2ImgTab(Base):
     def inpaint_release_callback(self, _element):
         self.handle_button_press("inpaint")
 
+    def outpaint_release_callback(self, _element):
+        self.handle_button_press("outpaint")
+
     def txt2img_painting_release_callback(self, _element):
         self.handle_button_press(
             "txt2img",
@@ -74,124 +114,14 @@ class Txt2ImgTab(Base):
             style=self.painting_types[self.config.value("painting_type")]
         )
 
-    def __init__(self):
+    def __init__(self, interfaces=[]):
         self.log_widget = PlainText(
             placeholder="log",
             config_name="log",
             max_height=50,
             disabled=True
         )
-        txt2img_button = Button(
-            label="Generate txt2img",
-            release_callback=self.txt2img_button_release_callback,
-            config_name="server_connected",
-        )
-        img2img_button = Button(
-            label="Generate img2img",
-            release_callback=self.img2img_release_callback,
-            config_name="server_connected",
-        )
-        inpaint_button = Button(
-            label="Generate inpaint",
-            release_callback=self.inpaint_release_callback,
-            config_name="server_connected",
-        )
-        progress_bar = ProgressBar(
-            label="Generating image"
-        )
-        self.progress_bar = progress_bar
-        # add progress_bar to the main Controller
-        Application.__setattr__("progress_bar", progress_bar)
-        Application.__setattr__("connection_label", Label(
-            label=f"Not connected to localhost:5000",
-            alignment="right",
-        ))
-        super().__init__([
-            VerticalInterface(widgets=[
-                Application.connection_label,
-                Label(label="Model"),
-                DropDown(
-                    options=self.available_models,
-                    config_name="model"
-                ),
-                Label(label="Prompt"),
-                PlainText(
-                    placeholder="prompt", config_name="prompt"
-                ),
-                Label(label="Negative Prompt"),
-                PlainText(
-                    placeholder="negative_prompt", config_name="negative_prompt"
-                ),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(
-                        label="Number of images",
-                        max_width=150
-                    ),
-                    Label(
-                        label="Seed"
-                    ),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(
-                        min=1,
-                        max=250,
-                        config_name="n_iter",
-                        step=2,
-                        min_width=150
-                    ),
-                    LineEdit(
-                        placeholder="Random seed",
-                        config_name="seed"
-                    ),
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Sampler")
-                ]),
-                HorizontalInterface(widgets=[
-                    DropDown(options=SAMPLERS, config_name="sampler")
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Strength"),
-                    Label(label="Steps"),
-                    Label(label="Scale"),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(
-                        min=0,
-                        max=1,
-                        config_name="strength",
-                        step=0.1,
-                        double=True
-                    ),
-                    SpinBox(
-                        min=1,
-                        max=250,
-                        config_name="ddim_steps",
-                        step=1
-                    ),
-                    SpinBox(
-                        min=1.0,
-                        max=30.0,
-                        config_name="cfg_scale",
-                        step=0.5, double=True
-                    )
-                ]),
-            ]),
-            VerticalInterface(widgets=[
-                txt2img_button,
-                img2img_button,
-                inpaint_button
-            ]),
-            HorizontalInterface(widgets=[
-                progress_bar,
-            ]),
-            HorizontalInterface(widgets=[
-                self.log_widget,
-            ]),
-        ])
+        submit_button = [HorizontalInterface(
+            widgets=[self.submit_button]
+        )] if self.submit_button else []
+        super().__init__(interfaces)
