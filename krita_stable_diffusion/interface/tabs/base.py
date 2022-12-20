@@ -318,7 +318,7 @@ class Base:
             Application.step_total,
             Application.cur_step
         ))
-        self.progressbar_update_timer.start(1000)
+        self.progressbar_update_timer.start(100)
 
     def image_insert_timed_update(self):
         self.image_insert_timer = QTimer()
