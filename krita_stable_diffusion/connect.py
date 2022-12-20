@@ -429,7 +429,6 @@ class SimpleEnqueueSocketClient(SocketClient):
                 self.soc.send(chunk)
                 message = message[chunk_size:]
                 n+=1
-                time.sleep(0.001)
 
             # send a byte string consisting of 1024 null bytes
             # this tells the server we are done sending messages

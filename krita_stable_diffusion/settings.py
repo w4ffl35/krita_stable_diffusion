@@ -10,14 +10,12 @@ SCHEDULERS = [
 ]
 UPSCALERS = ["None", "Lanczos"]
 MODELS = [
-    "stable-diffusion-2-1-base",
-    "stable-diffusion-2-base",
-    "stable-diffusion-v1-5",
-    "stable-diffusion-v1-4",
-    "stable-diffusion-v1-3",
-    "stable-diffusion-v1-2",
-    "stable-diffusion-v1-1",
-    "w4ffl35/kqz",
+    "stabilityai/stable-diffusion-2-1-base",
+    "stabilityai/stable-diffusion-x4-upscaler",
+    "stabilityai/stable-diffusion-2-inpainting",
+    "stabilityai/stable-diffusion-2-depth",
+    "runwayml/stable-diffusion-v1-5",
+    "runwayml/stable-diffusion-inpainting",
 ]
 DEFAULT_MODEL = MODELS[0]
 DEFAULT_SCHEDULER = SCHEDULERS[0]
