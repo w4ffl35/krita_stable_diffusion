@@ -210,9 +210,6 @@ class Base:
         mask = self.get_mask(pos_x, pos_y)
         if mask:
             data["mask"] = base64.b64encode(mask).decode("utf-8")
-            # save mask to file
-            with open("mask.png", "wb") as f:
-                f.write(mask)
         else:
             data["mask"] = mask
         data["pixels"] = pixels
