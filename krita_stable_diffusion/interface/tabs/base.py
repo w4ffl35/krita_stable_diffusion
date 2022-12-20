@@ -238,11 +238,11 @@ class Base:
         :param _element: passed by the button but not used
         :return: None, sends request to stable diffusion
         """
-        # prepare request data
         data = {}
         for k, v in self.default_setting_values.items():
             v = self.config.value(k, v)
             data[k] = v
+        self.update_progressbar(request_type, 0, 0)
 
         # add config options to request data
         data = self.prep_config_options(data)
@@ -286,20 +286,24 @@ class Base:
         # send request to the server
         self.send(data, request_type)
 
-    def update_progressbar(self):
-        progress_bar = None
-        if Application.cur_reqtype == "txt2img":
-            progress_bar = Application.txt2img_progress_bar
-        elif Application.cur_reqtype == "img2img":
-            progress_bar = Application.img2img_progress_bar
-        elif Application.cur_reqtype == "inpaint":
-            progress_bar = Application.inpaint_progress_bar
-
-        if progress_bar and Application.step != progress_bar.value:
-            progress_bar.setvalue(
-                Application.step,
-                Application.total_steps
-            )
+    def update_progressbar(self, reqtype, max, val):
+        try:
+            progress_bar = None
+            if reqtype == "txt2img":
+                progress_bar = Application.txt2img_progress_bar
+            elif reqtype == "img2img":
+                progress_bar = Application.img2img_progress_bar
+            elif reqtype == "inpaint":
+                progress_bar = Application.inpaint_progress_bar
+            elif reqtype == "outpaint":
+                progress_bar = Application.outpaint_progress_bar
+            if progress_bar:
+                if progress_bar.element.maximum() != max:
+                    progress_bar.setRange(0, max)
+                if max != 0:
+                    progress_bar.setvalue(val, max)
+        except Exception as e:
+            pass
 
     def update_image_insert(self):
         if len(Application.image_queue) > 0 and not self.inserting_image:
@@ -309,7 +313,11 @@ class Base:
 
     def progressbar_timed_update(self):
         self.progressbar_update_timer = QTimer()
-        self.progressbar_update_timer.timeout.connect(self.update_progressbar)
+        self.progressbar_update_timer.timeout.connect(lambda: self.update_progressbar(
+            Application.cur_reqtype,
+            Application.step_total,
+            Application.cur_step
+        ))
         self.progressbar_update_timer.start(100)
 
     def image_insert_timed_update(self):
@@ -478,6 +486,7 @@ class Base:
         self.widget.setLayout(self.layout)
 
     def __init__(self, interfaces):
+        Application.__setattr__("update_progressbar", self.update_progressbar)
         Application.__setattr__("connected_to_sd", False)
         Application.__setattr__("log_message", self.send)
         Application.__setattr__("app", self)
@@ -485,9 +494,9 @@ class Base:
         self.initialize_settings()
         self.reset_default_values()
         self.config.sync()
-        Application.__setattr__("step", 0)
-        Application.__setattr__("total_steps", int(self.config.value("ddim_steps", 50)))
         Application.__setattr__("cur_reqtype", None)
+        Application.__setattr__("step_total", 0)
+        Application.__setattr__("cur_step", 0)
         Application.__setattr__("image_queue", [])
         self.initialize_interfaces(interfaces)
         self.log_message(f"Initialized with PID {os.getpid()}")
