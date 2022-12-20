@@ -195,9 +195,6 @@ class Controller(QObject):
             )
         )
 
-    def update_progress_bar(self, step, total):
-        Application.progress_bar.setmaximum(total)
-
     def stablediffusion_response_callback(self, msg):
         if len(msg) > 1:
             # strip zero bytes from end of msg
@@ -219,9 +216,9 @@ class Controller(QObject):
                 elif "action" in msg:
                     if msg["action"] == 4:  # progress
                         # get a reference to the main thread
-                        Application.__setattr__("step", int(msg["step"]))
-                        Application.__setattr__("total_steps", int(msg["total"]))
                         Application.__setattr__("cur_reqtype", msg["reqtype"])
+                        Application.__setattr__("step_total", msg["total"])
+                        Application.__setattr__("cur_step", msg["step"])
                         return
             except json.decoder.JSONDecodeError:
                 print("JSONDecodeError")
