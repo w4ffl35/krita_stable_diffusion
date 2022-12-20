@@ -3,7 +3,7 @@ from .widget import Widget
 from functools import partial
 
 
-class SpinBox(Widget):
+class Slider(Widget):
     """
     Creates a spin box QWidget for use in an interface.
     :param label: The label of the spin box
@@ -16,31 +16,22 @@ class SpinBox(Widget):
     double = None
 
     def __init__(self, *args, **kwargs):
+        self.parent = kwargs.pop("parent", None)
         self.callback = kwargs.pop("callback", None)
         super().__init__(*args, **kwargs)
 
     def on_change(self, val):
-        if self.config_name:
-            self.config.setValue(self.config_name, val)
-            self.config.sync()
+        # self.config.setValue(self.config_name, val)
+        # self.config.sync()
         if self.callback:
-            self.callback()
+            self.callback(val)
 
     def create_widget(self):
-        if self.double:
-            element = QDoubleSpinBox()
-        else:
-            element = QSpinBox()
-
+        element = QSlider(
+            Qt.Horizontal,
+            self.parent.widget,
+        )
         element.setMinimum(self.min)
         element.setMaximum(self.max)
-
-        if self.step:
-            element.setSingleStep(self.step)
-
-        if self.double:
-            element.setValue(self.config.value(self.config_name, type=float))
-        else:
-            element.setValue(self.config.value(self.config_name, type=int))
-        element.valueChanged.connect(self.on_change)
+        element.valueChanged.connect(lambda v: self.on_change(v))
         self.widget = self.initialize_widget(element)
