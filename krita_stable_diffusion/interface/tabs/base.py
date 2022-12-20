@@ -241,6 +241,11 @@ class Base:
             data[k] = v
         self.update_progressbar(request_type, 0, 0)
 
+        # display status label
+        Application.status_label.setText(
+            "Loading (first load will take a while)"
+        )
+
         # add config options to request data
         data = self.prep_config_options(data)
 

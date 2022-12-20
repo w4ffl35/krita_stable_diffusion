@@ -220,7 +220,6 @@ class OutpaintTab(GenerateTab):
                     self.x_spin_box,
                 ]),
                 HorizontalInterface(widgets=[
-                    Label(label="Pos X"),
                     Label(label="Pos Y"),
                 ]),
                 HorizontalInterface(widgets=[

@@ -273,6 +273,11 @@ class Controller(QObject):
         StableDiffusionMenu()
 
     def initialize_client(self):
+        Application.__setattr__("status_label", Label(
+            label=f"",
+            alignment="left",
+            padding=10
+        ))
         Application.__setattr__("connection_label", Label(
             label=f"Not connected to localhost:5000",
             alignment="right",
