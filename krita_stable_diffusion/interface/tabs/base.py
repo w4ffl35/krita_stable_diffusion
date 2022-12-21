@@ -506,8 +506,6 @@ class Base:
         Application.__setattr__("app", self)
         # get steps from config
         self.initialize_settings()
-        self.reset_default_values()
-        self.config.sync()
         Application.__setattr__("cur_reqtype", None)
         Application.__setattr__("step_total", 0)
         Application.__setattr__("cur_step", 0)
