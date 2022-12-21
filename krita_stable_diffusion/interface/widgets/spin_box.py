@@ -23,7 +23,7 @@ class SpinBox(Widget):
         if self.config_name:
             self.update_value(self.config_name, val)
         if self.callback:
-            self.callback()
+            self.callback(val)
 
     def create_widget(self):
         if self.double:

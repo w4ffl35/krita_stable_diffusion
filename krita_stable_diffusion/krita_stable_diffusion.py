@@ -13,6 +13,12 @@ from krita_stable_diffusion.interface.widgets.dropdown import DropDown
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 from krita_stable_diffusion.settings import MODELS
+from subprocess import Popen
+CREATE_NEW_CONSOLE = None
+try:
+    from subprocess import CREATE_NEW_CONSOLE
+except:
+   pass
 
 HOME = os.path.expanduser("~")
 
@@ -272,15 +278,23 @@ class Controller(QObject):
             self.config.setValue("sever_connected", False)
 
     def window_created(self):
-        proc = QProcess(self)
         # get krita resources folder
-        from subprocess import Popen, CREATE_NEW_CONSOLE
         here = os.path.dirname(os.path.realpath(__file__))
-        p = Popen(
-            f"{here}\\runai\\runai",
-            #shell=True,
-            creationflags=CREATE_NEW_CONSOLE
-        )
+        if CREATE_NEW_CONSOLE:
+            # windows
+            Popen(
+                f"{here}\\runai\\runai",
+                creationflags=CREATE_NEW_CONSOLE
+            )
+        # else:
+        #     # linux
+        #     try:
+        #         Popen(
+        #             f"{here}/runai/server.py",
+        #             shell=True
+        #         )
+        #     except Exception as _e:
+        #         raise Exception("Could not start runai")
         StableDiffusionMenu()
 
     def initialize_client(self):
@@ -362,10 +376,26 @@ class Controller(QObject):
         Application.__setattr__("available_models_v2", MODELS["v2"])
         Application.__setattr__("model_version", 1)
         Application.__setattr__("update_extra_models", self.update_extra_models)
-        Application.__setattr__("txt2img_available_models_dropdown", DropDown(options=[], config_name="txt2img_model"))
-        Application.__setattr__("img2img_available_models_dropdown", DropDown(options=[], config_name="img2img_model"))
-        Application.__setattr__("inpaint_available_models_dropdown", DropDown(options=[], config_name="inpaint_model"))
-        Application.__setattr__("outpaint_available_models_dropdown", DropDown(options=[], config_name="outpaint_model"))
+        Application.__setattr__(
+            "txt2img_available_models_dropdown",
+            DropDown(options=[], config_name="txt2img_model")
+        )
+        Application.__setattr__(
+            "img2img_available_models_dropdown",
+            DropDown(options=[], config_name="img2img_model")
+        )
+        Application.__setattr__(
+            "inpaint_available_models_dropdown",
+            DropDown(options=[], config_name="inpaint_model")
+        )
+        Application.__setattr__(
+            "outpaint_available_models_dropdown",
+            DropDown(options=[], config_name="outpaint_model")
+        )
+        Application.__setattr__(
+            "outpaint_available_models_dropdown",
+            DropDown(options=[], config_name="outpaint_model")
+        )
         self.update_extra_models()
         self.create_stable_diffusion_panel()
         Application.notifier().windowCreated.connect(self.window_created)

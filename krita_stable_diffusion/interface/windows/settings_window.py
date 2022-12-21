@@ -26,7 +26,7 @@ class SettingsWindow(Base):
     }
 
     def model_path_update(self, name, val):
-        self.current_setting_values[name] = valh
+        self.current_setting_values[name] = val
         if self.callback:
             self.callback(name, val)
 

@@ -1,5 +1,6 @@
 import random
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
+from krita_stable_diffusion.interface.interfaces.slider_spinner import SliderSpinnerInterface
 from krita_stable_diffusion.interface.tabs.generatetab import GenerateTab
 from krita_stable_diffusion.interface.widgets.progress_bar import ProgressBar
 from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
@@ -43,9 +44,35 @@ class Img2ImgTab(GenerateTab):
         )
         Application.__setattr__("img2img_progress_bar", self.progress_bar)
         super().__init__([
+            HorizontalInterface(interfaces=[
+                VerticalInterface(interfaces=[
+                    HorizontalInterface(widgets=[
+                        Label(label="Scheduler")
+                    ]),
+                    HorizontalInterface(widgets=[
+                        DropDown(
+                            options=SCHEDULERS,
+                            config_name="img2img_scheduler"
+                        )
+                    ]),
+                ]),
+                VerticalInterface(widgets=[
+                    Label(label="Version"),
+                    DropDown(
+                        options=[
+                            "v1",
+                            "v2",
+                        ],
+                        config_name="img2img_model_version",
+                        max_width=100
+                    )
+                ]),
+                VerticalInterface(widgets=[
+                    Label(label="Model"),
+                    Application.img2img_available_models_dropdown,
+                ])
+            ]),
             VerticalInterface(widgets=[
-                Label(label="Model"),
-                Application.img2img_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",
@@ -87,43 +114,32 @@ class Img2ImgTab(GenerateTab):
                 ]),
             ]),
             VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Scheduler")
-                ]),
-                HorizontalInterface(widgets=[
-                    DropDown(
-                        options=SCHEDULERS,
-                        config_name="img2img_scheduler"
-                    )
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Strength"),
-                    Label(label="Steps"),
-                    Label(label="Scale"),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(
-                        min=0,
-                        max=1,
-                        config_name="img2img_strength",
-                        step=0.1,
-                        double=True
-                    ),
-                    SpinBox(
-                        min=1,
-                        max=250,
-                        config_name="img2img_ddim_steps",
-                        step=1
-                    ),
-                    SpinBox(
-                        min=1.0,
-                        max=30.0,
-                        config_name="img2img_cfg_scale",
-                        step=0.5, double=True
-                    ),
-                ]),
+                SliderSpinnerInterface(
+                    label="Strength",
+                    min=0.0,
+                    max=100.0,
+                    step=0.01,
+                    double=True,
+                    min_width=100,
+                    config_name="img2img_strength",
+                ),
+                SliderSpinnerInterface(
+                    label="Steps",
+                    min=1,
+                    max=250,
+                    step=1,
+                    min_width=100,
+                    config_name="img2img_ddim_steps",
+                ),
+                SliderSpinnerInterface(
+                    label="Scale",
+                    min=1.0,
+                    max=100.0,
+                    step=0.01,
+                    double=True,
+                    min_width=100,
+                    config_name="img2img_cfg_scale",
+                ),
                 HorizontalInterface(widgets=[
                     Button(
                         label="Generate",

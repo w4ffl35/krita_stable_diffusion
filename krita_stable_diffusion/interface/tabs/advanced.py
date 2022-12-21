@@ -2,14 +2,9 @@ import os
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.interface.tabs.base import Base
-from krita_stable_diffusion.interface.widgets.button import Button
-from krita_stable_diffusion.interface.widgets.checkbox import CheckBox
-from krita_stable_diffusion.interface.widgets.dropdown import DropDown
 from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
-from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.interface.widgets.spin_box import SpinBox
-from krita_stable_diffusion.settings import UPSCALERS, SAMPLERS
 
 
 class AdvancedTab(Base):
@@ -26,7 +21,7 @@ class AdvancedTab(Base):
         "outdir": os.path.join(SDDIR, "txt2img"),
         "skip_grid": True,
         "skip_save": False,
-        "ddim_steps": 50,
+        "ddim_steps": 20,
         "plms": True,
         "laion400m": False,
         "fixed_code": True,
@@ -51,7 +46,7 @@ class AdvancedTab(Base):
         """
         path = self.default_setting_values["init_img"]
         self.config.setValue("init_img", path)
-        self.save_active_node_to_png(path, False)
+        # self.save_active_node_to_png(path, False)
         self.handle_button_press("img2img")
 
     def txt2img_button_release_callback(self, _element):

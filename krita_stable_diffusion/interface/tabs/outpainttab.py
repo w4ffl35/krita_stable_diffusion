@@ -1,6 +1,7 @@
 import random
 from krita import *
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
+from krita_stable_diffusion.interface.interfaces.slider_spinner import SliderSpinnerInterface
 from krita_stable_diffusion.interface.tabs.generatetab import GenerateTab
 from krita_stable_diffusion.interface.widgets.progress_bar import ProgressBar
 from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
@@ -10,7 +11,6 @@ from krita_stable_diffusion.interface.widgets.dropdown import DropDown
 from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.widgets.checkbox import CheckBox
-from krita_stable_diffusion.interface.widgets.slider import Slider
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.settings import SCHEDULERS, MAX_SEED, MIN_SEED
 
@@ -24,10 +24,10 @@ class OutpaintTab(GenerateTab):
     do_random_seed = False
     outpaint_node = None
 
-    def move_node(self):
+    def move_node(self, _val):
         if self.outpaint_node:
-            x = self.x_spin_box.widget.value()
-            y = self.y_spin_box.widget.value()
+            x = int(self.config.value("outpaint_layer_x", 0))
+            y = int(self.config.value("outpaint_layer_y", 0))
             self.outpaint_node.move(x, y)
 
     def move_node_to(self, x, y):
@@ -58,8 +58,8 @@ class OutpaintTab(GenerateTab):
 
             self.outpaint_node = n
 
-            x = self.x_spin_box.widget.value()
-            y = self.y_spin_box.widget.value()
+            x = int(self.config.value("outpaint_layer_x", 0))
+            y = int(self.config.value("outpaint_layer_y", 0))
             self.move_node_to(x, y)
 
             if prev_layer:
@@ -78,18 +78,13 @@ class OutpaintTab(GenerateTab):
     def handle_tab_click(self, tab_index):
         if tab_index == 3:
             d = Krita.instance().activeDocument()
-            self.max_width = d.width() / 2
-            self.max_height = d.height() / 2
-            self.create_outpaint_layer()
+            if d:
+                self.max_width = d.width() / 2
+                self.max_height = d.height() / 2
+                self.create_outpaint_layer()
         elif self.outpaint_node:
             # delete outpaint_node
             self.outpaint_node.remove()
-
-    def handle_x_slider(self, value):
-        self.x_spin_box.widget.setValue(value)
-
-    def handle_y_slider(self, value):
-        self.y_spin_box.widget.setValue(value)
 
     def __init__(self):
         self.max_width = 512
@@ -107,23 +102,55 @@ class OutpaintTab(GenerateTab):
             "outpaint_progress_bar",
             self.progress_bar
         )
-        self.x_spin_box = SpinBox(
-            min=0,
-            max=self.max_width,
-            step=1,
-            callback=self.move_node
-        )
-        self.y_spin_box = SpinBox(
-            min=0,
-            max=self.max_height,
-            step=1,
-            callback=self.move_node
-        )
 
         super().__init__([
+            HorizontalInterface(interfaces=[
+                VerticalInterface(interfaces=[
+                    HorizontalInterface(widgets=[
+                        Label(label="Scheduler")
+                    ]),
+                    HorizontalInterface(widgets=[
+                        DropDown(
+                            options=SCHEDULERS,
+                            config_name="outpaint_scheduler"
+                        )
+                    ]),
+                ]),
+                VerticalInterface(widgets=[
+                    Label(label="Version"),
+                    DropDown(
+                        options=[
+                            "v1",
+                            "v2",
+                        ],
+                        config_name="outpaint2img_model_version",
+                        max_width=100
+                    )
+                ]),
+                VerticalInterface(widgets=[
+                    Label(label="Model"),
+                    Application.outpaint_available_models_dropdown,
+                ])
+            ]),
+            VerticalInterface(interfaces=[
+                SliderSpinnerInterface(
+                    label="Pos X",
+                    min=0,
+                    max=self.max_width,
+                    config_name="outpaint_layer_x",
+                    min_width=100,
+                    callback=self.move_node
+                ),
+                SliderSpinnerInterface(
+                    label="Pos Y",
+                    min=0,
+                    max=self.max_width,
+                    config_name="outpaint_layer_y",
+                    min_width=100,
+                    callback=self.move_node
+                ),
+            ]),
             VerticalInterface(widgets=[
-                Label(label="Model"),
-                Application.outpaint_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",
@@ -165,70 +192,52 @@ class OutpaintTab(GenerateTab):
                 ]),
             ]),
             VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Scheduler")
-                ]),
-                HorizontalInterface(widgets=[
-                    DropDown(
-                        options=SCHEDULERS,
-                        config_name="outpaint_scheduler"
-                    )
-                ]),
-            ]),
-            VerticalInterface(interfaces=[
-                HorizontalInterface(widgets=[
-                    Label(label="Strength"),
-                    Label(label="Steps"),
-                    Label(label="Scale"),
-                ]),
-                HorizontalInterface(widgets=[
-                    SpinBox(
-                        min=0,
-                        max=1,
-                        config_name="outpaint_strength",
-                        step=0.1,
-                        double=True
-                    ),
-                    SpinBox(
-                        min=1,
-                        max=250,
-                        config_name="outpaint_ddim_steps",
-                        step=1
-                    ),
-                    SpinBox(
-                        min=1.0,
-                        max=30.0,
-                        config_name="outpaint_cfg_scale",
-                        step=0.5,
-                        double=True
-                    ),
-                ]),
-                HorizontalInterface(widgets=[
-                    Label(label="Pos X"),
-                ]),
-                HorizontalInterface(widgets=[
-                    Slider(
-                        min=0,
-                        max=self.max_width,
-                        config_name="outpaint_layer_x",
-                        parent=self.x_spin_box,
-                        callback=self.handle_x_slider
-                    ),
-                    self.x_spin_box,
-                ]),
-                HorizontalInterface(widgets=[
-                    Label(label="Pos Y"),
-                ]),
-                HorizontalInterface(widgets=[
-                    Slider(
-                        min=0,
-                        max=self.max_height,
-                        config_name="outpaint_layer_y",
-                        parent=self.y_spin_box,
-                        callback=self.handle_y_slider
-                    ),
-                    self.y_spin_box,
-                ]),
+                SliderSpinnerInterface(
+                    label="Strength",
+                    min=0.0,
+                    max=100.0,
+                    step=0.01,
+                    double=True,
+                    min_width=100,
+                    config_name="outpaint_strength",
+                ),
+                SliderSpinnerInterface(
+                    label="Steps",
+                    min=1,
+                    max=250,
+                    step=1,
+                    min_width=100,
+                    config_name="outpaint_ddim_steps",
+                ),
+                SliderSpinnerInterface(
+                    label="Scale",
+                    min=1.0,
+                    max=100.0,
+                    step=0.01,
+                    double=True,
+                    min_width=100,
+                    config_name="outpaint_cfg_scale",
+                ),
+                # HorizontalInterface(widgets=[
+                #     Slider(
+                #         label="Pos X",
+                #         min=0,
+                #         max=self.max_width,
+                #         config_name="outpaint_layer_x",
+                #         min_width=100,
+                #         callback=self.move_node
+                #     )
+                # ]),
+                # HorizontalInterface(widgets=[
+                #     Slider(
+                #         label="Pos Y",
+                #         min=0,
+                #         max=self.max_width,
+                #         config_name="outpaint_layer_y",
+                #         min_width=100,
+                #         callback=self.move_node
+                #     )
+                # ]),
                 HorizontalInterface(widgets=[
                     Button(
                         label="Generate",
