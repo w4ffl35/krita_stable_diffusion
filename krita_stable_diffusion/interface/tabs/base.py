@@ -494,7 +494,6 @@ class Base:
     def initialize_interfaces(self, interfaces):
         if len(interfaces) == 0:
             return
-        interfaces[0].addStretch()
         self.layout = VerticalInterface(interfaces=interfaces)
         self.widget = QWidget()
         self.widget.setLayout(self.layout)

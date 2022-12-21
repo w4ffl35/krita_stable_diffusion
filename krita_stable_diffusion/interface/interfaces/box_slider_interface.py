@@ -10,7 +10,6 @@ class BoxSliderInterface(LayoutBase):
         max_height = kwargs.get("max_height", None)
         callback = kwargs.get("callback", None)
         super().__init__(
-            widgets=[],
             interfaces=[
                 VerticalInterface(interfaces=[
                     SliderSpinnerInterface(

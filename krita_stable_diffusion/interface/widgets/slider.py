@@ -1,7 +1,5 @@
 from krita import *
 from .widget import Widget
-from functools import partial
-
 
 class Slider(Widget):
     """

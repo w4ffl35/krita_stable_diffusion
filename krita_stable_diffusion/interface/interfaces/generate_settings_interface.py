@@ -1,7 +1,5 @@
 import random
-
 from krita import *
-
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
 from krita_stable_diffusion.interface.interfaces.slider_spinner import SliderSpinnerInterface
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface

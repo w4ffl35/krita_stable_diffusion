@@ -133,11 +133,11 @@ class GenerateTab(Base):
                 callback=self.move_node,
             )
         interfaces = [
+            slider_interface,
             ModelInterface(
                 section=self.config_name,
                 dropdown=dropdown,
             ),
-            slider_interface,
             PromptInterface(
                 section=self.config_name,
             ),

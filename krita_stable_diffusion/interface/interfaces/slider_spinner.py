@@ -18,7 +18,6 @@ class SliderSpinnerInterface(HorizontalInterface):
         return val
 
     def handle_slider(self, value):
-        print("handle_slider", value)
         if self.update_slider_value:
             self.slider.widget.setValue(self.slider_value(value))
         self.spinbox.widget.setValue(value)
@@ -32,7 +31,6 @@ class SliderSpinnerInterface(HorizontalInterface):
             else:
                 val = float(value / float(self.slider_max))
                 val = val * self.max
-                print(self.max, value, val)
         self.spinbox.widget.setValue(val)
         if self.callback:
             self.callback(val)
