@@ -3,6 +3,7 @@ from krita_stable_diffusion.interface.tabs.txt2imgtab import Txt2ImgTab
 from krita_stable_diffusion.interface.tabs.img2imgtab import Img2ImgTab
 from krita_stable_diffusion.interface.tabs.inpainttab import InpaintTab
 from krita_stable_diffusion.interface.tabs.outpainttab import OutpaintTab
+from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
 
 
 class KritaDockWidget(DockWidget):
@@ -44,7 +45,11 @@ class KritaDockWidget(DockWidget):
 
         layout = QVBoxLayout()
         layout.addWidget(tabs)
-        layout.addWidget(Application.connection_label.widget)
+        horizontal_interface = HorizontalInterface(widgets=[
+            Application.status_label,
+            Application.connection_label
+        ])
+        layout.addLayout(horizontal_interface)
         layout.addWidget(line)
         self.widget = QWidget(self)
         self.widget.setLayout(layout)

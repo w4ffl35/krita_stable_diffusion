@@ -9,8 +9,10 @@ import os
 from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
 from krita_stable_diffusion.interface.widgets.label import Label
+from krita_stable_diffusion.interface.widgets.dropdown import DropDown
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
+from krita_stable_diffusion.settings import MODELS
 
 HOME = os.path.expanduser("~")
 
@@ -270,9 +272,23 @@ class Controller(QObject):
             self.config.setValue("sever_connected", False)
 
     def window_created(self):
+        proc = QProcess(self)
+        # get krita resources folder
+        from subprocess import Popen, CREATE_NEW_CONSOLE
+        here = os.path.dirname(os.path.realpath(__file__))
+        p = Popen(
+            f"{here}\\runai\\runai",
+            #shell=True,
+            creationflags=CREATE_NEW_CONSOLE
+        )
         StableDiffusionMenu()
 
     def initialize_client(self):
+        Application.__setattr__("status_label", Label(
+            label=f"",
+            alignment="left",
+            padding=10
+        ))
         Application.__setattr__("connection_label", Label(
             label=f"Not connected to localhost:5000",
             alignment="right",
@@ -297,23 +313,61 @@ class Controller(QObject):
             name="watch_connection"
         )
 
+    def load_extra_models(self, path):
+        # find all ckpt files in config.model_path
+        # check recursively for ckpt files
+        config = Application.krita_stable_diffusion_config
+        model_path = config.value(path, None)
+        extra_models = []
+        if model_path:
+            for root, dirs, files in os.walk(model_path):
+                for file in files:
+                    if file.endswith(".ckpt"):
+                        extra_models.append(
+                            os.path.join
+                            (root, file)
+                        )
+        return extra_models
+
+    def update_extra_models(self):
+        Application.available_models_v1 = MODELS["v1"] + self.load_extra_models("model_path_v1")
+        Application.available_models_v2 = MODELS["v2"] + self.load_extra_models("model_path_v2")
+        self.set_model_options()
+
+    def set_model_options(self):
+        if Application.model_version == 1:
+            available_models = Application.available_models_v1
+        else:
+            available_models = Application.available_models_v2
+
+        Application.txt2img_available_models_dropdown.widget.clear()
+        Application.img2img_available_models_dropdown.widget.clear()
+        Application.inpaint_available_models_dropdown.widget.clear()
+        Application.outpaint_available_models_dropdown.widget.clear()
+        Application.txt2img_available_models_dropdown.setOptions(available_models)
+        Application.img2img_available_models_dropdown.setOptions(available_models)
+        Application.inpaint_available_models_dropdown.setOptions(available_models)
+        Application.outpaint_available_models_dropdown.setOptions(available_models)
+
+
     def __init__(self, *args, **kwargs):
         self.client = None
         Application.__setattr__("connected_to_sd", False)
         super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
-        self.create_stable_diffusion_panel()
         # self.popup(f"Plugin loaded {self}")
         Application.__setattr__("stablediffusion", self)
         self.initialize_client()
-        Application.addDockWidgetFactory(
-            DockWidgetFactory(
-                "krita_stable_diffusion",
-                DockWidgetFactoryBase.DockRight,
-                KritaDockWidget
-            )
-        )
-        # krita notifier for windowCreated
+        Application.__setattr__("available_models_v1", MODELS["v1"])
+        Application.__setattr__("available_models_v2", MODELS["v2"])
+        Application.__setattr__("model_version", 1)
+        Application.__setattr__("update_extra_models", self.update_extra_models)
+        Application.__setattr__("txt2img_available_models_dropdown", DropDown(options=[], config_name="txt2img_model"))
+        Application.__setattr__("img2img_available_models_dropdown", DropDown(options=[], config_name="img2img_model"))
+        Application.__setattr__("inpaint_available_models_dropdown", DropDown(options=[], config_name="inpaint_model"))
+        Application.__setattr__("outpaint_available_models_dropdown", DropDown(options=[], config_name="outpaint_model"))
+        self.update_extra_models()
+        self.create_stable_diffusion_panel()
         Application.notifier().windowCreated.connect(self.window_created)
 
 

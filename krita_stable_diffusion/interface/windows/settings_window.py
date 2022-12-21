@@ -17,14 +17,18 @@ class SettingsWindow(Base):
     name = "SettingsWindow"
     display_name = "Stable Diffusion Options"
     default_setting_values = {
-        "model_path": "",
+        "model_path_v1": "",
+        "model_path_v2": "",
     }
     current_setting_values = {
-        "model_path": "",
+        "model_path_v1": "",
+        "model_path_v2": "",
     }
 
     def model_path_update(self, name, val):
-        self.current_setting_values[name] = val
+        self.current_setting_values[name] = valh
+        if self.callback:
+            self.callback(name, val)
 
     def download_model(self, model):
         pass
@@ -32,37 +36,46 @@ class SettingsWindow(Base):
     def delete_model(self, model):
         pass
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        self.callback = kwargs.get("callback", None)
         self.config = Application.krita_stable_diffusion_config
-        path_line_edit = LineEdit(
-            placeholder="Extra models path",
-            config_name="model_path",
+        path_line_edit_v1 = LineEdit(
+            placeholder="path",
+            config_name="model_path_v1",
             update_value=self.model_path_update
         )
+        path_line_edit_v2 = LineEdit(
+            placeholder="path",
+            config_name="model_path_v2",
+            update_value=self.model_path_update
+        )
+        path_line_edit_v1.widget.setText(self.config.value("model_path_v1", ""))
+        path_line_edit_v2.widget.setText(self.config.value("model_path_v2", ""))
 
-        path_line_edit.widget.setText(self.config.value("model_path", ""))
         super().__init__([
-            VerticalInterface(
-                widgets=[
-                    Label(label=model),
-                ],
-                interfaces=[
-                  HorizontalInterface(widgets=[
-                      ProgressBar(
-                          label="Download",
-                          current_value=self.config.value(model, {
-                              "progress": 0,
-                          })
-                      ),
-                      Button(label="Download", callback=lambda: self.download_model(model)),
-                      Button(label="Delete", callback=lambda: self.delete_model(model)),
-                  ])
-                ]
-            ) for model in MODELS
-            # VerticalInterface(widgets=[
-            #     Label(label="Extra models path"),
-            #     path_line_edit,
-            # ])
+            # VerticalInterface(
+            #     widgets=[
+            #         Label(label=model),
+            #     ],
+            #     interfaces=[
+            #       HorizontalInterface(widgets=[
+            #           ProgressBar(
+            #               label="Download",
+            #               current_value=self.config.value(model, {
+            #                   "progress": 0,
+            #               })
+            #           ),
+            #           Button(label="Download", callback=lambda: self.download_model(model)),
+            #           Button(label="Delete", callback=lambda: self.delete_model(model)),
+            #       ])
+            #     ]
+            # ) for model in MODELS
+            VerticalInterface(widgets=[
+                Label(label="Extra models path (v2)"),
+                path_line_edit_v2,
+                Label(label="Extra models path (v1)"),
+                path_line_edit_v1,
+            ])
         ])
 
         self.newDialog = QDialog()
@@ -103,4 +116,5 @@ class SettingsWindow(Base):
         for k in self.default_setting_values.keys():
             self.config.setValue(k, self.current_setting_values[k])
         self.config.sync()
+        Application.update_extra_models()
         self.close()

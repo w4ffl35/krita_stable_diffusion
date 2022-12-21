@@ -123,10 +123,7 @@ class OutpaintTab(GenerateTab):
         super().__init__([
             VerticalInterface(widgets=[
                 Label(label="Model"),
-                DropDown(
-                    options=self.available_models,
-                    config_name="outpaint_model"
-                ),
+                Application.outpaint_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",
@@ -220,7 +217,6 @@ class OutpaintTab(GenerateTab):
                     self.x_spin_box,
                 ]),
                 HorizontalInterface(widgets=[
-                    Label(label="Pos X"),
                     Label(label="Pos Y"),
                 ]),
                 HorizontalInterface(widgets=[

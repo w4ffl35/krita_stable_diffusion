@@ -21,8 +21,7 @@ class SpinBox(Widget):
 
     def on_change(self, val):
         if self.config_name:
-            self.config.setValue(self.config_name, val)
-            self.config.sync()
+            self.update_value(self.config_name, val)
         if self.callback:
             self.callback()
 
@@ -42,5 +41,5 @@ class SpinBox(Widget):
             element.setValue(self.config.value(self.config_name, type=float))
         else:
             element.setValue(self.config.value(self.config_name, type=int))
-        element.valueChanged.connect(self.on_change)
+        element.valueChanged.connect(lambda val: self.on_change(val))
         self.widget = self.initialize_widget(element)
