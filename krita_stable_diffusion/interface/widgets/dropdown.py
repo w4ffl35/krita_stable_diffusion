@@ -36,3 +36,6 @@ class DropDown(Widget):
                 partial(self.config.setValue, self.config_name, value)
             )
         self.widget = self.initialize_widget(element)
+
+    def setOptions(self, options):
+        self.widget.addItems(options)

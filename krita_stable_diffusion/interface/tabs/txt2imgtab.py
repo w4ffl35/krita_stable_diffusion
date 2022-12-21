@@ -48,27 +48,10 @@ class Txt2ImgTab(GenerateTab):
             "txt2img_progress_bar",
             self.progress_bar
         )
-        config = Application.krita_stable_diffusion_config
-        # find all ckpt files in config.model_path
-        self.extra_models = []
-        # check recursively for ckpt files
-        model_path = config.value("model_path", None)
-        if model_path:
-            for root, dirs, files in os.walk(model_path):
-                for file in files:
-                    if file.endswith(".ckpt"):
-                        self.extra_models.append(
-                            os.path.join
-                            (root, file)
-                        )
-
         super().__init__([
             VerticalInterface(widgets=[
                 Label(label="Model"),
-                DropDown(
-                    options=self.available_models + self.extra_models,
-                    config_name="txt2img_model"
-                ),
+                Application.txt2img_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",

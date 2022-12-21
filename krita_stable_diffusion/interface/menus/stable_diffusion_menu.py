@@ -17,8 +17,11 @@ class StableDiffusionMenu(Base):
         "enable_community_models": False
     }
 
+    def model_path_update(self, name, val):
+        Application.update_extra_models()
+
     def options_clicked(self):
-        settings_window = SettingsWindow()
+        settings_window = SettingsWindow(callback=self.model_path_update)
 
     def add_checkmark_setting(self, main_menu, custom_menu, label, setting):
         custom_menu.addAction(label)

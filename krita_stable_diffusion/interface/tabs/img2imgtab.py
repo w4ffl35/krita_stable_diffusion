@@ -45,10 +45,7 @@ class Img2ImgTab(GenerateTab):
         super().__init__([
             VerticalInterface(widgets=[
                 Label(label="Model"),
-                DropDown(
-                    options=self.available_models,
-                    config_name="img2img_model"
-                ),
+                Application.img2img_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",
