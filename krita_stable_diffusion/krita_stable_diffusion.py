@@ -270,6 +270,15 @@ class Controller(QObject):
             self.config.setValue("sever_connected", False)
 
     def window_created(self):
+        proc = QProcess(self)
+        # get krita resources folder
+        from subprocess import Popen, CREATE_NEW_CONSOLE
+        here = os.path.dirname(os.path.realpath(__file__))
+        p = Popen(
+            f"{here}\\runai\\runai",
+            #shell=True,
+            creationflags=CREATE_NEW_CONSOLE
+        )
         StableDiffusionMenu()
 
     def initialize_client(self):
