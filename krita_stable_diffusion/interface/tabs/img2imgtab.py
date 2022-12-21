@@ -100,7 +100,7 @@ class Img2ImgTab(GenerateTab):
                         min=1,
                         max=999,
                         config_name="img2img_n_samples",
-                        step=2,
+                        step=1,
                     ),
                 ]),
                 HorizontalInterface(widgets=[
@@ -129,7 +129,7 @@ class Img2ImgTab(GenerateTab):
                     max=250,
                     step=1,
                     min_width=100,
-                    config_name="img2img_ddim_steps",
+                    config_name="img2img_steps",
                 ),
                 SliderSpinnerInterface(
                     label="Scale",

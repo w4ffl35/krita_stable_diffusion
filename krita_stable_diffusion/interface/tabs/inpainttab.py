@@ -33,15 +33,6 @@ class InpaintTab(GenerateTab):
             self.seed_line_edit.widget.setText(seed)
         self.inpaint_release_callback(element)
 
-    def handle_strength_slider(self, value):
-        pass
-
-    def handle_steps_slider(self, value):
-        pass
-
-    def handle_scale_slider(self, value):
-        pass
-
     def __init__(self):
         self.seed_line_edit = LineEdit(
             placeholder="Random seed",
@@ -113,7 +104,7 @@ class InpaintTab(GenerateTab):
                         min=1,
                         max=999,
                         config_name="inpaint_n_samples",
-                        step=2
+                        step=1
                     ),
                 ]),
                 HorizontalInterface(widgets=[
@@ -129,21 +120,12 @@ class InpaintTab(GenerateTab):
             VerticalInterface(interfaces=[
                 VerticalInterface(interfaces=[
                     SliderSpinnerInterface(
-                        label="Strength",
-                        min=0.0,
-                        max=100.0,
-                        step=0.01,
-                        double=True,
-                        min_width=100,
-                        config_name="inpaint_strength",
-                    ),
-                    SliderSpinnerInterface(
                         label="Steps",
                         min=1,
                         max=250,
                         step=1,
                         min_width=100,
-                        config_name="inpaint_ddim_steps",
+                        config_name="inpaint_steps",
                     ),
                     SliderSpinnerInterface(
                         label="Scale",

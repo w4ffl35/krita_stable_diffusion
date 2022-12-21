@@ -1,4 +1,3 @@
-import os
 import random
 from krita import *
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
@@ -102,7 +101,7 @@ class Txt2ImgTab(GenerateTab):
                         min=1,
                         max=999,
                         config_name="txt2img_n_samples",
-                        step=2
+                        step=1
                     ),
                 ]),
                 HorizontalInterface(widgets=[
@@ -116,28 +115,41 @@ class Txt2ImgTab(GenerateTab):
                 ]),
             ]),
             VerticalInterface(interfaces=[
-                SliderSpinnerInterface(
-                    label="Strength",
-                    min=0.0,
-                    max=100.0,
-                    step=0.01,
-                    double=True,
-                    min_width=100,
-                    config_name="txt2img_strength",
-                ),
+                HorizontalInterface(widgets=[
+                    Label(
+                        label="Width"
+                    ),
+                    Label(
+                        label="Height"
+                    ),
+                ]),
+                HorizontalInterface(widgets=[
+                    SpinBox(
+                        min=512,
+                        max=1088,
+                        config_name="txt2img_width",
+                        step=256,
+                    ),
+                    SpinBox(
+                        min=512,
+                        max=1088,
+                        config_name="txt2img_height",
+                        step=256,
+                    ),
+                ]),
                 SliderSpinnerInterface(
                     label="Steps",
                     min=1,
                     max=250,
                     step=1,
                     min_width=100,
-                    config_name="txt2img_ddim_steps",
+                    config_name="txt2img_steps",
                 ),
                 SliderSpinnerInterface(
                     label="Scale",
                     min=1.0,
                     max=100.0,
-                    step=0.01,
+                    step=float(0.1),
                     double=True,
                     min_width=100,
                     config_name="txt2img_cfg_scale",

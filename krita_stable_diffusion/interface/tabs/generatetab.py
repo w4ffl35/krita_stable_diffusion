@@ -17,69 +17,60 @@ class GenerateTab(Base):
     display_name = "Generate images"
     default_setting_values = {
         "txt2img_prompt": "",
-        "txt2img_ddim_steps": 50,
-        "txt2img_ddim_eta": 0.0,
+        "txt2img_negative_prompt": "",
+        "txt2img_steps": 20,
+        "txt2img_ddim_eta": 0.0,  # only applies to ddim scheduler
         "txt2img_n_iter": 1,
-        "txt2img_H": 512,
-        "txt2img_W": 512,
-        "txt2img_C": 4,
-        "txt2img_f": 8,
+        "txt2img_height": 512,
+        "txt2img_width": 512,
         "txt2img_n_samples": 1,
         "txt2img_scale": 7.5,
-        "txt2img_from-file": False,
         "txt2img_seed": 42,
-        "txt2img_negative_prompt": "",
         "txt2img_model": DEFAULT_MODEL,
         "txt2img_scheduler": DEFAULT_SCHEDULER,
         "txt2img_model_path": "",
 
         "img2img_prompt": "",
-        "img2img_ddim_steps": 50,
-        "img2img_ddim_eta": 0.0,
-        "img2img_n_iter": 1,
-        "img2img_H": 512,
-        "img2img_W": 512,
-        "img2img_C": 4,
-        "img2img_f": 8,
-        "img2img_n_samples": 1,
-        "img2img_scale": 7.5,
-        "img2img_from-file": False,
-        "img2img_seed": 42,
         "img2img_negative_prompt": "",
+        "img2img_steps": 20,
+        "img2img_ddim_eta": 0.0,  # only applies to ddim scheduler
+        "img2img_n_iter": 1,
+        "img2img_height": 512,
+        "img2img_width": 512,
+        "img2img_n_samples": 1,
+        "img2img_strength": 0.8,
+        "img2img_scale": 7.5,
+        "img2img_seed": 42,
         "img2img_model": DEFAULT_MODEL,
         "img2img_scheduler": DEFAULT_SCHEDULER,
         "img2img_model_path": "",
 
         "inpaint_prompt": "",
-        "inpaint_ddim_steps": 50,
+        "inpaint_negative_prompt": "",
+        "inpaint_steps": 20,
         "inpaint_ddim_eta": 0.0,
         "inpaint_n_iter": 1,
-        "inpaint_H": 512,
-        "inpaint_W": 512,
-        "inpaint_C": 4,
-        "inpaint_f": 8,
+        "inpaint_height": 512,
+        "inpaint_width": 512,
         "inpaint_n_samples": 1,
         "inpaint_scale": 7.5,
         "inpaint_from-file": False,
         "inpaint_seed": 42,
-        "inpaint_negative_prompt": "",
         "inpaint_model": DEFAULT_MODEL,
         "inpaint_scheduler": DEFAULT_SCHEDULER,
         "inpaint_model_path": "",
 
         "outpaint_prompt": "",
-        "outpaint_ddim_steps": 50,
+        "outpaint_negative_prompt": "",
+        "outpaint_steps": 20,
         "outpaint_ddim_eta": 0.0,
         "outpaint_n_iter": 1,
-        "outpaint_H": 512,
-        "outpaint_W": 512,
-        "outpaint_C": 4,
-        "outpaint_f": 8,
+        "outpaint_height": 512,
+        "outpaint_width": 512,
         "outpaint_n_samples": 1,
         "outpaint_scale": 7.5,
         "outpaint_from-file": False,
         "outpaint_seed": 42,
-        "outpaint_negative_prompt": "",
         "outpaint_model": DEFAULT_MODEL,
         "outpaint_scheduler": DEFAULT_SCHEDULER,
         "outpaint_model_path": "",
@@ -107,14 +98,7 @@ class GenerateTab(Base):
     def outpaint_release_callback(self, _element):
         self.handle_button_press("outpaint")
 
-    def txt2img_painting_release_callback(self, _element):
-        self.handle_button_press(
-            "txt2img",
-            image_type="painting",
-            style=self.painting_types[self.config.value("painting_type")]
-        )
-
-    def __init__(self, interfaces=[]):
+    def __init__(self, interfaces = None):
         self.log_widget = PlainText(
             placeholder="log",
             config_name="log",
@@ -124,4 +108,4 @@ class GenerateTab(Base):
         submit_button = [HorizontalInterface(
             widgets=[self.submit_button]
         )] if self.submit_button else []
-        super().__init__(interfaces)
+        super().__init__([] if not interfaces else interfaces)

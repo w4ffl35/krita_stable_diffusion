@@ -178,7 +178,7 @@ class OutpaintTab(GenerateTab):
                         min=1,
                         max=999,
                         config_name="outpaint_n_samples",
-                        step=2
+                        step=1
                     ),
                 ]),
                 HorizontalInterface(widgets=[
@@ -193,21 +193,12 @@ class OutpaintTab(GenerateTab):
             ]),
             VerticalInterface(interfaces=[
                 SliderSpinnerInterface(
-                    label="Strength",
-                    min=0.0,
-                    max=100.0,
-                    step=0.01,
-                    double=True,
-                    min_width=100,
-                    config_name="outpaint_strength",
-                ),
-                SliderSpinnerInterface(
                     label="Steps",
                     min=1,
                     max=250,
                     step=1,
                     min_width=100,
-                    config_name="outpaint_ddim_steps",
+                    config_name="outpaint_steps",
                 ),
                 SliderSpinnerInterface(
                     label="Scale",
