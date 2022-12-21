@@ -1,11 +1,11 @@
 import base64
 import os
 import logging
-import random
 from krita import *
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.settings import APPLICATION_ID
 from krita_stable_diffusion.settings import DEFAULT_MODEL
+
 
 class Base:
     """

@@ -1,8 +1,12 @@
 import os
-from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
+from krita_stable_diffusion.interface.interfaces.box_slider_interface import BoxSliderInterface
+from krita_stable_diffusion.interface.interfaces.generate_settings_interface import GenerateSettingsInterface
+from krita_stable_diffusion.interface.interfaces.model_interface import ModelInterface
+from krita_stable_diffusion.interface.interfaces.prompt_interface import PromptInterface
 from krita_stable_diffusion.interface.tabs.base import Base
 from krita_stable_diffusion.interface.widgets.plain_text import PlainText
 from krita_stable_diffusion.settings import DEFAULT_MODEL, DEFAULT_SCHEDULER
+
 
 class GenerateTab(Base):
     """
@@ -15,6 +19,7 @@ class GenerateTab(Base):
     name = "GenerateTab"
     submit_button = None
     display_name = "Generate images"
+    config_name = "generate"
     default_setting_values = {
         "txt2img_prompt": "",
         "txt2img_negative_prompt": "",
@@ -98,14 +103,53 @@ class GenerateTab(Base):
     def outpaint_release_callback(self, _element):
         self.handle_button_press("outpaint")
 
-    def __init__(self, interfaces = None):
+    def move_node(self, _val):
+        """
+        Overriden by outpaint tab
+        :return:
+        """
+        pass
+
+    def __init__(self):
+        # get txt2img_button_release_callback based on self.display_name
+        callback = None
+        dropdown = None
+        slider_interface = None
+        if self.config_name == "txt2img":
+            callback = self.txt2img_button_release_callback
+            dropdown = Application.txt2img_available_models_dropdown
+        elif self.config_name == "img2img":
+            callback = self.img2img_release_callback
+            dropdown = Application.img2img_available_models_dropdown
+        elif self.config_name == "inpaint":
+            callback = self.inpaint_release_callback
+            dropdown = Application.inpaint_available_models_dropdown
+        elif self.config_name == "outpaint":
+            callback = self.outpaint_release_callback
+            dropdown = Application.outpaint_available_models_dropdown
+            slider_interface = BoxSliderInterface(
+                max_width=512,
+                max_height=512,
+                callback=self.move_node,
+            )
+        interfaces = [
+            ModelInterface(
+                section=self.config_name,
+                dropdown=dropdown,
+            ),
+            slider_interface,
+            PromptInterface(
+                section=self.config_name,
+            ),
+            GenerateSettingsInterface(
+                section=self.config_name,
+                section_callback=callback
+            ),
+        ]
         self.log_widget = PlainText(
             placeholder="log",
             config_name="log",
             max_height=50,
             disabled=True
         )
-        submit_button = [HorizontalInterface(
-            widgets=[self.submit_button]
-        )] if self.submit_button else []
         super().__init__([] if not interfaces else interfaces)

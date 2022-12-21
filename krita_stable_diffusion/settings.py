@@ -9,6 +9,10 @@ SCHEDULERS = [
     "dpm"
 ]
 UPSCALERS = ["None", "Lanczos"]
+MODEL_VERSIONS = [
+    "v1",
+    "v2",
+]
 MODELS = {
     "v1": [
         "runwayml/stable-diffusion-v1-5",
