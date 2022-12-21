@@ -5,7 +5,7 @@ import random
 from krita import *
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.settings import APPLICATION_ID
-from krita_stable_diffusion.settings import MODELS
+from krita_stable_diffusion.settings import DEFAULT_MODEL
 
 class Base:
     """
@@ -25,7 +25,6 @@ class Base:
     layout = None
     default_setting_values = {}
     log_widget = None
-    available_models = MODELS
 
     @property
     def color_mode(self):
@@ -404,7 +403,7 @@ class Base:
         reqtype = image_response["reqtype"]
         pos_x = image_response["pos_x"]
         pos_y = image_response["pos_y"]
-        # convert base64 image to bytes
+        # convert base64 image to bytes+
         image_bytes = base64.b64decode(image)
         total_layers = len(self.root_node.childNodes()) + 1
         self.add_image_from_bytes(
@@ -455,7 +454,20 @@ class Base:
         data["do_nsfw_filter"] = False if do_nsfw_filter == 0 else True
         data["do_watermark"] = False if do_watermark == 0 else True
         data["enable_community_models"] = False if enable_community_models == 0 else True
-        data["model"] = self.available_models[int(self.config.value("model", 0))]
+
+        available_models = None
+        model_version = Application.model_version
+        if model_version == 1:
+            available_models = Application.available_models_v1
+            data["version"] = "v1"
+        else:
+            available_models = Application.available_models_v2
+            data["version"] = "v2"
+
+        if available_models:
+            data["model"] = available_models[int(self.config.value("model", 0))]
+        else:
+            data["model"] = DEFAULT_MODEL
         data["model_path"] = self.config.value("model_path", "")
         self.config.setValue("log", Application.stablediffusion.log)
         return data

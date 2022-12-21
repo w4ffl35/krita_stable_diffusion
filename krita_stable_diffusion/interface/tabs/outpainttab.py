@@ -123,10 +123,7 @@ class OutpaintTab(GenerateTab):
         super().__init__([
             VerticalInterface(widgets=[
                 Label(label="Model"),
-                DropDown(
-                    options=self.available_models,
-                    config_name="outpaint_model"
-                ),
+                Application.outpaint_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",

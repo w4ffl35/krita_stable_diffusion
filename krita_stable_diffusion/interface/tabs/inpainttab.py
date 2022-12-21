@@ -49,10 +49,7 @@ class InpaintTab(GenerateTab):
         super().__init__([
             VerticalInterface(widgets=[
                 Label(label="Model"),
-                DropDown(
-                    options=self.available_models,
-                    config_name="inpaint_model"
-                ),
+                Application.inpaint_available_models_dropdown,
                 Label(label="Prompt"),
                 PlainText(
                     placeholder="prompt",
