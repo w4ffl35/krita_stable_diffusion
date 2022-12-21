@@ -354,14 +354,14 @@ class Controller(QObject):
         else:
             available_models = Application.available_models_v2
 
-        Application.txt2img_available_models_dropdown.widget.clear()
-        Application.img2img_available_models_dropdown.widget.clear()
-        Application.inpaint_available_models_dropdown.widget.clear()
-        Application.outpaint_available_models_dropdown.widget.clear()
-        Application.txt2img_available_models_dropdown.setOptions(available_models)
-        Application.img2img_available_models_dropdown.setOptions(available_models)
-        Application.inpaint_available_models_dropdown.setOptions(available_models)
-        Application.outpaint_available_models_dropdown.setOptions(available_models)
+        # Application.txt2img_available_models_dropdown.widget.clear()
+        # Application.img2img_available_models_dropdown.widget.clear()
+        # Application.inpaint_available_models_dropdown.widget.clear()
+        # Application.outpaint_available_models_dropdown.widget.clear()
+        # Application.txt2img_available_models_dropdown.setOptions(available_models)
+        # Application.img2img_available_models_dropdown.setOptions(available_models)
+        # Application.inpaint_available_models_dropdown.setOptions(available_models)
+        # Application.outpaint_available_models_dropdown.setOptions(available_models)
 
 
     def __init__(self, *args, **kwargs):
@@ -376,26 +376,26 @@ class Controller(QObject):
         Application.__setattr__("available_models_v2", MODELS["v2"])
         Application.__setattr__("model_version", 1)
         Application.__setattr__("update_extra_models", self.update_extra_models)
-        Application.__setattr__(
-            "txt2img_available_models_dropdown",
-            DropDown(options=[], config_name="txt2img_model")
-        )
-        Application.__setattr__(
-            "img2img_available_models_dropdown",
-            DropDown(options=[], config_name="img2img_model")
-        )
-        Application.__setattr__(
-            "inpaint_available_models_dropdown",
-            DropDown(options=[], config_name="inpaint_model")
-        )
-        Application.__setattr__(
-            "outpaint_available_models_dropdown",
-            DropDown(options=[], config_name="outpaint_model")
-        )
-        Application.__setattr__(
-            "outpaint_available_models_dropdown",
-            DropDown(options=[], config_name="outpaint_model")
-        )
+        # Application.__setattr__(
+        #     "txt2img_available_models_dropdown",
+        #     DropDown(options=[], config_name="txt2img_model")
+        # )
+        # Application.__setattr__(
+        #     "img2img_available_models_dropdown",
+        #     DropDown(options=[], config_name="img2img_model")
+        # )
+        # Application.__setattr__(
+        #     "inpaint_available_models_dropdown",
+        #     DropDown(options=[], config_name="inpaint_model")
+        # )
+        # Application.__setattr__(
+        #     "outpaint_available_models_dropdown",
+        #     DropDown(options=[], config_name="outpaint_model")
+        # )
+        # Application.__setattr__(
+        #     "outpaint_available_models_dropdown",
+        #     DropDown(options=[], config_name="outpaint_model")
+        # )
         self.update_extra_models()
         self.create_stable_diffusion_panel()
         Application.notifier().windowCreated.connect(self.window_created)

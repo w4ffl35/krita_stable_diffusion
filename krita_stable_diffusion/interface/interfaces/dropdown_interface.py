@@ -7,15 +7,16 @@ from krita_stable_diffusion.interface.widgets.label import Label
 class DropdownInterface(LayoutBase):
     def __init__(self, **kwargs):
         label = Label(label=kwargs.get("label", "Label"))
-        dropdown = kwargs.get("dropdown", None)
-        if not dropdown:
-            dropdown = DropDown(
+        self.dropdown = kwargs.get("dropdown", None)
+        if not self.dropdown:
+            self.dropdown = DropDown(
                 options=kwargs.get("options", []),
                 config_name=kwargs.get("config_name", None),
                 max_width=kwargs.get("max_width", None),
+                callback=kwargs.get("callback", None),
             )
         super().__init__(
-            widgets=[label, dropdown],
+            widgets=[label, self.dropdown],
             interfaces=[],
             orientation=kwargs.get("orientation", "vertical"),
         )
