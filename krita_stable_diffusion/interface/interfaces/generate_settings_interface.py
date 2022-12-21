@@ -29,6 +29,7 @@ class GenerateSettingsInterface(VerticalInterface):
         self.section_callback(element)
 
     def __init__(self, **kwargs):
+        strength_interface = None
         section = kwargs.get("section", "txt2img")
         self.section_callback = kwargs.get("section_callback", None)
         self.progress_bar = ProgressBar(label="Generating image")
@@ -42,6 +43,18 @@ class GenerateSettingsInterface(VerticalInterface):
             max=MAX_SEED,
             max_width=100
         )
+        if section == "img2img":
+            strength_interface = SliderSpinnerInterface(
+                label="Strength",
+                config_name=f"{section}_strength",
+                min=0,
+                max=1.0,
+                slider_max=10000,
+                step=0.01,
+                default=0.5,
+                max_width=100,
+                double=True
+            )
         super().__init__(
             widgets=[],
             interfaces=[
@@ -95,22 +108,24 @@ class GenerateSettingsInterface(VerticalInterface):
                             step=256,
                         ),
                     ]),
+                    strength_interface,
                     SliderSpinnerInterface(
                         label="Steps",
                         min=1,
-                        max=100,
+                        max=255,
                         step=1,
                         min_width=100,
-                        config_name="f{section}_steps",
+                        config_name=f"{section}_steps",
                     ),
                     SliderSpinnerInterface(
                         label="Scale",
                         min=1.0,
                         max=100.0,
+                        slider_max=10000,
                         step=float(0.1),
                         double=True,
                         min_width=100,
-                        config_name=f"{section}_cfg_scale",
+                        config_name=f"{section}_scale",
                     ),
                     HorizontalInterface(widgets=[
                         Button(

@@ -17,6 +17,7 @@ class BoxSliderInterface(LayoutBase):
                         label="Pos X",
                         min=0,
                         max=max_width,
+                        slider_max=max_width,
                         config_name="outpaint_layer_x",
                         min_width=100,
                         callback=callback
@@ -25,6 +26,7 @@ class BoxSliderInterface(LayoutBase):
                         label="Pos Y",
                         min=0,
                         max=max_height,
+                        slider_max=max_height,
                         config_name="outpaint_layer_y",
                         min_width=100,
                         callback=callback
