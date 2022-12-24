@@ -11,7 +11,6 @@ class SliderSpinnerInterface(HorizontalInterface):
 
     def slider_value(self, value):
         val = value
-        print("slider value ", val)
         if self.double:
             val = value / self.max
             val = val * self.slider_max
