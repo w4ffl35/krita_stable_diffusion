@@ -19,6 +19,10 @@ class Widget(QWidget):
         self.config_name = kwargs.get("config_name", None)
         self.label = kwargs.get("label", "")
         self.update_value = kwargs.get("update_value", self.update_value)
+        self.min_width = kwargs.get("min_width", None)
+        self.max_width = kwargs.get("max_width", None)
+        self.max_height = kwargs.get("max_height", None)
+        self.disabled = kwargs.get("disabled", False)
 
         # set the config object so that variables are accessible to all widgets
         self.config = Application.krita_stable_diffusion_config

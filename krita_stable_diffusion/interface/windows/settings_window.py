@@ -26,7 +26,7 @@ class SettingsWindow(Base):
     }
 
     def model_path_update(self, name, val):
-        self.current_setting_values[name] = valh
+        self.current_setting_values[name] = val
         if self.callback:
             self.callback(name, val)
 
@@ -39,6 +39,8 @@ class SettingsWindow(Base):
     def __init__(self, *args, **kwargs):
         self.callback = kwargs.get("callback", None)
         self.config = Application.krita_stable_diffusion_config
+        for k in self.default_setting_values.keys():
+            self.current_setting_values[k] = self.config.value(k, type=str)
         path_line_edit_v1 = LineEdit(
             placeholder="path",
             config_name="model_path_v1",
@@ -49,8 +51,8 @@ class SettingsWindow(Base):
             config_name="model_path_v2",
             update_value=self.model_path_update
         )
-        path_line_edit_v1.widget.setText(self.config.value("model_path_v1", ""))
-        path_line_edit_v2.widget.setText(self.config.value("model_path_v2", ""))
+        path_line_edit_v1.widget.setText(self.current_setting_values["model_path_v1"])
+        path_line_edit_v2.widget.setText(self.current_setting_values["model_path_v2"])
 
         super().__init__([
             # VerticalInterface(
@@ -100,13 +102,11 @@ class SettingsWindow(Base):
         self.newDialog.setWindowTitle(self.display_name)
         self.newDialog.exec_()  # show the dialog
 
-        # store current setting values
-        for k in self.default_setting_values.keys():
-            self.current_setting_values[k] = self.config.value(k, self.default_setting_values[k])
+        # # store current setting values
+        # for k in self.default_setting_values.keys():
+        #     self.current_setting_values[k] = self.config.value(k, self.default_setting_values[k])
 
     def cancel(self):
-        for k in self.default_setting_values.keys():
-            self.default_setting_values[k] = self.current_setting_values[k]
         self.close()
 
     def close(self):

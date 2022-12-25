@@ -9,6 +9,10 @@ SCHEDULERS = [
     "dpm"
 ]
 UPSCALERS = ["None", "Lanczos"]
+MODEL_VERSIONS = [
+    "v1",
+    "v2",
+]
 MODELS = {
     "v1": [
         "runwayml/stable-diffusion-v1-5",
@@ -23,5 +27,5 @@ MODELS = {
 }
 DEFAULT_MODEL = MODELS["v2"][0]
 DEFAULT_SCHEDULER = SCHEDULERS[0]
-MIN_SEED = 0
+MIN_SEED = 4294967295#0
 MAX_SEED = 4294967295

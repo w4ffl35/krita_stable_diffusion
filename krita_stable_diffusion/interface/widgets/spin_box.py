@@ -23,7 +23,7 @@ class SpinBox(Widget):
         if self.config_name:
             self.update_value(self.config_name, val)
         if self.callback:
-            self.callback()
+            self.callback(val)
 
     def create_widget(self):
         if self.double:
@@ -38,8 +38,10 @@ class SpinBox(Widget):
             element.setSingleStep(self.step)
 
         if self.double:
-            element.setValue(self.config.value(self.config_name, type=float))
+            val = self.config.value(self.config_name, type=float)
+            val = val / self.max
         else:
-            element.setValue(self.config.value(self.config_name, type=int))
+            val = self.config.value(self.config_name, type=int)
+        element.setValue(val)
         element.valueChanged.connect(lambda val: self.on_change(val))
         self.widget = self.initialize_widget(element)

@@ -1,11 +1,11 @@
 import base64
 import os
 import logging
-import random
 from krita import *
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
 from krita_stable_diffusion.settings import APPLICATION_ID
 from krita_stable_diffusion.settings import DEFAULT_MODEL
+
 
 class Base:
     """
@@ -494,7 +494,6 @@ class Base:
     def initialize_interfaces(self, interfaces):
         if len(interfaces) == 0:
             return
-        interfaces[0].addStretch()
         self.layout = VerticalInterface(interfaces=interfaces)
         self.widget = QWidget()
         self.widget.setLayout(self.layout)
@@ -506,8 +505,6 @@ class Base:
         Application.__setattr__("app", self)
         # get steps from config
         self.initialize_settings()
-        self.reset_default_values()
-        self.config.sync()
         Application.__setattr__("cur_reqtype", None)
         Application.__setattr__("step_total", 0)
         Application.__setattr__("cur_step", 0)
