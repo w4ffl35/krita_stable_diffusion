@@ -8,40 +8,18 @@ import time
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
-# log to a file
-logging.basicConfig(filename='stablediffusion.log', filemode='w', level=logging.DEBUG)
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-HOME = os.path.expanduser("~")
-SDPATH = os.path.join(HOME, "stablediffusion")
+logger = logging.getLogger(__name__)
+SDPATH = os.path.join("stablediffusion")
+CHUNK_SIZE = 1024
 DEFAULT_PORT=50006
-DEFAULT_HOST="192.168.1.122"
-
-
-class StableDiffusionConnectionManager:
-    def __init__(self, *args, **kwargs):
-        """
-        Initialize all connections and workers
-        """
-        # create queues
-        self.request_queue = kwargs.get("request_queue", queue.Queue())
-        self.response_queue = kwargs.get("response_queue", queue.Queue())
-
-        # create request client
-        print("creating request worker...")
-        self.request_worker = StableDiffusionRequestQueueWorker(
-            port=DEFAULT_PORT,
-            pid=kwargs.get("pid"),
-        )
+DEFAULT_HOST="localhost"
 
 
 class Connection:
     """
     Connects to Stable Diffusion service
     """
-
     threads = []
-    pid = None  # keep track of krita process id
 
     def start_thread(self, target, daemon=False, name=None):
         """
@@ -98,18 +76,18 @@ class Connection:
         :return: None
         """
         self.disconnect()
-        print("Stopping connection thread...")
+        logger.info("Stopping connection thread...")
         for index in range(len(self.threads)):
             thread = self.threads[index]
             total = len(self.threads)
             name = thread.getName()
-            print(f"{index+1} of {total} Stopping thread {name}")
+            logger.info(f"{index+1} of {total} Stopping thread {name}")
             try:
                 thread.join()
             except RuntimeError:
-                print(f"Thread {thread.getName()} not running")
-            print(f"Stopped thread {thread.getName()}...")
-        print("All threads stopped")
+                logger.info(f"Thread {thread.getName()} not running")
+            logger.info(f"Stopped thread {thread.getName()}...")
+        logger.info("All threads stopped")
 
     def restart(self):
         """
@@ -192,6 +170,7 @@ class SocketConnection(Connection):
 
 class SocketClient(SocketConnection):
     has_connection = False
+    connecting = False
 
     def callback(self, msg):
         """
@@ -225,8 +204,6 @@ class SocketClient(SocketConnection):
         """
         self.queue.put(response)
 
-    connecting = False
-
     def connect(self):
         """
         Connect to the server
@@ -236,7 +213,7 @@ class SocketClient(SocketConnection):
         if self.connecting:
             return
         self.connecting = True
-        print("CLIENT: connecting")
+        logger.info("CLIENT: connecting")
         while True:
             # check self.soc for connection
             if not self.has_connection:
@@ -252,45 +229,42 @@ class SocketClient(SocketConnection):
                             "Connected to localhost:5000"
                         )
                     self.soc.settimeout(None)
-                    print("CLIENT: connected")
+                    logger.info("CLIENT: connected")
                 except ConnectionRefusedError as exc:
-                    # print("CLIENT: failed to connect - connection refused", exc)
+                    # logger.info("CLIENT: failed to connect - connection refused", exc)
                     self.has_connection = False
 
             if self.quit_event.is_set():
-                print("CLIENT: quitting")
+                logger.info("CLIENT: quitting")
                 break
 
             if self.has_connection:
                 try:
-                    # recieve message in 1024 byte chunks
+                    # recieve message in CHUNK_SIZE byte chunks
                     response = b""
                     total_bytes_recieved = 0
-                    chunk_size = 1024
                     n = 0
                     while self.has_connection:
-                        chunk = self.soc.recv(chunk_size)
+                        chunk = self.soc.recv(CHUNK_SIZE)
 
                         if not chunk:
                             self.has_connection = False
 
-                        # check if chunk is 1024 00 bytes
-                        if chunk == b'\x00' * 1024:
+                        # check if chunk is CHUNK_SIZE 00 bytes
+                        if chunk == b'\x00' * CHUNK_SIZE:
                             break
                         response += chunk
                         total_bytes_recieved += len(chunk)
                         n+=1
                 except socket.timeout:
                     self.has_connection = False
-                    print("CLIENT: connection timed out")
+                    logger.warning("CLIENT: connection timed out")
                 except Exception as exc:
                     self.has_connection = False
-                    print("CLIENT: Connection lost", exc)
+                    logger.error("CLIENT: Connection lost", exc)
                 if self.quit_event.is_set():
                     break
 
-                # response = self.soc.recv(1024) #786432
-                # print the bytes receieved in size
                 if self.has_connection:
                     sleep_time = 0
                 else:
@@ -313,7 +287,7 @@ class SocketClient(SocketConnection):
         Close the socket
         :return:
         """
-        print("Do Close")
+        logger.info("Do Close")
         self.res_queue.put("quit")
         self.soc.shutdown(socket.SHUT_RDWR)
         self.has_connection = False
@@ -353,7 +327,7 @@ class SimpleEnqueueSocketClient(SocketClient):
         """
         Set the message property
         """
-        print("Putting message in queue")
+        logger.info("Putting message in queue")
         self.queue.put(msg)
 
     @property
@@ -372,6 +346,15 @@ class SimpleEnqueueSocketClient(SocketClient):
         :return: None
         """
         self.res_queue.put(msg)
+
+    @staticmethod
+    def handle_response_default(_msg):
+        """
+        Handle the response from the server
+        :param _msg:
+        :return: None
+        """
+        logger.info("CLIENT: Pass handle_response to kwargs to override this method")
 
     def handle_response(self, response):
         """
@@ -397,8 +380,24 @@ class SimpleEnqueueSocketClient(SocketClient):
                 self._failed_messages.remove(message)
                 self.callback(message)
             except Exception as err:
-                print(f"CLIENT: error in retry_message: {err}")
+                logger.info(f"CLIENT: error in retry_message: {err}")
                 pass
+
+    def pad_chunk(self, chunk):
+        """
+        Pad the chunk to expected size in bytes
+        :param chunk:
+        :return:
+        """
+        return chunk.ljust(CHUNK_SIZE, b"\x00")
+
+    def send_end_signal(self):
+        """
+        send a byte string consisting of CHUNK_SIZE null bytes
+        this tells the server we are done sending messages
+        :return:
+        """
+        self.soc.sendall(b"\x00" * CHUNK_SIZE)
 
     def callback(self, message):
         """
@@ -406,52 +405,35 @@ class SimpleEnqueueSocketClient(SocketClient):
         :param message:
         :return: None
         """
-        print("CLIENT: callback")
+        logger.info("CLIENT: callback")
         try:
             # encode the message
             message = json.dumps(message).encode("utf-8")
 
-            # ensure message is at least 1024 bytes
-            if len(message) < 1024:
-                message += b"\x00" * (1024 - len(message))
+            # ensure message is at least CHUNK_SIZE bytes
+            if len(message) < CHUNK_SIZE:
+                message += b"\x00" * (CHUNK_SIZE - len(message))
 
-            # send the message
-            print(f"Sending message of size {len(message)}")
             # send message in chunks
             n = 0
-            chunk_size = 1024
             while len(message) > 0:
-                chunk = message[:chunk_size]
-
-                # ensure chunk is 1024 bytes
-                chunk = chunk.ljust(chunk_size, b"\x00")
-
+                chunk = message[:CHUNK_SIZE]
+                chunk = self.pad_chunk(chunk)
                 self.soc.send(chunk)
-                message = message[chunk_size:]
+                message = message[CHUNK_SIZE:]
                 n+=1
-
-            # send a byte string consisting of 1024 null bytes
-            # this tells the server we are done sending messages
-            self.soc.sendall(b"\x00" * 1024)
+            self.send_end_signal()
         except BrokenPipeError:
-            print("BrokenPipeError")
+            logger.error("BrokenPipeError")
             # keep track of failed messages and resend them
             # when we regain a connection
             self._failed_messages.append(message)
             self.has_connection = False
             self.disconnect()
             self.initialize_socket()
-            print("CLIENT: lost connection to server")
+            logger.info("CLIENT: lost connection to server")
         except Exception as err:
-            print(f"CLIENT: error in callback: {err}")
-
-    def handle_response_default(self, msg):
-        """
-        Handle the response from the server
-        :param msg:
-        :return: None
-        """
-        print("CLIENT: Pass handle_response to kwargs to override this method")
+            logger.error(f"CLIENT: error in callback: {err}")
 
     def quit(self):
         """
@@ -467,7 +449,6 @@ class SimpleEnqueueSocketClient(SocketClient):
         Worker thread to handle responses from the server
         :return: None
         """
-        print("STARTING WORKER")
         while True:
             if self.quit_event.is_set():
                 break
@@ -486,22 +467,19 @@ class SimpleEnqueueSocketClient(SocketClient):
         :return: None
         """
         while True:
-            print("Client waiting for message...")
             msg = self.res_queue.get()
             if msg == "quit":
                 break
-            print("Message received")
             try:
                 msg = msg.decode("utf-8")
             except Exception as err:
-                print("Failed to decode message", err)
+                logger.error("Failed to decode message", err)
                 pass
             try:
-                keys = msg.keys()
                 self.callback(msg)
                 continue
             except Exception as err:
-                print("Something went wrong ", err)
+                logger.error("Something went wrong ", err)
                 pass
             if msg != "" and msg is not None:
                 self.handle_response(msg)

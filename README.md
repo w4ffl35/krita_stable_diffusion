@@ -201,3 +201,14 @@ results in this discussion thread](https://github.com/w4ffl35/krita_stable_diffu
 
 Please post your results on
 the [discussion board](https://github.com/w4ffl35/krita_stable_diffusion/discussions).
+
+
+---
+
+# methods
+
+### handle_button_press
+
+This method is called when the user clicks the generate or convert button.
+
+Separation of concerns is needed here.

@@ -1,7 +1,5 @@
 from krita import *
 from .widget import Widget
-from functools import partial
-
 
 class Slider(Widget):
     """
@@ -18,6 +16,7 @@ class Slider(Widget):
     def __init__(self, *args, **kwargs):
         self.parent = kwargs.pop("parent", None)
         self.callback = kwargs.pop("callback", None)
+        self.double = kwargs.pop("double", False)
         super().__init__(*args, **kwargs)
 
     def on_change(self, val):

@@ -1,8 +1,5 @@
 from setuptools import setup, find_packages
-
-# This line is required for the packager. Do not remove it.
-VERSION = "0.3.2"
-
+VERSION = "1.0.0"  # This line is required for the packager. Do not remove it.
 setup(
     name='krita_stable_diffusion',
     version=VERSION,

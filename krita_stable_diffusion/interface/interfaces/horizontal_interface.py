@@ -29,4 +29,9 @@ class HorizontalInterface(QHBoxLayout):
         :return:
         """
         for interface in interfaces:
-            self.addLayout(interface)
+            if not interface:
+                continue
+            if isinstance(interface, QBoxLayout):
+                self.addLayout(interface)
+            else:
+                self.addLayout(interface.layout)
