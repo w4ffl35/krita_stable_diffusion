@@ -14,6 +14,7 @@ from krita_stable_diffusion.settings import MAX_SEED, MIN_SEED
 
 class GenerateSettingsInterface(VerticalInterface):
     seed_line_edit = None
+    section = None
     do_random_seed = False
 
     def random_seed_callback(self, is_checked):
@@ -26,11 +27,20 @@ class GenerateSettingsInterface(VerticalInterface):
             self.seed_line_edit.widget.setText(seed)
         self.section_callback(element)
 
+    def convert_model_callback(self, element):
+        config = Application.krita_stable_diffusion_config
+        model = config.value(f"{self.section}_model")
+        # check if model ends with ckpt
+        if model.endswith(".ckpt"):
+            Application.convert_model_to_diffusers()
+
     def __init__(self, **kwargs):
         strength_interface = None
         section = kwargs.get("section", "txt2img")
+        self.section = section
         self.section_callback = kwargs.get("section_callback", None)
         self.progress_bar = ProgressBar(label="Generating image")
+        self.convert_callback = kwargs.get("convert_callback", None)
         Application.__setattr__(
             f"{section}_progress_bar",
             self.progress_bar
@@ -132,6 +142,10 @@ class GenerateSettingsInterface(VerticalInterface):
                             config_name=f"{section}_server_connected",
                         ),
                         self.progress_bar,
+                        Button(
+                            label="ckpt to diffusers",
+                            release_callback=self.convert_callback
+                        ),
                     ]),
                 ])
             ]

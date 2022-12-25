@@ -9,7 +9,6 @@ import os
 from krita_stable_diffusion.connect import SimpleEnqueueSocketClient
 from krita import *
 from krita_stable_diffusion.interface.widgets.label import Label
-from krita_stable_diffusion.interface.widgets.dropdown import DropDown
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 from krita_stable_diffusion.settings import MODELS
@@ -20,7 +19,6 @@ try:
 except:
    pass
 
-HOME = os.path.expanduser("~")
 
 class Controller(QObject):
     krita_instance = None
@@ -38,7 +36,6 @@ class Controller(QObject):
         #     message
         # )
         pass
-
 
     def start_thread(self, target, daemon=False, name=None):
         t = threading.Thread(target=target, daemon=daemon)
@@ -71,9 +68,11 @@ class Controller(QObject):
     def selection(self):
         return self.active_document.selection()
 
+    @property
     def x(self):
         return 0 if self.selection is None else self.selection.x()
 
+    @property
     def y(self):
         return 0 if self.selection is None else self.selection.y()
 
@@ -85,9 +84,11 @@ class Controller(QObject):
     def root_node(self):
         return self.active_document.rootNode()
 
+    @property
     def width(self):
         return self.active_document.width() if self.selection is None else self.selection.width()
 
+    @property
     def height(self):
         return self.active_document.height() if self.selection is None else self.selection.height()
 
@@ -152,7 +153,7 @@ class Controller(QObject):
         image = QImage()
         image.loadFromData(image_bytes)
         layer = self.create_layer(name)
-        layer.setPixelData(self.byte_array(image), 0, 0, self.width(), self.height())
+        layer.setPixelData(self.byte_array(image), 0, 0, self.width, self.height)
 
         # the layer is not visible until we refresh the projection
         self.active_document.refreshProjection()
@@ -172,7 +173,7 @@ class Controller(QObject):
         image.load(path, "PNG")
         print("Getting layer ", layer_name)
         layer = self.create_layer(layer_name, visible=visible)
-        layer.setPixelData(self.byte_array(image), self.x(), self.y(), self.width(), self.height())
+        layer.setPixelData(self.byte_array(image), self.x, self.y, self.width, self.height)
 
     def delete_generated_images(self, files):
         for file in files:
@@ -241,14 +242,6 @@ class Controller(QObject):
         """
         pass
 
-    def request_prompt(self, message):
-        """
-        Sends prompt request to stable diffusion
-        :param message:
-        :return:
-        """
-        self.client.message = json.dumps(message).encode("ascii")
-
     def handle_sd_response(self, response):
         print("Handle stable diffusion response")
         # TODO handle image insertion here
@@ -269,7 +262,6 @@ class Controller(QObject):
                 self.client.close()
                 break
             time.sleep(1)
-
 
     def handle_status_change(self, status):
         if status == "CONNECTED":
@@ -363,6 +355,8 @@ class Controller(QObject):
         # Application.inpaint_available_models_dropdown.setOptions(available_models)
         # Application.outpaint_available_models_dropdown.setOptions(available_models)
 
+    def convert_model_to_diffusers(self):
+        print("CONVERT MODEL TO DIFFUSERS")
 
     def __init__(self, *args, **kwargs):
         self.client = None
@@ -376,6 +370,7 @@ class Controller(QObject):
         Application.__setattr__("available_models_v2", MODELS["v2"])
         Application.__setattr__("model_version", 1)
         Application.__setattr__("update_extra_models", self.update_extra_models)
+        Application.__setattr__("convert_model_to_diffusers", self.convert_model_to_diffusers)
         # Application.__setattr__(
         #     "txt2img_available_models_dropdown",
         #     DropDown(options=[], config_name="txt2img_model")

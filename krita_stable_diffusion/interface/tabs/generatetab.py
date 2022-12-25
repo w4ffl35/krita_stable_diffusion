@@ -103,6 +103,14 @@ class GenerateTab(Base):
     def outpaint_release_callback(self, _element):
         self.handle_button_press("outpaint")
 
+    def convert_release_callback(self, _element):
+        """
+        Callback for the convert button.
+        :param _element: passed by the button but not used
+        :return: None, sends request to stable diffusion
+        """
+        self.handle_button_press("convert")
+
     def move_node(self, _val):
         """
         Overriden by outpaint tab
@@ -143,7 +151,8 @@ class GenerateTab(Base):
             ),
             GenerateSettingsInterface(
                 section=self.config_name,
-                section_callback=callback
+                section_callback=callback,
+                convert_callback=self.convert_release_callback,
             ),
         ]
         self.log_widget = PlainText(
