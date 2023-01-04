@@ -25,7 +25,8 @@ MODELS = {
         "stabilityai/stable-diffusion-2-depth",
     ]
 }
-DEFAULT_MODEL = MODELS["v2"][0]
+DEFAULT_MODEL = MODELS["v2"][0] if len(MODELS["v2"]) > 0 else None
 DEFAULT_SCHEDULER = SCHEDULERS[0]
-MIN_SEED = 4294967295#0
+
+MIN_SEED = 0
 MAX_SEED = 4294967295
