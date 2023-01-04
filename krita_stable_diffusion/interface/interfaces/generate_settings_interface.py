@@ -39,7 +39,7 @@ class GenerateSettingsInterface(VerticalInterface):
         section = kwargs.get("section", "txt2img")
         self.section = section
         self.section_callback = kwargs.get("section_callback", None)
-        self.progress_bar = ProgressBar(label="Generating image")
+        self.progress_bar = ProgressBar(label="Converting ckpt file")
         self.convert_callback = kwargs.get("convert_callback", None)
         Application.__setattr__(
             f"{section}_progress_bar",

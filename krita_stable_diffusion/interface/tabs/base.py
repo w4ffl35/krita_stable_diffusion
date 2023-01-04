@@ -257,6 +257,7 @@ class Base:
 
         data["pos_x"] = 0
         data["pos_y"] = 0
+        data["model_base_path"] = self.config.value("model_base_path", "")
 
         # handle request types that require image data to be sent
         if request_type == "outpaint":
