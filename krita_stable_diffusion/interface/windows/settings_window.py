@@ -48,6 +48,7 @@ class SettingsWindow(Base):
             config_name="model_path_v2",
             update_value=self.model_path_update
         )
+
         path_line_edit_model_base_path = LineEdit(
             placeholder="path",
             config_name="model_base_path",
