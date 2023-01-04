@@ -3,6 +3,8 @@ from krita_stable_diffusion.interface.tabs.txt2imgtab import Txt2ImgTab
 from krita_stable_diffusion.interface.tabs.img2imgtab import Img2ImgTab
 from krita_stable_diffusion.interface.tabs.inpainttab import InpaintTab
 from krita_stable_diffusion.interface.tabs.outpainttab import OutpaintTab
+from krita_stable_diffusion.interface.tabs.converttab import ConvertTab
+from krita_stable_diffusion.interface.tabs.upscaletab import UpscaleTab
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
 
 
@@ -34,6 +36,8 @@ class KritaDockWidget(DockWidget):
         tabs.addTab(*(Img2ImgTab().tab()))
         tabs.addTab(*(InpaintTab().tab()))
         tabs.addTab(*(outpaint.tab()))
+        tabs.addTab(*(ConvertTab().tab()))
+        tabs.addTab(*(UpscaleTab().tab()))
 
         # on click of tabs[3]
         tabs.tabBarClicked.connect(lambda i: outpaint.handle_tab_click(i))
