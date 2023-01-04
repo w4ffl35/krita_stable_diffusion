@@ -402,6 +402,7 @@ class SimpleEnqueueSocketClient(SocketClient):
     def callback(self, message):
         """
         Callback function to handle messages
+        send a request to server
         :param message:
         :return: None
         """
