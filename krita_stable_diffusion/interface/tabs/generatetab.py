@@ -14,8 +14,6 @@ class GenerateTab(Base):
     :param name: The name of the tab
     :param interfaces: The interfaces to be added to the tab
     """
-    HOME = os.path.expanduser("~")
-    SDDIR = os.path.join(HOME, "stablediffusion")
     name = "GenerateTab"
     submit_button = None
     display_name = "Generate images"
@@ -103,14 +101,6 @@ class GenerateTab(Base):
     def outpaint_release_callback(self, _element):
         self.handle_button_press("outpaint")
 
-    def convert_release_callback(self, _element):
-        """
-        Callback for the convert button.
-        :param _element: passed by the button but not used
-        :return: None, sends request to stable diffusion
-        """
-        self.handle_button_press("convert")
-
     def move_node(self, _val):
         """
         Overriden by outpaint tab
@@ -151,8 +141,7 @@ class GenerateTab(Base):
             ),
             GenerateSettingsInterface(
                 section=self.config_name,
-                section_callback=callback,
-                convert_callback=self.convert_release_callback,
+                section_callback=callback
             ),
         ]
         self.log_widget = PlainText(

@@ -1,10 +1,5 @@
 from krita import *
 from krita_stable_diffusion.interface.tabs.base import Base
-from krita_stable_diffusion.interface.widgets.checkbox import CheckBox
-from krita_stable_diffusion.interface.widgets.button import Button
-from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
-from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
-from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.windows.settings_window import SettingsWindow
 
 
@@ -13,7 +8,6 @@ class StableDiffusionMenu(Base):
     display_name = "Stable Diffusion"
     default_setting_values = {
         "do_nsfw_filter": False,
-        "do_watermark": False,
         "enable_community_models": False
     }
 
@@ -44,11 +38,10 @@ class StableDiffusionMenu(Base):
         custom_menu = main_menu.addMenu(self.display_name)
 
         self.add_checkmark_setting(main_menu, custom_menu, "NSFW Filter", "do_nsfw_filter")
-        self.add_checkmark_setting(main_menu, custom_menu, "Add Watermark", "do_watermark")
         self.add_checkmark_setting(main_menu, custom_menu, "Enable community models", "enable_community_models")
 
         custom_menu.addAction("Options")
-        custom_menu.actions()[3].triggered.connect(lambda: self.options_clicked())
+        custom_menu.actions()[-1].triggered.connect(self.options_clicked)
 
 
     def __init__(self):

@@ -1,13 +1,8 @@
 from krita import *
 from krita_stable_diffusion.interface.tabs.base import Base
-from krita_stable_diffusion.interface.widgets.checkbox import CheckBox
-from krita_stable_diffusion.interface.widgets.button import Button
 from krita_stable_diffusion.interface.widgets.line_edit import LineEdit
 from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
-from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
-from krita_stable_diffusion.interface.widgets.progress_bar import ProgressBar
 from krita_stable_diffusion.interface.widgets.label import Label
-from  krita_stable_diffusion.settings import MODELS
 
 
 class SettingsWindow(Base):
@@ -19,10 +14,12 @@ class SettingsWindow(Base):
     default_setting_values = {
         "model_path_v1": "",
         "model_path_v2": "",
+        "model_base_path": "",
     }
     current_setting_values = {
         "model_path_v1": "",
         "model_path_v2": "",
+        "model_base_path": "",
     }
 
     def model_path_update(self, name, val):
@@ -51,8 +48,15 @@ class SettingsWindow(Base):
             config_name="model_path_v2",
             update_value=self.model_path_update
         )
+
+        path_line_edit_model_base_path = LineEdit(
+            placeholder="path",
+            config_name="model_base_path",
+            update_value=self.model_path_update
+        )
         path_line_edit_v1.widget.setText(self.current_setting_values["model_path_v1"])
         path_line_edit_v2.widget.setText(self.current_setting_values["model_path_v2"])
+        path_line_edit_model_base_path.widget.setText(self.current_setting_values["model_base_path"])
 
         super().__init__([
             # VerticalInterface(
@@ -73,11 +77,15 @@ class SettingsWindow(Base):
             #     ]
             # ) for model in MODELS
             VerticalInterface(widgets=[
+                Label(label="Model base path"),
+                path_line_edit_model_base_path,
+                Label(label="Core models"),
+                path_line_edit_v2,
                 Label(label="Extra models path (v2)"),
                 path_line_edit_v2,
                 Label(label="Extra models path (v1)"),
                 path_line_edit_v1,
-            ])
+            ]),
         ])
 
         self.newDialog = QDialog()
