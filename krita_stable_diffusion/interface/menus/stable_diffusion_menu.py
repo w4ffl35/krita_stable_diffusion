@@ -8,7 +8,6 @@ class StableDiffusionMenu(Base):
     display_name = "Stable Diffusion"
     default_setting_values = {
         "do_nsfw_filter": False,
-        "enable_community_models": False
     }
 
     def model_path_update(self, name, val):
@@ -38,7 +37,6 @@ class StableDiffusionMenu(Base):
         custom_menu = main_menu.addMenu(self.display_name)
 
         self.add_checkmark_setting(main_menu, custom_menu, "NSFW Filter", "do_nsfw_filter")
-        self.add_checkmark_setting(main_menu, custom_menu, "Enable community models", "enable_community_models")
 
         custom_menu.addAction("Options")
         custom_menu.actions()[-1].triggered.connect(self.options_clicked)
