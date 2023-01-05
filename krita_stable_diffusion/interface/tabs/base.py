@@ -459,14 +459,22 @@ class Base:
         if model_version == 1:
             available_models = Application.available_models_v1
             data["version"] = "v1"
-        else:
+        elif model_version == 2:
             available_models = Application.available_models_v2
             data["version"] = "v2"
+        elif model_version == 3:
+            available_models = Application.available_models_custom_v1
+            data["version"] = "v1"
+        else:
+            available_models = Application.available_models_custom_v2
+            data["version"] = "v2"
+
 
         if available_models:
             data["model"] = available_models[int(self.config.value("model", 0))]
         else:
             data["model"] = DEFAULT_MODEL
+
         data["model_path"] = self.config.value("model_path", "")
         self.config.setValue("log", Application.stablediffusion.log)
         return data
