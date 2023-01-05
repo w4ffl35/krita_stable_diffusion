@@ -16,7 +16,7 @@
 
 ---
 
-![img_3.png](src/img_3.png)
+![image](https://user-images.githubusercontent.com/25737761/210693732-004dc2f7-d496-4ad2-8c27-c74a28459901.png)
 
 - Runs on Windows 11 and Ubuntu 20.04
 - Run Stable Diffusion locally in Krita without the need for a Python environment.
