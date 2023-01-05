@@ -12,6 +12,8 @@ UPSCALERS = ["None", "Lanczos"]
 MODEL_VERSIONS = [
     "v1",
     "v2",
+    "v1 (community)",
+    "v2 (community)",
 ]
 MODELS = {
     "v1": [

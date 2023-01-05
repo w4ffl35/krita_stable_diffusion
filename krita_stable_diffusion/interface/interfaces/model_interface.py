@@ -6,15 +6,20 @@ from krita_stable_diffusion.settings import SCHEDULERS, MODEL_VERSIONS, MODELS
 
 
 class ModelInterface(HorizontalInterface):
-    def version_callback(self, version):
-        # update self.model_dropdown with model_options
+    def version_callback(self, _version):
         self.model_dropdown_interface.dropdown.update_options(self.model_options)
 
     @property
     def model_options(self):
         version = self.config.value(f"{self.section}_model_version", "v1")
-        return Application.available_models_v2 if version == "v2" \
-            else Application.available_models_v1
+        if version == "v1":
+            return Application.available_models_v1
+        elif version == "v2":
+            return Application.available_models_v2
+        elif version == "v1 (community)":
+            return Application.available_models_custom_v1
+        elif version == "v2 (community)":
+            return Application.available_models_custom_v2
 
     def __init__(self, **kwargs):
         self.section = kwargs.get("section", "txt2img")

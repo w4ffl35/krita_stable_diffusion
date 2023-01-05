@@ -336,8 +336,10 @@ class Controller(QObject):
         return extra_models
 
     def update_extra_models(self):
-        Application.available_models_v1 = MODELS["v1"] + self.load_extra_models("model_path_v1")
-        Application.available_models_v2 = MODELS["v2"] + self.load_extra_models("model_path_v2")
+        Application.available_models_v1 = MODELS["v1"]
+        Application.available_models_v2 = MODELS["v2"]
+        Application.available_models_custom_v1 = self.load_extra_models("model_path_v1")
+        Application.available_models_custom_v2 = self.load_extra_models("model_path_v2")
         self.set_model_options()
 
     def set_model_options(self):
@@ -368,6 +370,8 @@ class Controller(QObject):
         self.initialize_client()
         Application.__setattr__("available_models_v1", MODELS["v1"])
         Application.__setattr__("available_models_v2", MODELS["v2"])
+        Application.__setattr__("available_models_custom_v1", [])
+        Application.__setattr__("available_models_custom_v2", [])
         Application.__setattr__("model_version", 1)
         Application.__setattr__("update_extra_models", self.update_extra_models)
         Application.__setattr__("convert_model_to_diffusers", self.convert_model_to_diffusers)
