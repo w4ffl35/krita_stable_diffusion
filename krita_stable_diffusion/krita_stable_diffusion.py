@@ -12,6 +12,7 @@ from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 from krita_stable_diffusion.settings import MODELS
+from krita_stable_diffusion.settings import DEFAULT_HOST, DEFAULT_PORT
 from subprocess import Popen
 CREATE_NEW_CONSOLE = None
 try:
@@ -296,7 +297,7 @@ class Controller(QObject):
             padding=10
         ))
         Application.__setattr__("connection_label", Label(
-            label=f"Not connected to localhost:5000",
+            label=f"Not connected to {DEFAULT_HOST}:{DEFAULT_PORT}",
             alignment="right",
             padding=10
         ))
@@ -304,7 +305,7 @@ class Controller(QObject):
         Krita.instance().eventFilter = self.eventFilter
         self.popup("Loading client")
         self.client = SimpleEnqueueSocketClient(
-            port=50006,
+            port=DEFAULT_PORT,
             handle_response=self.stablediffusion_response_callback,
             status_change_callback=self.handle_status_change,
             Application=Application
