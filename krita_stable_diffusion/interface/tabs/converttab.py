@@ -33,7 +33,7 @@ class ConvertTab(Base):
         self.update_progressbar(request_type, 0, 0)
 
         # add config options to request data
-        data = self.prep_config_options(data)
+        data = self.prep_config_options(request_type, data)
 
         data["model_base_path"] = self.config.value("model_base_path", "")
 
