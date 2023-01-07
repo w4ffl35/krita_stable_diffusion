@@ -109,22 +109,16 @@ class GenerateTab(Base):
         pass
 
     def __init__(self):
-        # get txt2img_button_release_callback based on self.display_name
         callback = None
-        dropdown = None
         slider_interface = None
         if self.config_name == "txt2img":
             callback = self.txt2img_button_release_callback
-            #dropdown = Application.txt2img_available_models_dropdown
         elif self.config_name == "img2img":
             callback = self.img2img_release_callback
-            #dropdown = Application.img2img_available_models_dropdown
         elif self.config_name == "inpaint":
             callback = self.inpaint_release_callback
-            #dropdown = Application.inpaint_available_models_dropdown
         elif self.config_name == "outpaint":
             callback = self.outpaint_release_callback
-            #dropdown = Application.outpaint_available_models_dropdown
             slider_interface = BoxSliderInterface(
                 max_width=512,
                 max_height=512,
@@ -134,7 +128,7 @@ class GenerateTab(Base):
             slider_interface,
             ModelInterface(
                 section=self.config_name,
-                dropdown=dropdown,
+                dropdown=None,
             ),
             PromptInterface(
                 section=self.config_name,

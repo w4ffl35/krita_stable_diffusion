@@ -141,11 +141,7 @@ class GenerateSettingsInterface(VerticalInterface):
                             release_callback=self.generate_callback,
                             config_name=f"{section}_server_connected",
                         ),
-                        self.progress_bar,
-                        Button(
-                            label="ckpt to diffusers",
-                            release_callback=self.convert_callback
-                        ),
+                        self.progress_bar
                     ]),
                 ])
             ]

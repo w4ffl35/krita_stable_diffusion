@@ -12,6 +12,7 @@ class VerticalInterface(QVBoxLayout):
         super().__init__()
         self.add_widgets(widgets)
         self.add_interfaces(interfaces)
+        self.setAlignment(Qt.AlignTop)
 
     def add_widgets(self, widgets):
         """

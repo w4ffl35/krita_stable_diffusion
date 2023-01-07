@@ -37,7 +37,7 @@ class KritaDockWidget(DockWidget):
         tabs.addTab(*(InpaintTab().tab()))
         tabs.addTab(*(outpaint.tab()))
         tabs.addTab(*(ConvertTab().tab()))
-        tabs.addTab(*(UpscaleTab().tab()))
+        # tabs.addTab(*(UpscaleTab().tab()))
 
         # on click of tabs[3]
         tabs.tabBarClicked.connect(lambda i: outpaint.handle_tab_click(i))
