@@ -1,6 +1,7 @@
 from krita import *
 from krita_stable_diffusion.interface.tabs.txt2imgtab import Txt2ImgTab
 from krita_stable_diffusion.interface.tabs.img2imgtab import Img2ImgTab
+from krita_stable_diffusion.interface.tabs.depth2imgtab import Depth2ImgTab
 from krita_stable_diffusion.interface.tabs.inpainttab import InpaintTab
 from krita_stable_diffusion.interface.tabs.outpainttab import OutpaintTab
 from krita_stable_diffusion.interface.tabs.converttab import ConvertTab
@@ -34,6 +35,7 @@ class KritaDockWidget(DockWidget):
         outpaint = OutpaintTab()
         tabs.addTab(*(Txt2ImgTab().tab()))
         tabs.addTab(*(Img2ImgTab().tab()))
+        tabs.addTab(*(Depth2ImgTab().tab()))
         tabs.addTab(*(InpaintTab().tab()))
         tabs.addTab(*(outpaint.tab()))
         tabs.addTab(*(ConvertTab().tab()))

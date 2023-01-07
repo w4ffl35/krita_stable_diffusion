@@ -228,6 +228,20 @@ class Base:
         data["pixels"] = pixels
         return data
 
+    def handle_depth2img(self, data):
+        """
+        Get the pixels from the active layer.
+        :param data:
+        :return:
+        """
+        pos_x = 0
+        pos_y = 0
+        pixels = base64.b64encode(
+            self.get_active_layer_binary(pos_x, pos_y)
+        ).decode("utf-8")
+        data["pixels"] = pixels
+        return data
+
     def handle_button_press(self, request_type, **kwargs):
         """
         Callback for the txt2img button.
@@ -266,6 +280,8 @@ class Base:
             data = self.handle_inpaint(data)
         elif request_type == "img2img":
             data = self.handle_img2img(data)
+        elif request_type == "depth2img":
+            data = self.handle_depth2img(data)
 
         # if there is no self.active_document, create one
         if not self.active_document:
@@ -295,6 +311,8 @@ class Base:
                 progress_bar = Application.txt2img_progress_bar
             elif reqtype == "img2img":
                 progress_bar = Application.img2img_progress_bar
+            elif reqtype == "depth2img":
+                progress_bar = Application.depth2img_progress_bar
             elif reqtype == "inpaint":
                 progress_bar = Application.inpaint_progress_bar
             elif reqtype == "outpaint":

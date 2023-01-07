@@ -51,7 +51,7 @@ class GenerateSettingsInterface(VerticalInterface):
             max=MAX_SEED,
             max_width=100
         )
-        if section == "img2img":
+        if section in ["img2img", "depth2img"]:
             strength_interface = SliderSpinnerInterface(
                 label="Strength",
                 config_name=f"{section}_strength",

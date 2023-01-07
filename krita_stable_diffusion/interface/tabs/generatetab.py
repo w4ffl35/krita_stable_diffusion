@@ -48,6 +48,21 @@ class GenerateTab(Base):
         "img2img_scheduler": DEFAULT_SCHEDULER,
         "img2img_model_path": "",
 
+        "depth2img_prompt": "",
+        "depth2img_negative_prompt": "",
+        "depth2img_steps": 20,
+        "depth2img_ddim_eta": 0.0,  # only applies to ddim scheduler
+        "depth2img_n_iter": 1,
+        "depth2img_height": 512,
+        "depth2img_width": 512,
+        "depth2img_n_samples": 1,
+        "depth2img_strength": 0.8,
+        "depth2img_scale": 7.5,
+        "depth2img_seed": 42,
+        "depth2img_model": DEFAULT_MODEL,
+        "depth2img_scheduler": DEFAULT_SCHEDULER,
+        "depth2img_model_path": "",
+
         "inpaint_prompt": "",
         "inpaint_negative_prompt": "",
         "inpaint_steps": 20,
@@ -95,6 +110,14 @@ class GenerateTab(Base):
         """
         self.handle_button_press("img2img")
 
+    def depth2img_release_callback(self, _element):
+        """
+        Callback for the depth2img button.
+        :param _element: passed by the button but not used
+        :return: None, sends request to stable diffusion
+        """
+        self.handle_button_press("depth2img")
+
     def inpaint_release_callback(self, _element):
         self.handle_button_press("inpaint")
 
@@ -119,6 +142,9 @@ class GenerateTab(Base):
         elif self.config_name == "img2img":
             callback = self.img2img_release_callback
             #dropdown = Application.img2img_available_models_dropdown
+        elif self.config_name == "depth2img":
+            callback = self.depth2img_release_callback
+            # dropdown = Application.img2img_available_models_dropdown
         elif self.config_name == "inpaint":
             callback = self.inpaint_release_callback
             #dropdown = Application.inpaint_available_models_dropdown
