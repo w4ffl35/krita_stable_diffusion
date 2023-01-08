@@ -230,7 +230,7 @@ class Base:
 
     def handle_button_press(self, request_type, **kwargs):
         """
-        Callback for the txt2img button.
+        Callback for the generate button.
         :param _element: passed by the button but not used
         :return: None, sends request to stable diffusion
         """
@@ -246,7 +246,7 @@ class Base:
         )
 
         # add config options to request data
-        data = self.prep_config_options(data)
+        data = self.prep_config_options(request_type, data)
 
         # build the prompt based on request data
         data = self.build_prompt(
@@ -447,7 +447,7 @@ class Base:
     def tab(self):
         return self.widget, self.display_name
 
-    def prep_config_options(self, data):
+    def prep_config_options(self, request_type, data):
         # add config options
         do_nsfw_filter = self.config.value("do_nsfw_filter", True)
         do_watermark = self.config.value("do_watermark", True)
@@ -455,27 +455,33 @@ class Base:
         data["do_watermark"] = False if do_watermark == 0 else True
 
         available_models = None
-        model_version = Application.model_version
-        if model_version == 1:
+        model_version = self.config.value(f"{request_type}_model_version", "v1")
+        data["version"] = model_version
+        if model_version == "v1":
             available_models = Application.available_models_v1
-            data["version"] = "v1"
-        elif model_version == 2:
+        elif model_version == "v2":
             available_models = Application.available_models_v2
-            data["version"] = "v2"
-        elif model_version == 3:
+        elif model_version == "v1 (community)":
             available_models = Application.available_models_custom_v1
-            data["version"] = "v1"
         else:
             available_models = Application.available_models_custom_v2
-            data["version"] = "v2"
 
+        data["model_path"] = self.config.value("model_path", "")
 
         if available_models:
-            data["model"] = available_models[int(self.config.value("model", 0))]
+            model_name = self.config.value(f"{request_type}_model", 0)
+            for index in range(len(available_models)):
+                available_name = available_models[index]["name"]
+                available_path = available_models[index]["path"]
+                if available_name == model_name:
+                    data["model_path"] = available_path
+                    data[f"{request_type}_model"] = os.path.join(
+                        available_path
+                    )
+                    break
         else:
             data["model"] = DEFAULT_MODEL
 
-        data["model_path"] = self.config.value("model_path", "")
         self.config.setValue("log", Application.stablediffusion.log)
         return data
 

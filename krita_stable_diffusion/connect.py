@@ -6,13 +6,12 @@ import socket
 import threading
 import time
 import logging
-
+from krita_stable_diffusion.settings import DEFAULT_HOST, DEFAULT_PORT, CHUNK_SIZE
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 SDPATH = os.path.join("stablediffusion")
-CHUNK_SIZE = 1024
-DEFAULT_PORT=50006
-DEFAULT_HOST="localhost"
+
+
 
 
 class Connection:
@@ -226,12 +225,12 @@ class SocketClient(SocketConnection):
                     connection_label = self.Application.__getattribute__("connection_label")
                     if connection_label:
                         self.Application.connection_label.setText(
-                            "Connected to localhost:5000"
+                            f"Connected to {self.host}:{self.port}"
                         )
                     self.soc.settimeout(None)
                     logger.info("CLIENT: connected")
                 except ConnectionRefusedError as exc:
-                    # logger.info("CLIENT: failed to connect - connection refused", exc)
+                    logger.info("CLIENT: failed to connect - connection refused", exc)
                     self.has_connection = False
 
             if self.quit_event.is_set():
@@ -275,7 +274,7 @@ class SocketClient(SocketConnection):
 
                 if not self.has_connection and connection_label:
                     self.Application.connection_label.setText(
-                        "Not connected to localhost:5000"
+                        f"Not connected to {self.host}:{self.port}"
                     )
                 self.handle_response(response)
             if self.quit_event.is_set():

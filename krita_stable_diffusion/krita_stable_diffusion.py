@@ -12,6 +12,7 @@ from krita_stable_diffusion.interface.widgets.label import Label
 from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 from krita_stable_diffusion.settings import MODELS
+from krita_stable_diffusion.settings import DEFAULT_HOST, DEFAULT_PORT
 from subprocess import Popen
 CREATE_NEW_CONSOLE = None
 try:
@@ -296,7 +297,7 @@ class Controller(QObject):
             padding=10
         ))
         Application.__setattr__("connection_label", Label(
-            label=f"Not connected to localhost:5000",
+            label=f"Not connected to {DEFAULT_HOST}:{DEFAULT_PORT}",
             alignment="right",
             padding=10
         ))
@@ -304,7 +305,7 @@ class Controller(QObject):
         Krita.instance().eventFilter = self.eventFilter
         self.popup("Loading client")
         self.client = SimpleEnqueueSocketClient(
-            port=50006,
+            port=DEFAULT_PORT,
             handle_response=self.stablediffusion_response_callback,
             status_change_callback=self.handle_status_change,
             Application=Application
@@ -319,6 +320,18 @@ class Controller(QObject):
             name="watch_connection"
         )
 
+    def load_base_models(self, model_list):
+        """
+        Iterate over each model string in model_list and prefix self.config.value("model_base_path", "")
+        :param model_list:
+        :return:
+        """
+        model_base_path = self.config.value("model_base_path", "")
+        for model in model_list:
+            model["path"] = os.path.join(model_base_path, model["path"])
+        return model_list
+
+
     def load_extra_models(self, path):
         # find all ckpt files in config.model_path
         # check recursively for ckpt files
@@ -328,16 +341,21 @@ class Controller(QObject):
         if model_path:
             for root, dirs, files in os.walk(model_path):
                 for file in files:
+                    """
+                    Currently only ckpt files are supported.
+                    TODO: add support for safetensors and diffusers
+                    """
                     if file.endswith(".ckpt"):
-                        extra_models.append(
-                            os.path.join
-                            (root, file)
-                        )
+                        # get root path to file
+                        extra_models.append({
+                            "name": file,
+                            "path": os.path.join(root, file),
+                        })
         return extra_models
 
     def update_extra_models(self):
-        Application.available_models_v1 = MODELS["v1"]
-        Application.available_models_v2 = MODELS["v2"]
+        Application.available_models_v1 = self.load_base_models(MODELS["v1"])
+        Application.available_models_v2 = self.load_base_models(MODELS["v2"])
         Application.available_models_custom_v1 = self.load_extra_models("model_path_v1")
         Application.available_models_custom_v2 = self.load_extra_models("model_path_v2")
         self.set_model_options()

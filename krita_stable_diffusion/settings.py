@@ -1,3 +1,4 @@
+import os
 APPLICATION_ID = "krita_stable_diffusion"
 SCHEDULERS = [
     "euler_a",
@@ -15,20 +16,43 @@ MODEL_VERSIONS = [
     "v1 (community)",
     "v2 (community)",
 ]
-MODELS = {
+MODELS = {  # Default stable diffusion models
     "v1": [
-        "runwayml/stable-diffusion-v1-5",
-        "runwayml/stable-diffusion-inpainting",
+        {
+            "name": "v1-5",
+            "path": "runwayml/stable-diffusion-v1-5",
+        },
+        {
+            "name": "Inpainting model",
+            "path": "runwayml/stable-diffusion-inpainting",
+        }
     ],
     "v2": [
-        "stabilityai/stable-diffusion-2-1-base",
-        "stabilityai/stable-diffusion-x4-upscaler",
-        "stabilityai/stable-diffusion-2-inpainting",
-        "stabilityai/stable-diffusion-2-depth",
-    ]
+        {
+            "name": "v2-1",
+            "path": "stabilityai/stable-diffusion-2-1-base",
+        },
+        {
+            "name": "4x upscaler",
+            "path": "stabilityai/stable-diffusion-x4-upscaler",
+        },
+        {
+            "name": "Inpainting model",
+            "path": "stabilityai/stable-diffusion-2-inpainting",
+        },
+        {
+            "name": "Depth model",
+            "path": "stabilityai/stable-diffusion-2-depth",
+        }
+    ],
 }
-DEFAULT_MODEL = MODELS["v2"][0] if len(MODELS["v2"]) > 0 else None
+DEFAULT_MODEL = os.path.join(
+    MODELS["v2"][0]["path"],
+    MODELS["v2"][0]["name"]
+) if len(MODELS["v2"]) > 0 else None
 DEFAULT_SCHEDULER = SCHEDULERS[0]
-
 MIN_SEED = 0
 MAX_SEED = 4294967295
+CHUNK_SIZE = 1024
+DEFAULT_PORT=50006
+DEFAULT_HOST="localhost"
