@@ -25,6 +25,8 @@ class Base:
     layout = None
     default_setting_values = {}
     log_widget = None
+    image_insert_timer = None
+    progressbar_update_timer = None
 
     @property
     def color_mode(self):
@@ -423,7 +425,6 @@ class Base:
         :param request_type: The type of request to send
         :return: None
         """
-        self.log_message(f"Requesting...")
         Application.stablediffusion.client.message = {
             "action": request_type,
             "options": options,
@@ -514,7 +515,7 @@ class Base:
     def __init__(self, interfaces):
         Application.__setattr__("update_progressbar", self.update_progressbar)
         Application.__setattr__("connected_to_sd", False)
-        Application.__setattr__("log_message", self.send)
+        #Application.__setattr__("log_message", self.send)
         Application.__setattr__("app", self)
         # get steps from config
         self.initialize_settings()
@@ -523,6 +524,5 @@ class Base:
         Application.__setattr__("cur_step", 0)
         Application.__setattr__("image_queue", [])
         self.initialize_interfaces(interfaces)
-        self.log_message(f"Initialized with PID {os.getpid()}")
         self.progressbar_timed_update()
         self.image_insert_timed_update()

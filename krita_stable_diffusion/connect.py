@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 SDPATH = os.path.join("stablediffusion")
 
 
-
-
 class Connection:
     """
     Connects to Stable Diffusion service
@@ -397,6 +395,12 @@ class SimpleEnqueueSocketClient(SocketClient):
         :return:
         """
         self.soc.sendall(b"\x00" * CHUNK_SIZE)
+
+    def send_message(self, message):
+        """
+        Ease of use function to send a message to the server
+        """
+        self.callback(message)
 
     def callback(self, message):
         """

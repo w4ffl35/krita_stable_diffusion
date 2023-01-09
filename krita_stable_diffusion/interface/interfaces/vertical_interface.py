@@ -21,7 +21,10 @@ class VerticalInterface(QVBoxLayout):
         :return:
         """
         for widget in widgets:
-            self.addWidget(widget.widget)
+            try:
+                self.addWidget(widget.widget)
+            except AttributeError:
+                self.addWidget(widget)
 
     def add_interfaces(self, interfaces):
         """
