@@ -284,23 +284,7 @@ class Controller(QObject):
             self.config.setValue("sever_connected", False)
 
     def window_created(self):
-        # get krita resources folder
-        # here = os.path.dirname(os.path.realpath(__file__))
-        # if CREATE_NEW_CONSOLE:
-        #     # windows
-        #     Popen(
-        #         f"{here}\\runai\\runai",
-        #         creationflags=CREATE_NEW_CONSOLE
-        #     )
-        # else:
-        #     # linux
-        #     try:
-        #         Popen(
-        #             f"{here}/runai/server.py",
-        #             shell=True
-        #         )
-        #     except Exception as _e:
-        #         raise Exception("Could not start runai")
+        self.start_server()
         StableDiffusionMenu()
         # time.sleep(3)
         self.version_check()
@@ -352,7 +336,6 @@ class Controller(QObject):
             model["path"] = os.path.join(model_base_path, model["path"])
         return model_list
 
-
     def load_extra_models(self, path):
         # find all ckpt files in config.model_path
         # check recursively for ckpt files
@@ -360,18 +343,67 @@ class Controller(QObject):
         model_path = config.value(path, None)
         extra_models = []
         if model_path:
-            for root, dirs, files in os.walk(model_path):
-                for file in files:
-                    """
-                    Currently only ckpt files are supported.
-                    TODO: add support for safetensors and diffusers
-                    """
-                    if file.endswith(".ckpt"):
-                        # get root path to file
-                        extra_models.append({
+            # get a list of directories in model_path
+            dirs = [os.path.join(model_path, d) for d in os.listdir(model_path)]
+            for dir in dirs:
+                is_diffusers = True
+                # check if dir has ckpt files in it
+                ckpt_files = [f for f in os.listdir(dir) if f.endswith(".ckpt")]
+                st_files = [f for f in os.listdir(dir) if f.endswith(".safetensors")]
+                # check if dir has all required_files
+                required_files = [
+                    "scheduler/scheduler_config.json",
+                    "text_encoder/config.json",
+                    "text_encoder/pytorch_model.bin",
+                    "tokenizer/merges.txt",
+                    "tokenizer/special_tokens_map.json",
+                    "tokenizer/tokenizer_config.json",
+                    "tokenizer/vocab.json",
+                    "unet/config.json",
+                    "unet/diffusion_pytorch_model.bin",
+                    "vae/config.json",
+                    "vae/diffusion_pytorch_model.bin",
+                ]
+
+                for file in required_files:
+                    if not os.path.exists(os.path.join(dir, file)):
+                        is_diffusers = False
+                        print("is not diffusers", os.path.join(dir, file))
+                        break
+
+                    display_name = dir if is_diffusers else file
+
+                    # check if name already exists in extra_models
+                    add_data = True
+                    for m in extra_models:
+                        if m["name"] == display_name:
+                            add_data = False
+                            break
+
+                    # check if file already exists in extra_models
+                    if add_data:
+                        data = {
+                            "name": display_name,
+                            "path": os.path.join(model_path, display_name),
+                        }
+                        extra_models.append(data)
+
+                for file in ckpt_files:
+                    # check if name already exists in extra_models
+                    add_data = True
+                    for m in extra_models:
+                        if m["name"] == file:
+                            add_data = False
+                            break
+
+                    # check if file already exists in extra_models
+                    if add_data:
+                        data = {
                             "name": file,
-                            "path": os.path.join(root, file),
-                        })
+                            "path": os.path.join(dir, file),
+                        }
+                        extra_models.append(data)
+
         return extra_models
 
     def update_extra_models(self):
@@ -395,6 +427,27 @@ class Controller(QObject):
             "action": "update",
             "version": VERSION
         })
+
+    def start_server(self):
+        """
+        Starts the server
+        :return:
+        """
+        # get krita resources folder
+        here = os.path.dirname(os.path.realpath(__file__))
+        # get platform
+        platform = sys.platform
+        if platform == "linux":
+            Popen(
+                os.path.join(here, "runai", "runai --timeout"),
+                shell=True
+            )
+        else:
+            # windows
+            Popen(
+                f"{here}\\runai\\runai --timeout",
+                creationflags=CREATE_NEW_CONSOLE
+            )
 
     def version_check(self):
         """
@@ -440,6 +493,11 @@ class Controller(QObject):
         Application.__setattr__("model_version", 1)
         Application.__setattr__("update_extra_models", self.update_extra_models)
         Application.__setattr__("convert_model_to_diffusers", self.convert_model_to_diffusers)
+
+        print("*" * 800)
+        print("version_check")
+        # connect to https://raw.githubusercontent.com/w4ffl35/krita_stable_diffusion/master/VERSION
+        # and print the contents of the response
 
         # the following attributes are set by a push request from the server
         # on server start. They are used to determine if the client and server

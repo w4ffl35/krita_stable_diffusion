@@ -228,7 +228,7 @@ class SocketClient(SocketConnection):
                     self.soc.settimeout(None)
                     logger.info("CLIENT: connected")
                 except ConnectionRefusedError as exc:
-                    logger.info("CLIENT: failed to connect - connection refused", exc)
+                    logger.info("CLIENT: failed to connect - connection refused")
                     self.has_connection = False
 
             if self.quit_event.is_set():
