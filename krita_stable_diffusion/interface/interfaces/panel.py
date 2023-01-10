@@ -6,7 +6,7 @@ from krita_stable_diffusion.interface.tabs.outpainttab import OutpaintTab
 from krita_stable_diffusion.interface.tabs.converttab import ConvertTab
 from krita_stable_diffusion.interface.tabs.upscaletab import UpscaleTab
 from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
-
+from krita_stable_diffusion.settings import VERSION
 
 class KritaDockWidget(DockWidget):
     widget = None
@@ -19,7 +19,8 @@ class KritaDockWidget(DockWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Krita Stable Diffusion (v1.0.0)")
+        self.setWindowTitle(f"Krita Stable Diffusion ({VERSION})")
+
         self.create_interface()
 
         try:
@@ -51,6 +52,7 @@ class KritaDockWidget(DockWidget):
         layout.addWidget(tabs)
         horizontal_interface = HorizontalInterface(widgets=[
             Application.status_label,
+            Application.update_button,
             Application.connection_label
         ])
         layout.addLayout(horizontal_interface)

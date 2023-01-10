@@ -1,6 +1,3 @@
-"""
-Krita stable diffusion Controller class.
-"""
 import json
 import sys
 import threading
@@ -13,7 +10,11 @@ from krita_stable_diffusion.interface.interfaces.panel import KritaDockWidget
 from krita_stable_diffusion.interface.menus.stable_diffusion_menu import StableDiffusionMenu
 from krita_stable_diffusion.settings import MODELS
 from krita_stable_diffusion.settings import DEFAULT_HOST, DEFAULT_PORT
+from krita_stable_diffusion.settings import VERSION
 from subprocess import Popen
+from krita_stable_diffusion.interface.interfaces.vertical_interface import VerticalInterface
+from krita_stable_diffusion.interface.interfaces.horizontal_interface import HorizontalInterface
+from krita_stable_diffusion.interface.widgets.button import Button
 CREATE_NEW_CONSOLE = None
 try:
     from subprocess import CREATE_NEW_CONSOLE
@@ -22,6 +23,9 @@ except:
 
 
 class Controller(QObject):
+    """
+    Krita stable diffusion Controller class.
+    """
     krita_instance = None
     config = None
     stop_socket_connection = None
@@ -29,6 +33,10 @@ class Controller(QObject):
     threads = []
     first_run = True
     name = "Controller"
+    version_check_timer = None
+    version_checked = False
+    update_available = False
+    window_is_created = False
 
     def popup(self, message):
         # QMessageBox.information(
@@ -221,8 +229,13 @@ class Controller(QObject):
             # convert msg string to dict
             try:
                 msg = json.loads(msg)
+
                 if "image" in msg:
                     self.insert_images(msg)
+                elif "versions" in msg:
+                    versions = msg["versions"]
+                    # set versions here
+                    self.versions = versions
                 elif "action" in msg:
                     if msg["action"] == 4:  # progress
                         # get a reference to the main thread
@@ -272,13 +285,13 @@ class Controller(QObject):
 
     def window_created(self):
         # get krita resources folder
-        here = os.path.dirname(os.path.realpath(__file__))
-        if CREATE_NEW_CONSOLE:
-            # windows
-            Popen(
-                f"{here}\\runai\\runai",
-                creationflags=CREATE_NEW_CONSOLE
-            )
+        # here = os.path.dirname(os.path.realpath(__file__))
+        # if CREATE_NEW_CONSOLE:
+        #     # windows
+        #     Popen(
+        #         f"{here}\\runai\\runai",
+        #         creationflags=CREATE_NEW_CONSOLE
+        #     )
         # else:
         #     # linux
         #     try:
@@ -289,12 +302,20 @@ class Controller(QObject):
         #     except Exception as _e:
         #         raise Exception("Could not start runai")
         StableDiffusionMenu()
+        # time.sleep(3)
+        self.version_check()
 
     def initialize_client(self):
         Application.__setattr__("status_label", Label(
             label=f"",
             alignment="left",
             padding=10
+        ))
+        Application.__setattr__("update_button", Button(
+            label="Update",
+            release_callback=self.update_plugin,
+            padding=10,
+            disabled=True
         ))
         Application.__setattr__("connection_label", Label(
             label=f"Not connected to {DEFAULT_HOST}:{DEFAULT_PORT}",
@@ -358,32 +379,58 @@ class Controller(QObject):
         Application.available_models_v2 = self.load_base_models(MODELS["v2"])
         Application.available_models_custom_v1 = self.load_extra_models("model_path_v1")
         Application.available_models_custom_v2 = self.load_extra_models("model_path_v2")
-        self.set_model_options()
-
-    def set_model_options(self):
-        if Application.model_version == 1:
-            available_models = Application.available_models_v1
-        else:
-            available_models = Application.available_models_v2
-
-        # Application.txt2img_available_models_dropdown.widget.clear()
-        # Application.img2img_available_models_dropdown.widget.clear()
-        # Application.inpaint_available_models_dropdown.widget.clear()
-        # Application.outpaint_available_models_dropdown.widget.clear()
-        # Application.txt2img_available_models_dropdown.setOptions(available_models)
-        # Application.img2img_available_models_dropdown.setOptions(available_models)
-        # Application.inpaint_available_models_dropdown.setOptions(available_models)
-        # Application.outpaint_available_models_dropdown.setOptions(available_models)
 
     def convert_model_to_diffusers(self):
         print("CONVERT MODEL TO DIFFUSERS")
 
+    def update_plugin(self, _element):
+        """
+        Downloads the latest releases from github in background and stores them.
+        :return:
+        """
+        print("run updates")
+
+        # send message to server requesting an upgrade
+        self.client.send_message({
+            "action": "update",
+            "version": VERSION
+        })
+
+    def version_check(self):
+        """
+        Checks if there are any server or client updates available.
+        :return:
+        """
+        versions = self.versions
+        current_ksd_version = self.config.value("current_ksd_version", VERSION)
+        current_runai_version = versions["current_runai_version"]
+        latest_ksd_version = versions["latest_ksd_version"]
+        latest_runai_version = versions["latest_runai_version"]
+
+        if current_ksd_version and current_runai_version and latest_ksd_version and latest_runai_version:
+            print("VERSION CHECK COMPLETED")
+            # all values have been set by the server
+            self.version_checked = True
+            if current_runai_version != latest_runai_version or current_ksd_version != latest_ksd_version:
+                # versions are out of sync, tell the user to update
+                self.update_available = True
+            else:
+                print("NO UPDATE AVAILABLE")
+
+            if self.update_available:
+                self.plugin_versions = {
+                    "current_ksd_version": current_ksd_version,
+                    "current_runai_version": current_runai_version,
+                    "latest_ksd_version": latest_ksd_version,
+                    "latest_runai_version": latest_runai_version
+                }
+                Application.update_button.widget.setDisabled(False)
+
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.client = None
         Application.__setattr__("connected_to_sd", False)
-        super().__init__(*args, **kwargs)
         self.init_settings(**kwargs)
-        # self.popup(f"Plugin loaded {self}")
         Application.__setattr__("stablediffusion", self)
         self.initialize_client()
         Application.__setattr__("available_models_v1", MODELS["v1"])
@@ -393,6 +440,15 @@ class Controller(QObject):
         Application.__setattr__("model_version", 1)
         Application.__setattr__("update_extra_models", self.update_extra_models)
         Application.__setattr__("convert_model_to_diffusers", self.convert_model_to_diffusers)
+
+        # the following attributes are set by a push request from the server
+        # on server start. They are used to determine if the client and server
+        # software versions are up-to-date
+        Application.__setattr__("current_ksd_version", VERSION)
+        Application.__setattr__("current_runai_version", None)
+        Application.__setattr__("latest_ksd_version", None)
+        Application.__setattr__("latest_runai_version", None)
+
         # Application.__setattr__(
         #     "txt2img_available_models_dropdown",
         #     DropDown(options=[], config_name="txt2img_model")

@@ -138,10 +138,10 @@ class GenerateTab(Base):
                 section_callback=callback
             ),
         ]
-        self.log_widget = PlainText(
-            placeholder="log",
-            config_name="log",
-            max_height=50,
-            disabled=True
-        )
+        # self.log_widget = PlainText(
+        #     placeholder="log",
+        #     config_name="log",
+        #     max_height=50,
+        #     disabled=True
+        # )
         super().__init__([] if not interfaces else interfaces)

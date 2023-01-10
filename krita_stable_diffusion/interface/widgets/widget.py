@@ -10,6 +10,7 @@ class Widget(QWidget):
     max_width = None
     max_height = None
     disabled = False
+    # visible = True
     config_name = None
     placeholder = ""
 
@@ -42,6 +43,7 @@ class Widget(QWidget):
         if self.max_height:
             widget.setMaximumHeight(self.max_height)
         widget.setDisabled(self.disabled)
+        # widget.setVisible(self.visible)
         return widget
 
     def initialize_args(self, kwargs):
