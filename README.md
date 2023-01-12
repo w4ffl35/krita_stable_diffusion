@@ -18,10 +18,10 @@
 
 ## Download runai socket server
 
-[![Linux](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=linux&logoColor=white&link=)](https://github.com/w4ffl35/run-ai-socket-server/releases/tag/v1.0.0)
+[![Linux](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=linux&logoColor=white&link=)](https://github.com/w4ffl35/run-ai-socket-server/releases/download/v1.0.0/runai.tar.xz)
 
-- unzip the socket server
-- run the server `cd runai && ./runai`
+- unzip and untar the xz file - you should have a folder called `runai`
+- run the server: `cd runai && ./runai`
 
 **Windows download coming soon**
 
