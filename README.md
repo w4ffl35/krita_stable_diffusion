@@ -14,7 +14,9 @@
 ## Download the Stable Diffusion plugin
 
 - [Download the latest version](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/krita_stable_diffusion.zip) of the plugin
-- [Use the Python Plugins Manager](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html) to install the plugin
+- [Use the Python Plugins Manager](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html) to install the plugin from within Krita
+- [Download the model downloader script](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/download_models.sh)
+- To download models into `~/stablediffusion` run `./download_models.sh`
 
 ## Download runai socket server
 
