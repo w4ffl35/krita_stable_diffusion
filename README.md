@@ -46,7 +46,7 @@ Download and install the latest version of Krita from [krita.org](https://krita.
 
 ### Download the Stable Diffusion plugin
 
-- [Download the latest version](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/latest/krita_stable_diffusion.tar.gz) of the plugin
+- [Download the latest version](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/krita_stable_diffusion.zip) of the plugin
 - [Use the Python Plugins Manager](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html) to install the plugin
 
 ### Update the plugin
