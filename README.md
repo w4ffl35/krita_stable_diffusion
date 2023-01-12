@@ -1,6 +1,6 @@
 # Krita Stable Diffusion
 
-[![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/PUVDDCJ7gz)
+[![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white)](https://discord.gg/PUVDDCJ7gz)
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
 ![GitHub all releases](https://img.shields.io/github/downloads/w4ffl35/krita_stable_diffusion/total)
 ![GitHub last commit](https://img.shields.io/github/last-commit/w4ffl35/krita_stable_diffusion)
@@ -52,4 +52,14 @@
 
 ### Update the plugin
 
-To update the plugin, click the "update" button in the plugin panel within Krita.
+Requires manual update for now (re-follow installation steps)
+
+**Automatic updates under development**
+
+---
+
+[![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/PUVDDCJ7gz)
+
+Join us on Discord
+
+---
