@@ -1,7 +1,5 @@
 # Krita Stable Diffusion
 
-[![Windows](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=windows&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/latest-windows/krita_stable_diffusion.tar.gz)
-[![Linux](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=linux&logoColor=white&link=)](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/latest-linux/krita_stable_diffusion.tar.gz)
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/PUVDDCJ7gz)
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
 ![GitHub all releases](https://img.shields.io/github/downloads/w4ffl35/krita_stable_diffusion/total)
@@ -13,9 +11,25 @@
 
 ---
 
+## Download the Stable Diffusion plugin
+
+- [Download the latest version](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/krita_stable_diffusion.zip) of the plugin
+- [Use the Python Plugins Manager](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html) to install the plugin
+
+## Download runai socket server
+
+[![Linux](https://img.shields.io/static/v1?label=Download&message=Download&color=00aa00&style=for-the-badge&logo=linux&logoColor=white&link=)](https://github.com/w4ffl35/run-ai-socket-server/releases/tag/v1.0.0)
+
+- unzip the socket server
+- run the server `cd runai && ./runai`
+
+**Windows download coming soon**
+
+---
+
 ![image](https://user-images.githubusercontent.com/25737761/210693732-004dc2f7-d496-4ad2-8c27-c74a28459901.png)
 
-- Runs on Windows and Ubuntu
+- Runs on ~~Windows and~~ Ubuntu (Windows version coming soon)
 - Run locally in Krita without the need for a Python environment.
 - **Easy installation: no need to install Python or other dependencies**
 - Non-blocking image generation: continue working in Krita while your images generate
@@ -35,19 +49,6 @@
 - **Checkpoint conversion**: convert ckpt to diffusers format
 
 ---
-
-## Getting started
-
-### Download Krita
-
-Download and install the latest version of Krita from [krita.org](https://krita.org/en/download/krita-desktop/)
-
-![img.png](img.png)
-
-### Download the Stable Diffusion plugin
-
-- [Download the latest version](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/krita_stable_diffusion.zip) of the plugin
-- [Use the Python Plugins Manager](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html) to install the plugin
 
 ### Update the plugin
 
