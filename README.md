@@ -36,7 +36,7 @@
 - **Easy installation: no need to install Python or other dependencies**
 - Non-blocking image generation: continue working in Krita while your images generate
 - Moves images from server to Krita without moving to disc first
-- Standalone - comes bundled with required server
+- ~Standalone - comes bundled with required server~ Coming soon - currently have to download and run server separately
 - Uses a queued request system
 - Runs Stable Diffusion models v1-5 and 2-1
 - Runs any diffusers or ckpt models
