@@ -15,8 +15,17 @@
 
 - [Download the latest version](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/krita_stable_diffusion.zip) of the plugin
 - [Use the Python Plugins Manager](https://docs.krita.org/en/user_manual/python_scripting/install_custom_python_plugin.html) to install the plugin from within Krita
+
+## Acquire models
+
 - [Download the model downloader script](https://github.com/w4ffl35/krita_stable_diffusion/releases/download/1.0.0/download_models.sh)
-- To download models into `~/stablediffusion` run `./download_models.sh`
+- Run `./download_models.sh`
+
+This places models in a `stablediffusion` folder in your home folder in linux:
+
+`/home/$USER/stablediffusion`
+
+You must place your models inside of this directory. For more information on the layout of this directory, how you must structure it with your models [see the run-ai-socket-server README](https://github.com/w4ffl35/run-ai-socket-server#stable-diffusion-directory-structure)
 
 ## Download runai socket server
 
