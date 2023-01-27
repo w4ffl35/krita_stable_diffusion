@@ -1,4 +1,12 @@
-# Krita Stable Diffusion
+# This plugin is no longer supported. Instead download my actively maintained A.I. Runner - a free Stable Diffusion interface.
+
+[![image](https://user-images.githubusercontent.com/25737761/214990670-46d725d0-3258-47a6-8af8-57e5997b10b7.png)](https://capsizegames.itch.io/ai-runner?v=2)
+
+## 💫💫💫 [GET A.I. RUNNER HERE](https://capsizegames.itch.io/ai-runner?v=2) 💫💫💫
+
+---
+
+## Krita Stable Diffusion
 
 [![Discord](https://img.shields.io/discord/839511291466219541?color=5865F2&logo=discord&logoColor=white)](https://discord.gg/PUVDDCJ7gz)
 ![GitHub](https://img.shields.io/github/license/w4ffl35/krita_stable_diffusion)
