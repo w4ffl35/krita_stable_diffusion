@@ -4,6 +4,12 @@
 
 ## 💫💫💫 [GET A.I. RUNNER HERE](https://capsizegames.itch.io/ai-runner?v=2) 💫💫💫
 
+- [AI Runner Build](https://capsizegames.itch.io/ai-runner)
+- [Chat AI Build](https://capsizegames.itch.io/chat-ai)
+- [AI Runner Source](https://github.com/Capsize-Games/airunner)
+- [Chat AI Source](https://github.com/Capsize-Games/chatai)
+- [AI Handler Source](https://github.com/Capsize-Games/aihandler)
+
 ---
 
 ## Krita Stable Diffusion
